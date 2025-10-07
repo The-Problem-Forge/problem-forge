@@ -1,5 +1,7 @@
 package ru.nsu.problem_forge.service
 
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -11,9 +13,9 @@ import ru.nsu.problem_forge.repository.UserRepository
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder
-) {
+) : UserDetailsService {
 
-    fun loadUserByUsername(login: String): User {
+    override fun loadUserByUsername(login: String): UserDetails {
         return userRepository.findByLogin(login)
             .orElseThrow { UsernameNotFoundException("User not found: $login") }
     }
@@ -31,5 +33,10 @@ class UserService(
         )
         
         return userRepository.save(user)
+    }
+
+    fun findUserByLogin(login: String): User {
+        return userRepository.findByLogin(login)
+            .orElseThrow { UsernameNotFoundException("User not found: $login") }
     }
 }

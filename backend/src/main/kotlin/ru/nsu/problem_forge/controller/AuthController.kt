@@ -12,32 +12,32 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-    // private val authenticationManager: AuthenticationManager,
+    private val authenticationManager: AuthenticationManager,
     private val userService: UserService,
     private val jwtUtil: JwtUtil
 ) {
 
     @PostMapping("/login")
     fun login(@RequestBody authRequest: AuthRequest): ResponseEntity<AuthResponse> {
-        // authenticationManager.authenticate(
-        //     UsernamePasswordAuthenticationToken(authRequest.login, authRequest.password) // changed to login
-        // )
+        authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken(authRequest.login, authRequest.password)
+        )
         
-        val user = userService.loadUserByUsername(authRequest.login) // changed to login
-        val token = jwtUtil.generateToken(user.login) // changed to login
+        val user = userService.findUserByLogin(authRequest.login)
+        val token = jwtUtil.generateToken(user.login)
         
-        return ResponseEntity.ok(AuthResponse(token, user.login)) // changed to login
+        return ResponseEntity.ok(AuthResponse(token, user.login))
     }
 
     @PostMapping("/register")
     fun register(@RequestBody authRequest: AuthRequest): ResponseEntity<AuthResponse> {
         val user = userService.createUser(
-            login = authRequest.login, // changed to login
+            login = authRequest.login,
             password = authRequest.password,
-            email = "${authRequest.login}@example.com" // changed to login
+            email = "${authRequest.login}@example.com"
         )
         
-        val token = jwtUtil.generateToken(user.login) // changed to login
-        return ResponseEntity.ok(AuthResponse(token, user.login)) // changed to login
+        val token = jwtUtil.generateToken(user.login) 
+        return ResponseEntity.ok(AuthResponse(token, user.login))
     }
 }

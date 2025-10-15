@@ -14,7 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import ru.nsu.problem_forge.service.UserService
 import ru.nsu.problem_forge.config.JwtRequestFilter
-import ru.nsu.problem_forge.config.JwtRequestFilter
 import org.springframework.security.core.userdetails.UserDetailsService
 
 @Configuration

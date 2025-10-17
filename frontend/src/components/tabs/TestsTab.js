@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { testsAPI, generatorsAPI } from "../../services/api";
+import Table from "../Table";
 
 /**
  * TestsTab component for problem tests management
@@ -174,130 +175,110 @@ const TestsTab = () => {
         <div className="tests-fields">
           <div className="field-group">
             <label>Problem Tests:</label>
-            {tests.length === 0 ? (
-              <p>No tests yet</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Input</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tests.map((test) => (
-                    <tr key={test.id}>
-                      <>
-                        <td>
-                          {editingTestId === test.id ? (
-                            <textarea
-                              value={editInput}
-                              onChange={(e) => setEditInput(e.target.value)}
-                              rows={3}
-                            />
-                          ) : (
-                            test.inputText?.substring(0, 50) || "N/A"
-                          )}
-                        </td>
-                        <td>
-                          {editingTestId === test.id ? (
-                            <input
-                              type="text"
-                              value={editDescription}
-                              onChange={(e) =>
-                                setEditDescription(e.target.value)
-                              }
-                            />
-                          ) : (
-                            test.description || "N/A"
-                          )}
-                        </td>
-                        <td>
-                          {editingTestId === test.id ? (
-                            <>
-                              <button onClick={() => handleSaveEdit(test.id)}>
-                                Save
-                              </button>
-                              <button onClick={() => setEditingTestId(null)}>
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button onClick={() => handleEditClick(test)}>
-                                Edit
-                              </button>
-                              <button onClick={() => handleDeleteTest(test.id)}>
-                                Delete
-                              </button>
-                            </>
-                          )}
-                        </td>
-                      </>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td colSpan="3">
-                      <div className="add-test">
-                        <input
-                          type="text"
-                          placeholder="Input"
-                          value={newTest.inputText}
-                          onChange={(e) =>
-                            setNewTest({
-                              ...newTest,
-                              inputText: e.target.value,
-                            })
-                          }
-                        />
-                        <input
-                          type="text"
-                          placeholder="Description (optional)"
-                          value={newTest.description}
-                          onChange={(e) =>
-                            setNewTest({
-                              ...newTest,
-                              description: e.target.value,
-                            })
-                          }
-                        />
-                        <button onClick={handleAddTest}>Add Test</button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
+            <Table
+              headers={[
+                { key: "input", label: "Input" },
+                { key: "description", label: "Description" },
+                { key: "actions", label: "Actions" },
+              ]}
+              rows={tests}
+              renderCell={(test, key, index) => {
+                if (key === "input") {
+                  return editingTestId === test.id ? (
+                    <textarea
+                      value={editInput}
+                      onChange={(e) => setEditInput(e.target.value)}
+                      rows={3}
+                    />
+                  ) : (
+                    test.inputText?.substring(0, 50) || "N/A"
+                  );
+                }
+                if (key === "description") {
+                  return editingTestId === test.id ? (
+                    <input
+                      type="text"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                  ) : (
+                    test.description || "N/A"
+                  );
+                }
+                if (key === "actions") {
+                  return editingTestId === test.id ? (
+                    <>
+                      <button onClick={() => handleSaveEdit(test.id)}>
+                        Save
+                      </button>
+                      <button onClick={() => setEditingTestId(null)}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => handleEditClick(test)}>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDeleteTest(test.id)}>
+                        Delete
+                      </button>
+                    </>
+                  );
+                }
+                return null;
+              }}
+              emptyMessage="No tests yet"
+            />
+            <div className="add-test">
+              <input
+                type="text"
+                placeholder="Input"
+                value={newTest.inputText}
+                onChange={(e) =>
+                  setNewTest({
+                    ...newTest,
+                    inputText: e.target.value,
+                  })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Description (optional)"
+                value={newTest.description}
+                onChange={(e) =>
+                  setNewTest({
+                    ...newTest,
+                    description: e.target.value,
+                  })
+                }
+              />
+              <button onClick={handleAddTest}>Add Test</button>
+            </div>
           </div>
           <div className="field-group">
             <label>Generators:</label>
-            {generators.length === 0 ? (
-              <p>No generators yet</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Generator</th>
-                    <th>Language</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {generators.map((gen) => (
-                    <tr key={gen.id}>
-                      <td>{gen.name || gen.id}</td>
-                      <td>{gen.language || "N/A"}</td>
-                      <td>
-                        <button onClick={() => setSelectedGenerator(gen)}>
-                          Run
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <Table
+              headers={[
+                { key: "name", label: "Generator" },
+                { key: "language", label: "Language" },
+                { key: "actions", label: "Actions" },
+              ]}
+              rows={generators}
+              renderCell={(gen, key) => {
+                if (key === "name") return gen.name || gen.id;
+                if (key === "language") return gen.language || "N/A";
+                if (key === "actions") {
+                  return (
+                    <button onClick={() => setSelectedGenerator(gen)}>
+                      Run
+                    </button>
+                  );
+                }
+                return null;
+              }}
+              emptyMessage="No generators yet"
+            />
           </div>
         </div>
       </div>

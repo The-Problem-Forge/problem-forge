@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { solutionsAPI } from "../../services/api";
+import Table from "../Table";
 
 /**
  * SolutionsTab component for solutions management
@@ -168,60 +169,49 @@ const SolutionsTab = () => {
         <div className="solutions-fields">
           <div className="field-group">
             <label>Solutions:</label>
-            {solutions.length === 0 ? (
-              <p>No solutions yet</p>
-            ) : (
-              <table>
-                <thead>
+            <Table
+              headers={[
+                { key: "name", label: "Name" },
+                { key: "language", label: "Language" },
+                { key: "type", label: "Type" },
+                { key: "actions", label: "Actions" },
+              ]}
+              rows={solutions}
+              renderRow={(solution, index) => (
+                <React.Fragment key={solution.id}>
                   <tr>
-                    <th>Name</th>
-                    <th>Language</th>
-                    <th>Type</th>
-                    <th>Actions</th>
+                    <td>{solution.name || `Solution ${solution.id}`}</td>
+                    <td>{solution.language || "Unknown"}</td>
+                    <td>{solution.type || "Unknown"}</td>
+                    <td>
+                      <button
+                        onClick={() => handleCompile(solution.id)}
+                        disabled={compiling[solution.id]}
+                      >
+                        {compiling[solution.id] ? "Compiling..." : "Compile"}
+                      </button>
+                      <button onClick={() => handleViewSource(solution.id)}>
+                        View/Edit
+                      </button>
+                      <button onClick={() => handleDownload(solution.id)}>
+                        Download
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {solutions.map((solution) => (
-                    <React.Fragment key={solution.id}>
-                      <tr>
-                        <td>{solution.name || `Solution ${solution.id}`}</td>
-                        <td>{solution.language || "Unknown"}</td>
-                        <td>{solution.type || "Unknown"}</td>
-                        <td>
-                          <button
-                            onClick={() => handleCompile(solution.id)}
-                            disabled={compiling[solution.id]}
-                          >
-                            {compiling[solution.id]
-                              ? "Compiling..."
-                              : "Compile"}
-                          </button>
-                          <button onClick={() => handleViewSource(solution.id)}>
-                            View/Edit
-                          </button>
-                          <button onClick={() => handleDownload(solution.id)}>
-                            Download
-                          </button>
-                        </td>
-                      </tr>
-                      {compileResults[solution.id] && (
-                        <tr>
-                          <td
-                            colSpan="4"
-                            style={{ backgroundColor: "#f9f9f9" }}
-                          >
-                            <strong>Compile Result:</strong> Verdict:{" "}
-                            {compileResults[solution.id].verdict}; Stdout:{" "}
-                            {compileResults[solution.id].stdout}; Stderr:{" "}
-                            {compileResults[solution.id].stderr}
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  {compileResults[solution.id] && (
+                    <tr>
+                      <td colSpan="4" style={{ backgroundColor: "#f9f9f9" }}>
+                        <strong>Compile Result:</strong> Verdict:{" "}
+                        {compileResults[solution.id].verdict}; Stdout:{" "}
+                        {compileResults[solution.id].stdout}; Stderr:{" "}
+                        {compileResults[solution.id].stderr}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )}
+              emptyMessage="No solutions yet"
+            />
           </div>
           {editingSource && (
             <div className="field-group">

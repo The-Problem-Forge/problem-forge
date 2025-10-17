@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { invocationsAPI, solutionsAPI, testsAPI } from "../../services/api";
+import Table from "../Table";
 
 /**
  * InvocationsTab component for managing invocations and viewing results matrix
@@ -158,36 +159,31 @@ const InvocationsTab = () => {
 
       <div className="invocations-list">
         <h3>Invocations</h3>
-        {invocations.length === 0 ? (
-          <p>No invocations yet</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Solutions</th>
-                <th>Tests</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invocations.map((inv) => (
-                <tr key={inv.id}>
-                  <td>{inv.id}</td>
-                  <td>{inv.solutionIds?.length || 0}</td>
-                  <td>{inv.testIds?.length || 0}</td>
-                  <td>{inv.status || "Pending"}</td>
-                  <td>
-                    <button onClick={() => handleViewMatrix(inv.id)}>
-                      View Matrix
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table
+          headers={[
+            { key: "id", label: "ID" },
+            { key: "solutions", label: "Solutions" },
+            { key: "tests", label: "Tests" },
+            { key: "status", label: "Status" },
+            { key: "actions", label: "Actions" },
+          ]}
+          rows={invocations}
+          renderCell={(inv, key) => {
+            if (key === "id") return inv.id;
+            if (key === "solutions") return inv.solutionIds?.length || 0;
+            if (key === "tests") return inv.testIds?.length || 0;
+            if (key === "status") return inv.status || "Pending";
+            if (key === "actions") {
+              return (
+                <button onClick={() => handleViewMatrix(inv.id)}>
+                  View Matrix
+                </button>
+              );
+            }
+            return null;
+          }}
+          emptyMessage="No invocations yet"
+        />
       </div>
 
       {selectedInvocation && matrixData && (
@@ -197,18 +193,34 @@ const InvocationsTab = () => {
             <p>Loading matrix...</p>
           ) : (
             <div className="matrix-container">
-              <table className="results-matrix">
-                <thead>
-                  <tr>
-                    <th>Solution</th>
-                    {matrixData.tests?.map((test) => (
-                      <th key={test.id}>Test {test.id}</th>
-                    ))}
-                    <th>Summary</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {matrixData.solutions?.map((solution) => {
+              <Table
+                className="results-matrix"
+                headers={[
+                  { key: "solution", label: "Solution" },
+                  ...(matrixData.tests?.map((test) => ({
+                    key: `test-${test.id}`,
+                    label: `Test ${test.id}`,
+                  })) || []),
+                  { key: "summary", label: "Summary" },
+                ]}
+                rows={matrixData.solutions || []}
+                renderCell={(solution, key, index) => {
+                  if (key === "solution") return solution.name;
+                  if (key.startsWith("test-")) {
+                    const testId = key.replace("test-", "");
+                    const results = matrixData.results?.[solution.id] || {};
+                    const result = results[testId];
+                    return result ? (
+                      <div>
+                        <div className="verdict">{result.verdict}</div>
+                        <div className="time">{result.timeMs}ms</div>
+                        <div className="memory">{result.memoryKb}KB</div>
+                      </div>
+                    ) : (
+                      <span>-</span>
+                    );
+                  }
+                  if (key === "summary") {
                     const results = matrixData.results?.[solution.id] || {};
                     const passedCount = Object.values(results).filter(
                       (r) => r?.verdict === "OK" || r?.verdict === "AC",
@@ -223,40 +235,18 @@ const InvocationsTab = () => {
                         .map((r) => r?.memoryKb || 0)
                         .filter((m) => m > 0),
                     );
-
                     return (
-                      <tr key={solution.id}>
-                        <td>{solution.name}</td>
-                        {matrixData.tests?.map((test) => {
-                          const result = results[test.id];
-                          return (
-                            <td key={test.id} className="result-cell">
-                              {result ? (
-                                <div>
-                                  <div className="verdict">
-                                    {result.verdict}
-                                  </div>
-                                  <div className="time">{result.timeMs}ms</div>
-                                  <div className="memory">
-                                    {result.memoryKb}KB
-                                  </div>
-                                </div>
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="summary-cell">
-                          <div>Passed: {passedCount}</div>
-                          <div>Max Time: {maxTime}ms</div>
-                          <div>Max Memory: {maxMemory}KB</div>
-                        </td>
-                      </tr>
+                      <div>
+                        <div>Passed: {passedCount}</div>
+                        <div>Max Time: {maxTime}ms</div>
+                        <div>Max Memory: {maxMemory}KB</div>
+                      </div>
                     );
-                  })}
-                </tbody>
-              </table>
+                  }
+                  return null;
+                }}
+                emptyMessage="No matrix data"
+              />
             </div>
           )}
         </div>

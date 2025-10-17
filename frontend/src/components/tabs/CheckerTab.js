@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { checkerAPI } from "../../services/api";
+import Table from "../Table";
 
 /**
  * CheckerTab component for editing checker source and tests
@@ -210,33 +211,35 @@ const CheckerTab = () => {
           </div>
           <div className="field-group">
             <label>Tests:</label>
-            <table>
-              <thead>
-                <tr>
-                  <th>Input</th>
-                  <th>Output</th>
-                  <th>Expected</th>
-                  <th>Verdict</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.tests.map((test) => (
-                  <tr key={test.id}>
-                    <td>{test.input}</td>
-                    <td>{test.output}</td>
-                    <td>{test.expected}</td>
-                    <td>{runResults[test.id] || test.verdict || "N/A"}</td>
-                    <td>
+            <Table
+              headers={[
+                { key: "input", label: "Input" },
+                { key: "output", label: "Output" },
+                { key: "expected", label: "Expected" },
+                { key: "verdict", label: "Verdict" },
+                { key: "actions", label: "Actions" },
+              ]}
+              rows={data.tests}
+              renderCell={(test, key) => {
+                if (key === "input") return test.input;
+                if (key === "output") return test.output;
+                if (key === "expected") return test.expected;
+                if (key === "verdict")
+                  return runResults[test.id] || test.verdict || "N/A";
+                if (key === "actions") {
+                  return (
+                    <>
                       <button onClick={() => handleEditTest(test)}>Edit</button>
                       <button onClick={() => handleDeleteTest(test.id)}>
                         Delete
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </>
+                  );
+                }
+                return null;
+              }}
+              emptyMessage="No tests yet"
+            />
             <div className="add-test">
               <h4>Add New Test</h4>
               <input

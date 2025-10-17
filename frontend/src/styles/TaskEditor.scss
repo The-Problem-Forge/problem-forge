@@ -1,5 +1,5 @@
-@import 'variables';
-@import 'mixins';
+@import "variables";
+@import "mixins";
 
 .task-editor {
   padding: $spacing-lg;
@@ -184,41 +184,30 @@
   flex: 1;
 }
 
-.tests-tab table {
+.table {
   table-layout: fixed;
   width: 100%;
 }
 
-.tests-tab table th:nth-child(1),
-.tests-tab table td:nth-child(1) {
-  width: 40%;
+.table th {
+  @include table-header;
 }
 
-.tests-tab table th:nth-child(2),
-.tests-tab table td:nth-child(2) {
-  width: 30%;
-}
-
-.tests-tab table th:nth-child(3),
-.tests-tab table td:nth-child(3) {
-  width: 30%;
-}
-
-.tests-tab table tr {
-  height: 80px;
-}
-
-.tests-tab table td {
+.table td {
   @include table-cell;
 }
 
-.tests-tab table textarea,
-.tests-tab table input {
+.table tr {
+  height: 80px;
+}
+
+.table textarea,
+.table input {
   width: 100%;
   box-sizing: border-box;
 }
 
-.tests-tab table button {
+.table button {
   margin-right: $spacing-xs;
   padding: $spacing-xs $spacing-sm;
   font-size: $font-size-sm;

@@ -85,3 +85,13 @@
   border: 1px solid $border-color;
   border-radius: $border-radius;
 }
+
+// Table header mixin
+@mixin table-header {
+  padding: $spacing-sm;
+  vertical-align: center;
+  font-weight: $font-weight-bold;
+  text-align: center;
+  background-color: transparent;
+  border-radius: $border-radius;
+}

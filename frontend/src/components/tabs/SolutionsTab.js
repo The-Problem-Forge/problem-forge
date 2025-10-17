@@ -155,9 +155,7 @@ const SolutionsTab = () => {
     <div className="solutions-tab">
       <h2>Solutions</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <div className="solutions-upload">
-        <h3>Upload New Solution</h3>
+      <div className="solutions-controls">
         <input
           type="file"
           accept=".cpp,.py,.java,.c,.js"
@@ -166,74 +164,84 @@ const SolutionsTab = () => {
         />
         {uploadingFile && <span>Uploading...</span>}
       </div>
-
-      <div className="solutions-list">
-        <h3>Solutions</h3>
-        {solutions.length === 0 ? (
-          <p>No solutions yet</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Language</th>
-                <th>Type</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {solutions.map((solution) => (
-                <React.Fragment key={solution.id}>
+      <div className="solutions-editor">
+        <div className="solutions-fields">
+          <div className="field-group">
+            <label>Solutions:</label>
+            {solutions.length === 0 ? (
+              <p>No solutions yet</p>
+            ) : (
+              <table>
+                <thead>
                   <tr>
-                    <td>{solution.name || `Solution ${solution.id}`}</td>
-                    <td>{solution.language || "Unknown"}</td>
-                    <td>{solution.type || "Unknown"}</td>
-                    <td>
-                      <button
-                        onClick={() => handleCompile(solution.id)}
-                        disabled={compiling[solution.id]}
-                      >
-                        {compiling[solution.id] ? "Compiling..." : "Compile"}
-                      </button>
-                      <button onClick={() => handleViewSource(solution.id)}>
-                        View/Edit
-                      </button>
-                      <button onClick={() => handleDownload(solution.id)}>
-                        Download
-                      </button>
-                    </td>
+                    <th>Name</th>
+                    <th>Language</th>
+                    <th>Type</th>
+                    <th>Actions</th>
                   </tr>
-                  {compileResults[solution.id] && (
-                    <tr>
-                      <td colSpan="4" style={{ backgroundColor: "#f9f9f9" }}>
-                        <strong>Compile Result:</strong> Verdict: {compileResults[solution.id].verdict}; Stdout: {compileResults[solution.id].stdout}; Stderr: {compileResults[solution.id].stderr}
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {editingSource && (
-        <div className="source-editor">
-          <h3>Edit Solution Source</h3>
-          <textarea
-            value={sourceContent}
-            onChange={(e) => setSourceContent(e.target.value)}
-            rows={15}
-            placeholder="Enter solution source code..."
-          />
-          <div className="editor-buttons">
-            <button onClick={handleSaveSource} disabled={savingSource}>
-              {savingSource ? "Saving..." : "Save"}
-            </button>
-            <button onClick={() => setEditingSource(null)}>Cancel</button>
+                </thead>
+                <tbody>
+                  {solutions.map((solution) => (
+                    <React.Fragment key={solution.id}>
+                      <tr>
+                        <td>{solution.name || `Solution ${solution.id}`}</td>
+                        <td>{solution.language || "Unknown"}</td>
+                        <td>{solution.type || "Unknown"}</td>
+                        <td>
+                          <button
+                            onClick={() => handleCompile(solution.id)}
+                            disabled={compiling[solution.id]}
+                          >
+                            {compiling[solution.id]
+                              ? "Compiling..."
+                              : "Compile"}
+                          </button>
+                          <button onClick={() => handleViewSource(solution.id)}>
+                            View/Edit
+                          </button>
+                          <button onClick={() => handleDownload(solution.id)}>
+                            Download
+                          </button>
+                        </td>
+                      </tr>
+                      {compileResults[solution.id] && (
+                        <tr>
+                          <td
+                            colSpan="4"
+                            style={{ backgroundColor: "#f9f9f9" }}
+                          >
+                            <strong>Compile Result:</strong> Verdict:{" "}
+                            {compileResults[solution.id].verdict}; Stdout:{" "}
+                            {compileResults[solution.id].stdout}; Stderr:{" "}
+                            {compileResults[solution.id].stderr}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
+          {editingSource && (
+            <div className="field-group">
+              <label>Edit Solution Source:</label>
+              <textarea
+                value={sourceContent}
+                onChange={(e) => setSourceContent(e.target.value)}
+                rows={15}
+                placeholder="Enter solution source code..."
+              />
+              <div className="editor-buttons">
+                <button onClick={handleSaveSource} disabled={savingSource}>
+                  {savingSource ? "Saving..." : "Save"}
+                </button>
+                <button onClick={() => setEditingSource(null)}>Cancel</button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

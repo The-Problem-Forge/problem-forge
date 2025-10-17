@@ -164,104 +164,142 @@ const TestsTab = () => {
     <div className="tests-tab">
       <h2>Tests</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <div className="tests-controls">
         <button onClick={() => setShowAddModal(true)}>Add Test</button>
         <button onClick={() => setShowGeneratorModal(true)}>
           Upload Generator
         </button>
       </div>
-
-      <div className="tests-list">
-        <h3>Problem Tests</h3>
-        {tests.length === 0 ? (
-          <p>No tests yet</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Input</th>
-                <th>Description</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tests.map((test) => (
-                <tr key={test.id}>
-                  {editingTestId === test.id ? (
-                    <>
-                      <td>
-                        <textarea
-                          value={editInput}
-                          onChange={(e) => setEditInput(e.target.value)}
-                          rows={3}
-                        />
-                      </td>
-                      <td>
+      <div className="tests-editor">
+        <div className="tests-fields">
+          <div className="field-group">
+            <label>Problem Tests:</label>
+            {tests.length === 0 ? (
+              <p>No tests yet</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Input</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tests.map((test) => (
+                    <tr key={test.id}>
+                      <>
+                        <td>
+                          {editingTestId === test.id ? (
+                            <textarea
+                              value={editInput}
+                              onChange={(e) => setEditInput(e.target.value)}
+                              rows={3}
+                            />
+                          ) : (
+                            test.inputText?.substring(0, 50) || "N/A"
+                          )}
+                        </td>
+                        <td>
+                          {editingTestId === test.id ? (
+                            <input
+                              type="text"
+                              value={editDescription}
+                              onChange={(e) =>
+                                setEditDescription(e.target.value)
+                              }
+                            />
+                          ) : (
+                            test.description || "N/A"
+                          )}
+                        </td>
+                        <td>
+                          {editingTestId === test.id ? (
+                            <>
+                              <button onClick={() => handleSaveEdit(test.id)}>
+                                Save
+                              </button>
+                              <button onClick={() => setEditingTestId(null)}>
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => handleEditClick(test)}>
+                                Edit
+                              </button>
+                              <button onClick={() => handleDeleteTest(test.id)}>
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td colSpan="3">
+                      <div className="add-test">
                         <input
                           type="text"
-                          value={editDescription}
-                          onChange={(e) => setEditDescription(e.target.value)}
+                          placeholder="Input"
+                          value={newTest.inputText}
+                          onChange={(e) =>
+                            setNewTest({
+                              ...newTest,
+                              inputText: e.target.value,
+                            })
+                          }
                         />
-                      </td>
+                        <input
+                          type="text"
+                          placeholder="Description (optional)"
+                          value={newTest.description}
+                          onChange={(e) =>
+                            setNewTest({
+                              ...newTest,
+                              description: e.target.value,
+                            })
+                          }
+                        />
+                        <button onClick={handleAddTest}>Add Test</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div className="field-group">
+            <label>Generators:</label>
+            {generators.length === 0 ? (
+              <p>No generators yet</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Generator</th>
+                    <th>Language</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generators.map((gen) => (
+                    <tr key={gen.id}>
+                      <td>{gen.name || gen.id}</td>
+                      <td>{gen.language || "N/A"}</td>
                       <td>
-                        <button onClick={() => handleSaveEdit(test.id)}>
-                          Save
-                        </button>
-                        <button onClick={() => setEditingTestId(null)}>
-                          Cancel
+                        <button onClick={() => setSelectedGenerator(gen)}>
+                          Run
                         </button>
                       </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{test.inputText?.substring(0, 50) || "N/A"}...</td>
-                      <td>{test.description || "N/A"}</td>
-                      <td>
-                        <button onClick={() => handleEditClick(test)}>
-                          Edit
-                        </button>
-                        <button onClick={() => handleDeleteTest(test.id)}>
-                          Delete
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <div className="generators-list">
-        <h3>Generators</h3>
-        {generators.length === 0 ? (
-          <p>No generators yet</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Generator</th>
-                <th>Language</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {generators.map((gen) => (
-                <tr key={gen.id}>
-                  <td>{gen.name || gen.id}</td>
-                  <td>{gen.language || "N/A"}</td>
-                  <td>
-                    <button onClick={() => setSelectedGenerator(gen)}>
-                      Run
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
       </div>
 
       {showAddModal && (
@@ -347,7 +385,9 @@ const TestsTab = () => {
                   <select
                     value={selectedGenerator ? selectedGenerator.id : ""}
                     onChange={(e) => {
-                      const gen = generators.find((g) => g.id === e.target.value);
+                      const gen = generators.find(
+                        (g) => g.id === e.target.value,
+                      );
                       setSelectedGenerator(gen || null);
                     }}
                     required

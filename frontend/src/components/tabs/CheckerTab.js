@@ -173,122 +173,131 @@ const CheckerTab = () => {
     <div className="checker-tab">
       <h2>Checker</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <div className="checker-source">
-        <h3>Source Code</h3>
-        <div className="source-controls">
-          <select
-            value={data.language}
-            onChange={(e) => setData({ ...data, language: e.target.value })}
-          >
-            <option value="cpp">C++</option>
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-          </select>
-          <input
-            type="file"
-            accept=".cpp,.py,.java,.c,.js"
-            onChange={handleFileUpload}
-          />
-          <button onClick={handleSaveSource} disabled={saving}>
-            {saving ? "Saving..." : "Save Source"}
-          </button>
-        </div>
-        <textarea
-          value={data.source}
-          onChange={(e) => setData({ ...data, source: e.target.value })}
-          rows={10}
-          placeholder="Enter checker source code..."
-        />
+      <div className="checker-controls">
+        <button onClick={handleSaveSource} disabled={saving}>
+          {saving ? "Saving..." : "Save Source"}
+        </button>
+        <button onClick={handleRunTests} disabled={running}>
+          {running ? "Running..." : "Run Tests"}
+        </button>
       </div>
-      <div className="checker-tests">
-        <h3>Tests</h3>
-        <div className="test-controls">
-          <button onClick={handleRunTests} disabled={running}>
-            {running ? "Running..." : "Run Tests"}
-          </button>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Input</th>
-              <th>Output</th>
-              <th>Expected</th>
-              <th>Verdict</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.tests.map((test) => (
-              <tr key={test.id}>
-                <td>{test.input}</td>
-                <td>{test.output}</td>
-                <td>{test.expected}</td>
-                <td>{runResults[test.id] || test.verdict || "N/A"}</td>
-                <td>
-                  <button onClick={() => handleEditTest(test)}>Edit</button>
-                  <button onClick={() => handleDeleteTest(test.id)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="add-test">
-          <h4>Add New Test</h4>
-          <input
-            type="text"
-            placeholder="Input"
-            value={newTest.input}
-            onChange={(e) => setNewTest({ ...newTest, input: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Output"
-            value={newTest.output}
-            onChange={(e) => setNewTest({ ...newTest, output: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Expected"
-            value={newTest.expected}
-            onChange={(e) =>
-              setNewTest({ ...newTest, expected: e.target.value })
-            }
-          />
-          <button onClick={handleAddTest}>Add Test</button>
-        </div>
-        {editingTest && (
-          <div className="edit-test">
-            <h4>Edit Test</h4>
-            <input
-              type="text"
-              placeholder="Input"
-              value={editingTest.input}
-              onChange={(e) =>
-                setEditingTest({ ...editingTest, input: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Output"
-              value={editingTest.output}
-              onChange={(e) =>
-                setEditingTest({ ...editingTest, output: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Expected"
-              value={editingTest.expected}
-              onChange={(e) =>
-                setEditingTest({ ...editingTest, expected: e.target.value })
-              }
-            />
-            <button onClick={handleUpdateTest}>Update Test</button>
-            <button onClick={() => setEditingTest(null)}>Cancel</button>
+      <div className="checker-editor">
+        <div className="checker-fields">
+          <div className="field-group">
+            <label>Language:</label>
+            <select
+              value={data.language}
+              onChange={(e) => setData({ ...data, language: e.target.value })}
+            >
+              <option value="cpp">C++</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+            </select>
           </div>
-        )}
+          <div className="field-group">
+            <label>Source Code:</label>
+            <input
+              type="file"
+              accept=".cpp,.py,.java,.c,.js"
+              onChange={handleFileUpload}
+            />
+            <textarea
+              value={data.source}
+              onChange={(e) => setData({ ...data, source: e.target.value })}
+              rows={10}
+              placeholder="Enter checker source code..."
+            />
+          </div>
+          <div className="field-group">
+            <label>Tests:</label>
+            <table>
+              <thead>
+                <tr>
+                  <th>Input</th>
+                  <th>Output</th>
+                  <th>Expected</th>
+                  <th>Verdict</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.tests.map((test) => (
+                  <tr key={test.id}>
+                    <td>{test.input}</td>
+                    <td>{test.output}</td>
+                    <td>{test.expected}</td>
+                    <td>{runResults[test.id] || test.verdict || "N/A"}</td>
+                    <td>
+                      <button onClick={() => handleEditTest(test)}>Edit</button>
+                      <button onClick={() => handleDeleteTest(test.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="add-test">
+              <h4>Add New Test</h4>
+              <input
+                type="text"
+                placeholder="Input"
+                value={newTest.input}
+                onChange={(e) =>
+                  setNewTest({ ...newTest, input: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Output"
+                value={newTest.output}
+                onChange={(e) =>
+                  setNewTest({ ...newTest, output: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Expected"
+                value={newTest.expected}
+                onChange={(e) =>
+                  setNewTest({ ...newTest, expected: e.target.value })
+                }
+              />
+              <button onClick={handleAddTest}>Add Test</button>
+            </div>
+            {editingTest && (
+              <div className="edit-test">
+                <h4>Edit Test</h4>
+                <input
+                  type="text"
+                  placeholder="Input"
+                  value={editingTest.input}
+                  onChange={(e) =>
+                    setEditingTest({ ...editingTest, input: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Output"
+                  value={editingTest.output}
+                  onChange={(e) =>
+                    setEditingTest({ ...editingTest, output: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Expected"
+                  value={editingTest.expected}
+                  onChange={(e) =>
+                    setEditingTest({ ...editingTest, expected: e.target.value })
+                  }
+                />
+                <button onClick={handleUpdateTest}>Update Test</button>
+                <button onClick={() => setEditingTest(null)}>Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

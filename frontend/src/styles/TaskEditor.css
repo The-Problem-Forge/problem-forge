@@ -126,3 +126,173 @@
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
+
+.checker-tab .checker-controls,
+.validator-tab .validator-controls,
+.tests-tab .tests-controls,
+.solutions-tab .solutions-controls {
+  margin-bottom: 1rem;
+}
+
+.checker-tab .checker-controls button,
+.validator-tab .validator-controls button,
+.tests-tab .tests-controls button,
+.solutions-tab .solutions-controls button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.checker-tab .checker-controls button:hover,
+.validator-tab .validator-controls button:hover,
+.tests-tab .tests-controls button:hover,
+.solutions-tab .solutions-controls button:hover {
+  background: #0056b3;
+}
+
+.checker-tab .checker-editor,
+.validator-tab .validator-editor,
+.tests-tab .tests-editor,
+.solutions-tab .solutions-editor {
+  display: flex;
+  gap: 2rem;
+}
+
+.checker-tab .checker-fields,
+.validator-tab .validator-fields,
+.tests-tab .tests-fields,
+.solutions-tab .solutions-fields {
+  flex: 1;
+}
+
+.checker-tab .field-group,
+.validator-tab .field-group,
+.tests-tab .field-group,
+.solutions-tab .field-group {
+  margin-bottom: 1rem;
+}
+
+.checker-tab label,
+.validator-tab label,
+.tests-tab label,
+.solutions-tab label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.checker-tab textarea,
+.validator-tab textarea,
+.tests-tab textarea,
+.solutions-tab textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.checker-tab input,
+.validator-tab input,
+.tests-tab input,
+.solutions-tab input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.checker-tab select,
+.validator-tab select,
+.tests-tab select,
+.solutions-tab select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.modal-buttons {
+  margin-top: 1rem;
+}
+
+.modal-buttons button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-buttons button:hover {
+  background: #0056b3;
+}
+
+.add-test {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.add-test input {
+  flex: 1;
+}
+
+.tests-tab table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tests-tab table th:nth-child(1),
+.tests-tab table td:nth-child(1) {
+  width: 40%;
+}
+
+.tests-tab table th:nth-child(2),
+.tests-tab table td:nth-child(2) {
+  width: 30%;
+}
+
+.tests-tab table th:nth-child(3),
+.tests-tab table td:nth-child(3) {
+  width: 30%;
+}
+
+.tests-tab table tr {
+  height: 80px;
+}
+
+.tests-tab table td {
+  padding: 0.5rem;
+  vertical-align: top;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tests-tab table textarea,
+.tests-tab table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tests-tab table button {
+  margin-right: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.tests-tab table button:hover {
+  background: #0056b3;
+}

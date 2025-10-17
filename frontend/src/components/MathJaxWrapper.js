@@ -13,7 +13,7 @@ const MathJaxWrapper = ({ content }) => {
     // Load MathJax if not already loaded
     if (!window.MathJax) {
       window.MathJax = {
-        tex2jax: {
+        tex: {
           inlineMath: [
             ["$", "$"],
             ["\\(", "\\)"],
@@ -26,7 +26,7 @@ const MathJaxWrapper = ({ content }) => {
       };
       const script = document.createElement("script");
       script.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML";
+        "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
       script.async = true;
       document.head.appendChild(script);
 
@@ -38,12 +38,12 @@ const MathJaxWrapper = ({ content }) => {
     }
 
     function renderMath() {
-      if (window.MathJax && window.MathJax.Hub && containerRef.current) {
-        window.MathJax.Hub.Queue([
-          "Typeset",
-          window.MathJax.Hub,
-          containerRef.current,
-        ]);
+      if (window.MathJax && window.MathJax.startup && containerRef.current) {
+        window.MathJax.startup.promise.then(() => {
+          window.MathJax.typesetPromise([containerRef.current]).catch((err) =>
+            console.error("MathJax rendering error:", err),
+          );
+        });
       }
     }
   }, [content]);

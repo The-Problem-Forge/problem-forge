@@ -11,6 +11,9 @@ const api = axios.create({
 
 // Mock data for UI testing
 const mockData = {
+  // Existing mock data...
+  // Add generators storage for UI test mode
+  generators: {},
   contests: [
     {
       id: "1",
@@ -123,6 +126,103 @@ const mockData = {
       notesTex: "Notes",
       tutorialTex: "Tutorial",
     },
+  },
+  checker: {
+    1: {
+      source:
+        "#include <bits/stdc++.h>\nusing namespace std;\nint main() { /* checker code */ }",
+      language: "cpp",
+      tests: [
+        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "AC" },
+        { id: "2", input: "2 3", output: "5", expected: "5", verdict: "AC" },
+      ],
+      runResults: { 1: "AC", 2: "AC" },
+    },
+    2: {
+      source: "def checker():\n    pass",
+      language: "python",
+      tests: [
+        { id: "3", input: "1", output: "1", expected: "1", verdict: "WA" },
+      ],
+      runResults: { 3: "WA" },
+    },
+    3: {
+      source: "public class Checker { /* java checker */ }",
+      language: "java",
+      tests: [],
+      runResults: {},
+    },
+  },
+  validator: {
+    1: {
+      source:
+        "#include <bits/stdc++.h>\nusing namespace std;\nint main() { /* validator code */ }",
+      language: "cpp",
+      tests: [
+        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "AC" },
+      ],
+      runResults: { 1: "AC" },
+    },
+    2: {
+      source: "def validator():\n    pass",
+      language: "python",
+      tests: [
+        { id: "2", input: "2", output: "2", expected: "2", verdict: "AC" },
+      ],
+      runResults: { 2: "AC" },
+    },
+    3: {
+      source: "public class Validator { /* java validator */ }",
+      language: "java",
+      tests: [],
+      runResults: {},
+    },
+  },
+  tests: {
+    1: [
+      { id: "1", input: "1 2", description: "Test 1" },
+      { id: "2", input: "2 3", description: "Test 2" },
+    ],
+    2: [{ id: "3", input: "1", description: "Test 3" }],
+    3: [],
+  },
+  solutions: {
+    1: [
+      {
+        id: "1",
+        name: "Solution A",
+        language: "cpp",
+        compilerVariant: "g++",
+        type: "main",
+      },
+      {
+        id: "2",
+        name: "Solution B",
+        language: "python",
+        type: "accepted",
+      },
+    ],
+    2: [
+      {
+        id: "3",
+        name: "Solution C",
+        language: "java",
+        type: "main",
+      },
+    ],
+    3: [],
+  },
+  invocations: {
+    1: [
+      {
+        id: "1",
+        solutionIds: ["1", "2"],
+        testIds: ["1", "2"],
+        createdAt: "2023-01-01T00:00:00Z",
+      },
+    ],
+    2: [],
+    3: [],
   },
 };
 
@@ -553,8 +653,18 @@ export const checkerAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If upload fails
    */
-  uploadSource: (taskId, formData) =>
-    api.post(`/tasks/${taskId}/checker/source`, formData),
+  uploadSource: (taskId, formData) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      return Promise.resolve({
+        data: { message: "Source uploaded successfully" },
+      });
+    }
+    return api.post(`/tasks/${taskId}/checker/source`, formData);
+  },
 
   /**
    * Gets source for checker
@@ -562,7 +672,16 @@ export const checkerAPI = {
    * @returns {Promise} Axios response with source data
    * @throws {Error} If fetch fails
    */
-  getSource: (taskId) => api.get(`/tasks/${taskId}/checker/source`),
+  getSource: (taskId) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      return Promise.resolve({ data });
+    }
+    return api.get(`/tasks/${taskId}/checker/source`);
+  },
 
   /**
    * Updates source for checker
@@ -571,8 +690,13 @@ export const checkerAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If update fails
    */
-  updateSource: (taskId, data) =>
-    api.put(`/tasks/${taskId}/checker/source`, data),
+  updateSource: (taskId, data) => {
+    if (UI_TEST) {
+      mockData.checker[taskId] = { ...mockData.checker[taskId], ...data };
+      return Promise.resolve({ data: mockData.checker[taskId] });
+    }
+    return api.put(`/tasks/${taskId}/checker/source`, data);
+  },
 
   /**
    * Lists tests for checker
@@ -580,7 +704,16 @@ export const checkerAPI = {
    * @returns {Promise} Axios response with tests array
    * @throws {Error} If fetch fails
    */
-  listTests: (taskId) => api.get(`/tasks/${taskId}/checker/tests`),
+  listTests: (taskId) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      return Promise.resolve({ data: data.tests });
+    }
+    return api.get(`/tasks/${taskId}/checker/tests`);
+  },
 
   /**
    * Creates a test for checker
@@ -589,8 +722,18 @@ export const checkerAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If creation fails
    */
-  createTest: (taskId, test) =>
-    api.post(`/tasks/${taskId}/checker/tests`, test),
+  createTest: (taskId, test) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      const newTest = { id: String(data.tests.length + 1), ...test };
+      data.tests.push(newTest);
+      return Promise.resolve({ data: newTest });
+    }
+    return api.post(`/tasks/${taskId}/checker/tests`, test);
+  },
 
   /**
    * Updates a test for checker
@@ -600,8 +743,21 @@ export const checkerAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If update fails
    */
-  updateTest: (taskId, testId, test) =>
-    api.put(`/tasks/${taskId}/checker/tests/${testId}`, test),
+  updateTest: (taskId, testId, test) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      const index = data.tests.findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      data.tests[index] = { ...data.tests[index], ...test };
+      return Promise.resolve({ data: data.tests[index] });
+    }
+    return api.put(`/tasks/${taskId}/checker/tests/${testId}`, test);
+  },
 
   /**
    * Deletes a test for checker
@@ -610,8 +766,21 @@ export const checkerAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If deletion fails
    */
-  deleteTest: (taskId, testId) =>
-    api.delete(`/tasks/${taskId}/checker/tests/${testId}`),
+  deleteTest: (taskId, testId) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      const index = data.tests.findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      data.tests.splice(index, 1);
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/tasks/${taskId}/checker/tests/${testId}`);
+  },
 
   /**
    * Runs tests for checker
@@ -620,28 +789,129 @@ export const checkerAPI = {
    * @returns {Promise} Axios response with results
    * @throws {Error} If run fails
    */
-  runTests: (taskId, testIds) =>
-    api.post(`/tasks/${taskId}/checker/run`, { testIds }),
+  runTests: (taskId, testIds) => {
+    if (UI_TEST) {
+      const data = mockData.checker[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Checker data not found"));
+      }
+      const results = {};
+      const testsToRun = testIds
+        ? data.tests.filter((t) => testIds.includes(t.id))
+        : data.tests;
+      testsToRun.forEach((test) => {
+        results[test.id] = test.verdict || "AC";
+      });
+      data.runResults = results;
+      return Promise.resolve({ data: results });
+    }
+    return api.post(`/tasks/${taskId}/checker/run`, { testIds });
+  },
 };
 
 /**
  * Validator API methods (similar to checker)
  */
 export const validatorAPI = {
-  uploadSource: (taskId, formData) =>
-    api.post(`/tasks/${taskId}/validator/source`, formData),
-  getSource: (taskId) => api.get(`/tasks/${taskId}/validator/source`),
-  updateSource: (taskId, data) =>
-    api.put(`/tasks/${taskId}/validator/source`, data),
-  listTests: (taskId) => api.get(`/tasks/${taskId}/validator/tests`),
-  createTest: (taskId, test) =>
-    api.post(`/tasks/${taskId}/validator/tests`, test),
-  updateTest: (taskId, testId, test) =>
-    api.put(`/tasks/${taskId}/validator/tests/${testId}`, test),
-  deleteTest: (taskId, testId) =>
-    api.delete(`/tasks/${taskId}/validator/tests/${testId}`),
-  runTests: (taskId, testIds) =>
-    api.post(`/tasks/${taskId}/validator/run`, { testIds }),
+  uploadSource: (taskId, formData) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      return Promise.resolve({
+        data: { message: "Source uploaded successfully" },
+      });
+    }
+    return api.post(`/tasks/${taskId}/validator/source`, formData);
+  },
+  getSource: (taskId) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      return Promise.resolve({ data });
+    }
+    return api.get(`/tasks/${taskId}/validator/source`);
+  },
+  updateSource: (taskId, data) => {
+    if (UI_TEST) {
+      mockData.validator[taskId] = { ...mockData.validator[taskId], ...data };
+      return Promise.resolve({ data: mockData.validator[taskId] });
+    }
+    return api.put(`/tasks/${taskId}/validator/source`, data);
+  },
+  listTests: (taskId) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      return Promise.resolve({ data: data.tests });
+    }
+    return api.get(`/tasks/${taskId}/validator/tests`);
+  },
+  createTest: (taskId, test) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      const newTest = { id: String(data.tests.length + 1), ...test };
+      data.tests.push(newTest);
+      return Promise.resolve({ data: newTest });
+    }
+    return api.post(`/tasks/${taskId}/validator/tests`, test);
+  },
+  updateTest: (taskId, testId, test) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      const index = data.tests.findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      data.tests[index] = { ...data.tests[index], ...test };
+      return Promise.resolve({ data: data.tests[index] });
+    }
+    return api.put(`/tasks/${taskId}/validator/tests/${testId}`, test);
+  },
+  deleteTest: (taskId, testId) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      const index = data.tests.findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      data.tests.splice(index, 1);
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/tasks/${taskId}/validator/tests/${testId}`);
+  },
+  runTests: (taskId, testIds) => {
+    if (UI_TEST) {
+      const data = mockData.validator[taskId];
+      if (!data) {
+        return Promise.reject(new Error("Validator data not found"));
+      }
+      const results = {};
+      const testsToRun = testIds
+        ? data.tests.filter((t) => testIds.includes(t.id))
+        : data.tests;
+      testsToRun.forEach((test) => {
+        results[test.id] = test.verdict || "AC";
+      });
+      data.runResults = results;
+      return Promise.resolve({ data: results });
+    }
+    return api.post(`/tasks/${taskId}/validator/run`, { testIds });
+  },
 };
 
 /**
@@ -654,7 +924,12 @@ export const testsAPI = {
    * @returns {Promise} Axios response with tests array
    * @throws {Error} If fetch fails
    */
-  list: (taskId) => api.get(`/tasks/${taskId}/tests`),
+  list: (taskId) => {
+    if (UI_TEST) {
+      return Promise.resolve({ data: mockData.tests[taskId] || [] });
+    }
+    return api.get(`/tasks/${taskId}/tests`);
+  },
 
   /**
    * Creates a test via text
@@ -663,7 +938,22 @@ export const testsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If creation fails
    */
-  createText: (taskId, test) => api.post(`/tasks/${taskId}/tests`, test),
+  createText: (taskId, test) => {
+    if (UI_TEST) {
+      const newTest = {
+        id: String(
+          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1
+        ),
+        ...test,
+      };
+      if (!mockData.tests[taskId]) {
+        mockData.tests[taskId] = [];
+      }
+      mockData.tests[taskId].push(newTest);
+      return Promise.resolve({ data: newTest });
+    }
+    return api.post(`/tasks/${taskId}/tests`, test);
+  },
 
   /**
    * Creates a test via file upload
@@ -672,8 +962,25 @@ export const testsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If creation fails
    */
-  createFile: (taskId, formData) =>
-    api.post(`/tasks/${taskId}/tests`, formData),
+  createFile: (taskId, formData) => {
+    if (UI_TEST) {
+      // For UI test mode, treat file upload similarly to text creation
+      const newTest = {
+        id: String(
+          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1
+        ),
+        // No specific fields from formData; placeholder values
+        input: "uploaded",
+        description: "",
+      };
+      if (!mockData.tests[taskId]) {
+        mockData.tests[taskId] = [];
+      }
+      mockData.tests[taskId].push(newTest);
+      return Promise.resolve({ data: newTest });
+    }
+    return api.post(`/tasks/${taskId}/tests`, formData);
+  },
 
   /**
    * Updates a test
@@ -683,8 +990,29 @@ export const testsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If update fails
    */
-  update: (taskId, testId, test) =>
-    api.put(`/tasks/${taskId}/tests/${testId}`, test),
+  update: (taskId, testId, test) => {
+    if (UI_TEST) {
+      const taskTests = mockData.tests[taskId];
+      if (!taskTests) {
+        return Promise.reject(new Error("No tests for this task"));
+      }
+      const index = taskTests.findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      // Support both inputText and legacy input field
+      const existing = taskTests[index];
+      const updated = {
+        ...existing,
+        ...test,
+        input: test.inputText !== undefined ? test.inputText : existing.input,
+        inputText: test.inputText !== undefined ? test.inputText : existing.inputText,
+      };
+      taskTests[index] = updated;
+      return Promise.resolve({ data: updated });
+    }
+    return api.put(`/tasks/${taskId}/tests/${testId}`, test);
+  },
 
   /**
    * Deletes a test
@@ -693,7 +1021,20 @@ export const testsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If deletion fails
    */
-  delete: (taskId, testId) => api.delete(`/tasks/${taskId}/tests/${testId}`),
+  delete: (taskId, testId) => {
+    if (UI_TEST) {
+      if (!mockData.tests[taskId]) {
+        return Promise.reject(new Error("No tests for this task"));
+      }
+      const index = mockData.tests[taskId].findIndex((t) => t.id === testId);
+      if (index === -1) {
+        return Promise.reject(new Error("Test not found"));
+      }
+      mockData.tests[taskId].splice(index, 1);
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/tasks/${taskId}/tests/${testId}`);
+  },
 };
 
 /**
@@ -706,7 +1047,13 @@ export const generatorsAPI = {
    * @returns {Promise} Axios response with generators array
    * @throws {Error} If fetch fails
    */
-  list: (taskId) => api.get(`/tasks/${taskId}/generators`),
+  list: (taskId) => {
+    if (UI_TEST) {
+      // Return mock generators if any, otherwise empty array
+      return Promise.resolve({ data: mockData.generators[taskId] || [] });
+    }
+    return api.get(`/tasks/${taskId}/generators`);
+  },
 
   /**
    * Uploads source for generator
@@ -715,8 +1062,24 @@ export const generatorsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If upload fails
    */
-  uploadSource: (taskId, formData) =>
-    api.post(`/tasks/${taskId}/generators`, formData),
+  uploadSource: (taskId, formData) => {
+    if (UI_TEST) {
+      // Create a mock generator entry
+      const name = formData.get("name") || `Generator ${Date.now()}`;
+      const newGenerator = {
+        id: String(
+          (mockData.generators[taskId] ? mockData.generators[taskId].length : 0) + 1
+        ),
+        name,
+      };
+      if (!mockData.generators[taskId]) {
+        mockData.generators[taskId] = [];
+      }
+      mockData.generators[taskId].push(newGenerator);
+      return Promise.resolve({ data: newGenerator });
+    }
+    return api.post(`/tasks/${taskId}/generators`, formData);
+  },
 
   /**
    * Gets source for generator
@@ -761,7 +1124,12 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response with solutions array
    * @throws {Error} If fetch fails
    */
-  list: (taskId) => api.get(`/tasks/${taskId}/solutions`),
+  list: (taskId) => {
+    if (UI_TEST) {
+      return Promise.resolve({ data: mockData.solutions[taskId] || [] });
+    }
+    return api.get(`/tasks/${taskId}/solutions`);
+  },
 
   /**
    * Uploads source for solution
@@ -770,8 +1138,37 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If upload fails
    */
-  uploadSource: (taskId, formData) =>
-    api.post(`/tasks/${taskId}/solutions`, formData),
+  uploadSource: (taskId, formData) => {
+    if (UI_TEST) {
+      const name = formData.get("name") || `Solution ${Date.now()}`;
+      const language = formData.get("language") || "cpp";
+      const compilerVariant = formData.get("compilerVariant") || "";
+      const type = formData.get("type") || "main";
+
+      const newSolution = {
+        id: String(
+          (mockData.solutions[taskId] ? mockData.solutions[taskId].length : 0) + 1
+        ),
+        name,
+        language,
+        compilerVariant,
+        type,
+      };
+      if (!mockData.solutions[taskId]) {
+        mockData.solutions[taskId] = [];
+      }
+      mockData.solutions[taskId].push(newSolution);
+      if (!mockData.solutionSources) {
+        mockData.solutionSources = {};
+      }
+      mockData.solutionSources[`${taskId}:${newSolution.id}`] = {
+        source: "// placeholder source code",
+        language,
+      };
+      return Promise.resolve({ data: newSolution });
+    }
+    return api.post(`/tasks/${taskId}/solutions`, formData);
+  },
 
   /**
    * Gets source for solution
@@ -780,8 +1177,22 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response with source data
    * @throws {Error} If fetch fails
    */
-  getSource: (taskId, solutionId) =>
-    api.get(`/tasks/${taskId}/solutions/${solutionId}`),
+  getSource: (taskId, solutionId) => {
+    if (UI_TEST) {
+      if (
+        mockData.solutionSources &&
+        mockData.solutionSources[`${taskId}:${solutionId}`]
+      ) {
+        return Promise.resolve({
+          data: mockData.solutionSources[`${taskId}:${solutionId}`],
+        });
+      }
+      return Promise.resolve({
+        data: { source: "// placeholder source code", language: "cpp" },
+      });
+    }
+    return api.get(`/tasks/${taskId}/solutions/${solutionId}`);
+  },
 
   /**
    * Updates a solution
@@ -791,8 +1202,27 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If update fails
    */
-  update: (taskId, solutionId, data) =>
-    api.put(`/tasks/${taskId}/solutions/${solutionId}`, data),
+  update: (taskId, solutionId, data) => {
+    if (UI_TEST) {
+      const solutions = mockData.solutions[taskId] || [];
+      const index = solutions.findIndex((s) => s.id === solutionId);
+      if (index === -1) {
+        return Promise.reject(new Error("Solution not found"));
+      }
+      solutions[index] = { ...solutions[index], ...data };
+      if (data.source) {
+        if (!mockData.solutionSources) {
+          mockData.solutionSources = {};
+        }
+        mockData.solutionSources[`${taskId}:${solutionId}`] = {
+          source: data.source,
+          language: data.language || solutions[index].language,
+        };
+      }
+      return Promise.resolve({ data: solutions[index] });
+    }
+    return api.put(`/tasks/${taskId}/solutions/${solutionId}`, data);
+  },
 
   /**
    * Downloads source for solution
@@ -801,10 +1231,21 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response with file
    * @throws {Error} If download fails
    */
-  download: (taskId, solutionId) =>
-    api.get(`/tasks/${taskId}/solutions/${solutionId}/download`, {
+  download: (taskId, solutionId) => {
+    if (UI_TEST) {
+      const sourceObj =
+        (mockData.solutionSources &&
+          mockData.solutionSources[`${taskId}:${solutionId}`]) ||
+        { source: "// placeholder source code", language: "cpp" };
+      const blob = new Blob([sourceObj.source], {
+        type: "text/plain;charset=utf-8",
+      });
+      return Promise.resolve({ data: blob });
+    }
+    return api.get(`/tasks/${taskId}/solutions/${solutionId}/download`, {
       responseType: "blob",
-    }),
+    });
+  },
 
   /**
    * Compiles a solution
@@ -813,8 +1254,18 @@ export const solutionsAPI = {
    * @returns {Promise} Axios response with compile result
    * @throws {Error} If compile fails
    */
-  compile: (taskId, solutionId) =>
-    api.post(`/tasks/${taskId}/solutions/${solutionId}/compile`),
+  compile: (taskId, solutionId) => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: {
+          verdict: "OK",
+          stdout: "Compilation successful",
+          stderr: "",
+        },
+      });
+    }
+    return api.post(`/tasks/${taskId}/solutions/${solutionId}/compile`);
+  },
 };
 
 /**

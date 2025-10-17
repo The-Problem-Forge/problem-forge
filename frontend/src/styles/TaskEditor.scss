@@ -257,3 +257,7 @@
   @include button($secondary-color, $secondary-hover);
   margin-bottom: $spacing-sm;
 }
+
+.general-tab .save-btn {
+  @include button($primary-color, $primary-hover);
+}

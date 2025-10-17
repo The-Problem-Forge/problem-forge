@@ -102,7 +102,7 @@ const GeneralTab = () => {
           }
         />
       </div>
-      <button onClick={handleSave} disabled={saving}>
+      <button onClick={handleSave} disabled={saving} className="save-btn">
         {saving ? "Saving..." : "Save"}
       </button>
     </div>

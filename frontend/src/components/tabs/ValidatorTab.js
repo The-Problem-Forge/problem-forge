@@ -204,31 +204,52 @@ const ValidatorTab = () => {
             <label>Tests:</label>
             <Table
               headers={[
-                { key: "input", label: "Input" },
-                { key: "output", label: "Output" },
-                { key: "expected", label: "Expected" },
-                { key: "verdict", label: "Verdict" },
+                {
+                  key: "input",
+                  label: "Input",
+                  editable: true,
+                  type: "textarea",
+                },
+                {
+                  key: "output",
+                  label: "Output",
+                  editable: true,
+                  type: "textarea",
+                },
+                {
+                  key: "expected",
+                  label: "Expected",
+                  editable: true,
+                  type: "textarea",
+                },
+                {
+                  key: "verdict",
+                  label: "Verdict",
+                  editable: true,
+                  type: "select",
+                  options: [
+                    { value: "VALID", label: "VALID" },
+                    { value: "INVALID", label: "INVALID" },
+                  ],
+                },
                 { key: "actions", label: "Actions" },
               ]}
               rows={data.tests}
-              renderCell={(test, key) => {
-                if (key === "input") return test.input;
-                if (key === "output") return test.output;
-                if (key === "expected") return test.expected;
-                if (key === "verdict")
-                  return runResults[test.id] || test.verdict || "N/A";
-                if (key === "actions") {
-                  return (
-                    <>
-                      <button onClick={() => handleEditTest(test)}>Edit</button>
-                      <button onClick={() => handleDeleteTest(test.id)}>
-                        Delete
-                      </button>
-                    </>
-                  );
+              onSave={(testId, key, value) => {
+                const updatedTest = data.tests.find(
+                  (test) => test.id === testId,
+                );
+                if (updatedTest) {
+                  handleUpdateTest({ ...updatedTest, [key]: value });
                 }
-                return null;
               }}
+              renderActions={(test) => (
+                <>
+                  <button onClick={() => handleDeleteTest(test.id)}>
+                    Delete
+                  </button>
+                </>
+              )}
               emptyMessage="No tests yet"
             />
             <div className="add-test">

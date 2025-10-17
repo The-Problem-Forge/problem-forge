@@ -80,26 +80,47 @@ const Table = ({
                   return <td key={header.key}>{renderActions(row, index)}</td>;
                 }
 
+                if (isEditable && header.type === "select") {
+                  return (
+                    <td key={header.key}>
+                      <select
+                        value={row[header.key] || ""}
+                        onChange={(e) =>
+                          handleSave(row.id, header.key, e.target.value)
+                        }
+                        style={{ width: "100%", height: "100%" }}
+                      >
+                        {header.options?.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  );
+                }
+
                 return (
                   <td
                     key={header.key}
                     onClick={
-                      isEditable
+                      isEditable && header.type !== "select"
                         ? () => handleEdit(row.id, header.key)
                         : undefined
                     }
-                    style={isEditable ? { cursor: "pointer" } : {}}
+                    style={isEditable && header.type !== "select" ? { cursor: "pointer" } : {}}
                   >
                     {isEditing ? (
                       <EditableCell
                         value={row[header.key] || ""}
-                        type={header.type === "textarea" ? "textarea" : "text"}
+                        type={header.type || "text"}
                         onSave={(newValue) =>
                           handleSave(row.id, header.key, newValue)
                         }
                         onCancel={handleCancel}
                         placeholder={header.placeholder || ""}
                         rows={header.rows || 3}
+                        options={header.options || []}
                       />
                     ) : renderEditableCell ? (
                       renderEditableCell(

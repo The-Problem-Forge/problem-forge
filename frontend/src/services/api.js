@@ -133,10 +133,10 @@ const mockData = {
         "#include <bits/stdc++.h>\nusing namespace std;\nint main() { /* checker code */ }",
       language: "cpp",
       tests: [
-        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "AC" },
-        { id: "2", input: "2 3", output: "5", expected: "5", verdict: "AC" },
+        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "OK" },
+        { id: "2", input: "2 3", output: "5", expected: "5", verdict: "OK" },
       ],
-      runResults: { 1: "AC", 2: "AC" },
+      runResults: { 1: "OK", 2: "OK" },
     },
     2: {
       source: "def checker():\n    pass",
@@ -159,17 +159,17 @@ const mockData = {
         "#include <bits/stdc++.h>\nusing namespace std;\nint main() { /* validator code */ }",
       language: "cpp",
       tests: [
-        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "AC" },
+        { id: "1", input: "1 2", output: "3", expected: "3", verdict: "OK" },
       ],
-      runResults: { 1: "AC" },
+      runResults: { 1: "OK" },
     },
     2: {
       source: "def validator():\n    pass",
       language: "python",
       tests: [
-        { id: "2", input: "2", output: "2", expected: "2", verdict: "AC" },
+        { id: "2", input: "2", output: "2", expected: "2", verdict: "OK" },
       ],
-      runResults: { 2: "AC" },
+      runResults: { 2: "OK" },
     },
     3: {
       source: "public class Validator { /* java validator */ }",
@@ -800,7 +800,7 @@ export const checkerAPI = {
         ? data.tests.filter((t) => testIds.includes(t.id))
         : data.tests;
       testsToRun.forEach((test) => {
-        results[test.id] = test.verdict || "AC";
+        results[test.id] = test.verdict || "OK";
       });
       data.runResults = results;
       return Promise.resolve({ data: results });
@@ -905,7 +905,7 @@ export const validatorAPI = {
         ? data.tests.filter((t) => testIds.includes(t.id))
         : data.tests;
       testsToRun.forEach((test) => {
-        results[test.id] = test.verdict || "AC";
+        results[test.id] = test.verdict || "OK";
       });
       data.runResults = results;
       return Promise.resolve({ data: results });
@@ -942,7 +942,7 @@ export const testsAPI = {
     if (UI_TEST) {
       const newTest = {
         id: String(
-          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1
+          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1,
         ),
         ...test,
       };
@@ -967,7 +967,7 @@ export const testsAPI = {
       // For UI test mode, treat file upload similarly to text creation
       const newTest = {
         id: String(
-          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1
+          (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1,
         ),
         // No specific fields from formData; placeholder values
         input: "uploaded",
@@ -1006,7 +1006,8 @@ export const testsAPI = {
         ...existing,
         ...test,
         input: test.inputText !== undefined ? test.inputText : existing.input,
-        inputText: test.inputText !== undefined ? test.inputText : existing.inputText,
+        inputText:
+          test.inputText !== undefined ? test.inputText : existing.inputText,
       };
       taskTests[index] = updated;
       return Promise.resolve({ data: updated });
@@ -1068,7 +1069,9 @@ export const generatorsAPI = {
       const name = formData.get("name") || `Generator ${Date.now()}`;
       const newGenerator = {
         id: String(
-          (mockData.generators[taskId] ? mockData.generators[taskId].length : 0) + 1
+          (mockData.generators[taskId]
+            ? mockData.generators[taskId].length
+            : 0) + 1,
         ),
         name,
       };
@@ -1147,7 +1150,8 @@ export const solutionsAPI = {
 
       const newSolution = {
         id: String(
-          (mockData.solutions[taskId] ? mockData.solutions[taskId].length : 0) + 1
+          (mockData.solutions[taskId] ? mockData.solutions[taskId].length : 0) +
+            1,
         ),
         name,
         language,
@@ -1233,10 +1237,11 @@ export const solutionsAPI = {
    */
   download: (taskId, solutionId) => {
     if (UI_TEST) {
-      const sourceObj =
-        (mockData.solutionSources &&
-          mockData.solutionSources[`${taskId}:${solutionId}`]) ||
-        { source: "// placeholder source code", language: "cpp" };
+      const sourceObj = (mockData.solutionSources &&
+        mockData.solutionSources[`${taskId}:${solutionId}`]) || {
+        source: "// placeholder source code",
+        language: "cpp",
+      };
       const blob = new Blob([sourceObj.source], {
         type: "text/plain;charset=utf-8",
       });

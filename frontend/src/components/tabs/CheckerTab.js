@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { checkerAPI } from "../../services/api";
 import Table from "../Table";
+import EditableCell from "../EditableCell";
 
 /**
  * CheckerTab component for editing checker source and tests
@@ -19,7 +20,6 @@ const CheckerTab = () => {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [runResults, setRunResults] = useState({});
-  const [editingTest, setEditingTest] = useState(null);
   const [newTest, setNewTest] = useState({
     input: "",
     output: "",
@@ -133,27 +133,6 @@ const CheckerTab = () => {
     }
   };
 
-  const handleEditTest = (test) => {
-    setEditingTest(test);
-  };
-
-  const handleUpdateTest = async () => {
-    try {
-      await checkerAPI.updateTest(taskId, editingTest.id, editingTest);
-      setData((prevData) => ({
-        ...prevData,
-        tests: prevData.tests.map((test) =>
-          test.id === editingTest.id ? editingTest : test,
-        ),
-      }));
-      setEditingTest(null);
-      setError("");
-    } catch (err) {
-      console.error("Failed to update test:", err);
-      setError("Failed to update test");
-    }
-  };
-
   const handleDeleteTest = async (testId) => {
     try {
       await checkerAPI.deleteTest(taskId, testId);
@@ -213,31 +192,80 @@ const CheckerTab = () => {
             <label>Tests:</label>
             <Table
               headers={[
-                { key: "input", label: "Input" },
-                { key: "output", label: "Output" },
-                { key: "expected", label: "Expected" },
-                { key: "verdict", label: "Verdict" },
+                {
+                  key: "input",
+                  label: "Input",
+                  editable: true,
+                  type: "text",
+                  placeholder: "Input",
+                },
+                {
+                  key: "output",
+                  label: "Output",
+                  editable: true,
+                  type: "text",
+                  placeholder: "Output",
+                },
+                {
+                  key: "expected",
+                  label: "Expected",
+                  editable: true,
+                  type: "text",
+                  placeholder: "Expected",
+                },
+                {
+                  key: "verdict",
+                  label: "Verdict",
+                  editable: true,
+                  type: "select",
+                  options: [
+                    { value: "OK", label: "OK" },
+                    { value: "WRONG_ANSWER", label: "WRONG_ANSWER" },
+                    {
+                      value: "PRESENTATION_ERROR",
+                      label: "PRESENTATION_ERROR",
+                    },
+                    { value: "CRASHED", label: "CRASHED" },
+                  ],
+                },
                 { key: "actions", label: "Actions" },
               ]}
               rows={data.tests}
+              onSave={async (rowId, columnKey, newValue) => {
+                try {
+                  const test = data.tests.find((t) => t.id === rowId);
+                  const updateData = {
+                    input: columnKey === "input" ? newValue : test.input,
+                    output: columnKey === "output" ? newValue : test.output,
+                    expected:
+                      columnKey === "expected" ? newValue : test.expected,
+                    verdict: columnKey === "verdict" ? newValue : test.verdict,
+                  };
+                  await checkerAPI.updateTest(taskId, rowId, updateData);
+                  setData((prevData) => ({
+                    ...prevData,
+                    tests: prevData.tests.map((test) =>
+                      test.id === rowId ? { ...test, ...updateData } : test,
+                    ),
+                  }));
+                  setError("");
+                } catch (err) {
+                  console.error("Failed to update test:", err);
+                  setError("Failed to update test");
+                }
+              }}
               renderCell={(test, key) => {
                 if (key === "input") return test.input;
                 if (key === "output") return test.output;
                 if (key === "expected") return test.expected;
-                if (key === "verdict")
-                  return runResults[test.id] || test.verdict || "N/A";
-                if (key === "actions") {
-                  return (
-                    <>
-                      <button onClick={() => handleEditTest(test)}>Edit</button>
-                      <button onClick={() => handleDeleteTest(test.id)}>
-                        Delete
-                      </button>
-                    </>
-                  );
-                }
+                if (key === "verdict") return test.verdict || "OK";
                 return null;
               }}
+              renderActions={(test) => (
+                <button onClick={() => handleDeleteTest(test.id)}>
+                  Delete
+                </button>
+              )}
               emptyMessage="No tests yet"
             />
             <div className="add-test">
@@ -268,37 +296,6 @@ const CheckerTab = () => {
               />
               <button onClick={handleAddTest}>Add Test</button>
             </div>
-            {editingTest && (
-              <div className="edit-test">
-                <h4>Edit Test</h4>
-                <input
-                  type="text"
-                  placeholder="Input"
-                  value={editingTest.input}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, input: e.target.value })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Output"
-                  value={editingTest.output}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, output: e.target.value })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Expected"
-                  value={editingTest.expected}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, expected: e.target.value })
-                  }
-                />
-                <button onClick={handleUpdateTest}>Update Test</button>
-                <button onClick={() => setEditingTest(null)}>Cancel</button>
-              </div>
-            )}
           </div>
         </div>
       </div>

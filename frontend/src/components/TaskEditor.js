@@ -8,7 +8,7 @@ import ValidatorTab from "./tabs/ValidatorTab";
 import TestsTab from "./tabs/TestsTab";
 import SolutionsTab from "./tabs/SolutionsTab";
 import InvocationsTab from "./tabs/InvocationsTab";
-import "../styles/TaskEditor.css";
+import "../styles/main.scss";
 
 /**
  * TaskEditor component for editing tasks with tabs

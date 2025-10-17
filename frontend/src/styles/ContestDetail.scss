@@ -1,0 +1,89 @@
+@import 'variables';
+@import 'mixins';
+
+.contest-header {
+  margin-bottom: $spacing-lg;
+}
+
+.contest-header h1 {
+  margin-bottom: $spacing-sm;
+}
+
+.contest-header p {
+  color: $dark-gray;
+}
+
+.tasks-section h2 {
+  margin-bottom: $spacing-md;
+}
+
+.add-task-btn {
+  @include button($success-color, $success-hover);
+  margin-bottom: $spacing-md;
+}
+
+.tasks-list {
+  list-style: none;
+  padding: 0;
+}
+
+.task-item {
+  @include flex-between;
+  border: 1px solid $border-color;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border-radius: $border-radius;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-info h3 {
+  margin: 0 0 $spacing-sm 0;
+}
+
+.task-info p {
+  margin: 0;
+  color: $dark-gray;
+}
+
+.task-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.reorder-btn {
+  @include button($secondary-color, $secondary-hover);
+}
+
+.edit-task-btn {
+  @include button($primary-color, $primary-hover);
+  text-decoration: none;
+}
+
+.modal {
+  @include modal;
+}
+
+.modal-content {
+  @include modal-content;
+
+  h3 {
+    margin-top: 0;
+  }
+
+  form div {
+    @include form-group;
+  }
+}
+
+.modal-input {
+  @include input;
+}
+
+.modal-buttons {
+  @include flex-between;
+  gap: $spacing-md;
+  justify-content: flex-end;
+}

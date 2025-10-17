@@ -1,0 +1,46 @@
+@import 'variables';
+@import 'mixins';
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background-color: $navbar-bg;
+  color: $navbar-text;
+  padding: $spacing-md;
+  @include flex-between;
+}
+
+.nav-brand a {
+  color: $navbar-text;
+  text-decoration: none;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.nav-links a {
+  color: $navbar-text;
+  text-decoration: none;
+}
+
+.nav-user {
+  color: $navbar-link;
+}
+
+.logout-btn {
+  @include button($danger-color, $danger-hover);
+}
+
+.main-content {
+  flex: 1;
+  padding: $spacing-lg;
+}

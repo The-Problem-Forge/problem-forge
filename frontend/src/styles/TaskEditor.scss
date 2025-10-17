@@ -1,0 +1,226 @@
+@import 'variables';
+@import 'mixins';
+
+.task-editor {
+  padding: $spacing-lg;
+}
+
+.task-editor-header {
+  @include flex-between;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.back-button {
+  @include button($secondary-color, $secondary-hover);
+  text-decoration: none;
+}
+
+.task-editor h1 {
+  margin: 0;
+}
+
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $spacing-lg;
+}
+
+.tab-link {
+  padding: $spacing-sm $spacing-md;
+  text-decoration: none;
+  color: $dark-gray;
+  border-bottom: 2px solid transparent;
+
+  &.active {
+    color: $primary-color;
+    border-bottom-color: $primary-color;
+  }
+
+  &:hover {
+    color: $primary-color;
+  }
+}
+
+.tab-content {
+  padding: $spacing-md 0;
+}
+
+.general-tab .form-group {
+  @include form-group;
+}
+
+.general-tab label {
+  @include label;
+}
+
+.general-tab input {
+  @include input;
+}
+
+.statement-tab .statement-controls {
+  margin-bottom: $spacing-md;
+}
+
+.statement-tab .statement-controls button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.statement-tab .statement-editor {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.statement-tab .statement-fields {
+  flex: 1;
+}
+
+.statement-tab .field-group {
+  @include form-group;
+}
+
+.statement-tab label {
+  @include label;
+}
+
+.statement-tab textarea {
+  @include textarea;
+}
+
+.statement-tab .statement-preview {
+  flex: 1;
+  border-left: 1px solid $border-color;
+  padding-left: $spacing-lg;
+}
+
+.statement-tab .statement-preview h3,
+.statement-tab .statement-preview h4 {
+  margin-top: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.checker-tab .checker-controls,
+.validator-tab .validator-controls,
+.tests-tab .tests-controls,
+.solutions-tab .solutions-controls {
+  margin-bottom: $spacing-md;
+}
+
+.checker-tab .checker-controls button,
+.validator-tab .validator-controls button,
+.tests-tab .tests-controls button,
+.solutions-tab .solutions-controls button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.checker-tab .checker-editor,
+.validator-tab .validator-editor,
+.tests-tab .tests-editor,
+.solutions-tab .solutions-editor {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.checker-tab .checker-fields,
+.validator-tab .validator-fields,
+.tests-tab .tests-fields,
+.solutions-tab .solutions-fields {
+  flex: 1;
+}
+
+.checker-tab .field-group,
+.validator-tab .field-group,
+.tests-tab .field-group,
+.solutions-tab .field-group {
+  @include form-group;
+}
+
+.checker-tab label,
+.validator-tab label,
+.tests-tab label,
+.solutions-tab label {
+  @include label;
+}
+
+.checker-tab textarea,
+.validator-tab textarea,
+.tests-tab textarea,
+.solutions-tab textarea {
+  @include textarea;
+}
+
+.checker-tab input,
+.validator-tab input,
+.tests-tab input,
+.solutions-tab input {
+  @include input;
+}
+
+.checker-tab select,
+.validator-tab select,
+.tests-tab select,
+.solutions-tab select {
+  @include input;
+}
+
+.modal-buttons {
+  margin-top: $spacing-md;
+}
+
+.modal-buttons button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.add-test {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.add-test input {
+  flex: 1;
+}
+
+.tests-tab table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tests-tab table th:nth-child(1),
+.tests-tab table td:nth-child(1) {
+  width: 40%;
+}
+
+.tests-tab table th:nth-child(2),
+.tests-tab table td:nth-child(2) {
+  width: 30%;
+}
+
+.tests-tab table th:nth-child(3),
+.tests-tab table td:nth-child(3) {
+  width: 30%;
+}
+
+.tests-tab table tr {
+  height: 80px;
+}
+
+.tests-tab table td {
+  @include table-cell;
+}
+
+.tests-tab table textarea,
+.tests-tab table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tests-tab table button {
+  margin-right: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  @include button($primary-color, $primary-hover);
+}

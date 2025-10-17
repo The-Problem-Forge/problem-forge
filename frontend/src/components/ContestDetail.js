@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { contestsAPI, tasksAPI } from "../services/api";
-import "../styles/ContestDetail.css";
+import "../styles/main.scss";
 
 /**
  * ContestDetail component for showing contest info and tasks

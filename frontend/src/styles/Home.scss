@@ -1,0 +1,82 @@
+@import 'variables';
+@import 'mixins';
+
+.home-landing {
+  text-align: center;
+  padding: $spacing-lg;
+}
+
+.home-landing h1 {
+  margin-bottom: $spacing-md;
+}
+
+.home-landing p {
+  margin-bottom: $spacing-lg;
+}
+
+.home-contests {
+  padding: $spacing-lg;
+}
+
+.contest-header {
+  margin-bottom: $spacing-lg;
+}
+
+.contest-header h1 {
+  margin-bottom: $spacing-sm;
+}
+
+.contest-header p {
+  color: $dark-gray;
+}
+
+.contests-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.contest-card {
+  border: 1px solid $border-color;
+  padding: $spacing-md;
+  border-radius: $border-radius-lg;
+  width: 300px;
+  cursor: pointer;
+  text-decoration: none;
+  color: $text-color;
+
+  &:hover {
+    background-color: $light-gray;
+  }
+}
+
+.new-contest-btn {
+  @include button($primary-color, $primary-hover);
+  margin-bottom: $spacing-md;
+}
+
+.modal {
+  @include modal;
+}
+
+.modal-content {
+  @include modal-content;
+
+  h3 {
+    margin-top: 0;
+  }
+
+  form div {
+    @include form-group;
+  }
+}
+
+.modal-input {
+  @include input;
+}
+
+.modal-buttons {
+  @include flex-between;
+  gap: $spacing-md;
+  justify-content: flex-end;
+}

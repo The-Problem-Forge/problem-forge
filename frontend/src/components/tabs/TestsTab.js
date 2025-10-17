@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { testsAPI, generatorsAPI } from "../../services/api";
 import Table from "../Table";
+import EditableCell from "../EditableCell";
 
 /**
  * TestsTab component for problem tests management
@@ -13,9 +14,6 @@ const TestsTab = () => {
   const [generators, setGenerators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editingTestId, setEditingTestId] = useState(null);
-  const [editInput, setEditInput] = useState("");
-  const [editDescription, setEditDescription] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [addMode, setAddMode] = useState("text"); // text, file, generator
   const [newTest, setNewTest] = useState({ inputText: "", description: "" });
@@ -114,28 +112,6 @@ const TestsTab = () => {
     }
   };
 
-  const handleEditClick = (test) => {
-    setEditingTestId(test.id);
-    setEditInput(test.inputText || "");
-    setEditDescription(test.description || "");
-  };
-
-  const handleSaveEdit = async (testId) => {
-    try {
-      await testsAPI.update(taskId, testId, {
-        inputText: editInput,
-        description: editDescription,
-      });
-      const res = await testsAPI.list(taskId);
-      setTests(res.data || []);
-      setEditingTestId(null);
-      setError("");
-    } catch (err) {
-      console.error("Failed to update test:", err);
-      setError("Failed to update test");
-    }
-  };
-
   const handleUploadGenerator = async (e) => {
     e.preventDefault();
     if (!generatorFile || !generatorLanguage) {
@@ -177,57 +153,52 @@ const TestsTab = () => {
             <label>Problem Tests:</label>
             <Table
               headers={[
-                { key: "input", label: "Input" },
-                { key: "description", label: "Description" },
+                {
+                  key: "input",
+                  label: "Input",
+                  type: "textarea",
+                  placeholder: "Input text",
+                  editable: true,
+                },
+                {
+                  key: "description",
+                  label: "Description",
+                  type: "text",
+                  placeholder: "Description",
+                  editable: true,
+                },
                 { key: "actions", label: "Actions" },
               ]}
               rows={tests}
-              renderCell={(test, key, index) => {
-                if (key === "input") {
-                  return editingTestId === test.id ? (
-                    <textarea
-                      value={editInput}
-                      onChange={(e) => setEditInput(e.target.value)}
-                      rows={3}
-                    />
-                  ) : (
-                    test.inputText?.substring(0, 50) || "N/A"
-                  );
+              onSave={async (rowId, columnKey, newValue) => {
+                try {
+                  const updateData =
+                    columnKey === "input"
+                      ? {
+                          inputText: newValue,
+                          description:
+                            tests.find((t) => t.id === rowId)?.description ||
+                            "",
+                        }
+                      : {
+                          inputText:
+                            tests.find((t) => t.id === rowId)?.inputText || "",
+                          description: newValue,
+                        };
+                  await testsAPI.update(taskId, rowId, updateData);
+                  const res = await testsAPI.list(taskId);
+                  setTests(res.data || []);
+                  setError("");
+                } catch (err) {
+                  console.error("Failed to update test:", err);
+                  setError("Failed to update test");
                 }
-                if (key === "description") {
-                  return editingTestId === test.id ? (
-                    <input
-                      type="text"
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                    />
-                  ) : (
-                    test.description || "N/A"
-                  );
-                }
-                if (key === "actions") {
-                  return editingTestId === test.id ? (
-                    <>
-                      <button onClick={() => handleSaveEdit(test.id)}>
-                        Save
-                      </button>
-                      <button onClick={() => setEditingTestId(null)}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => handleEditClick(test)}>
-                        Edit
-                      </button>
-                      <button onClick={() => handleDeleteTest(test.id)}>
-                        Delete
-                      </button>
-                    </>
-                  );
-                }
-                return null;
               }}
+              renderActions={(test) => (
+                <button onClick={() => handleDeleteTest(test.id)}>
+                  Delete
+                </button>
+              )}
               emptyMessage="No tests yet"
             />
             <div className="add-test">

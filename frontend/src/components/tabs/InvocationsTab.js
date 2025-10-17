@@ -51,11 +51,11 @@ const InvocationsTab = () => {
 
     setCreating(true);
     try {
-      const response = await invocationsAPI.create(taskId, {
+      await invocationsAPI.create(taskId, {
         solutionIds: selectedSolutions,
         testIds: selectedTests,
       });
-      setInvocations([...invocations, response.data]);
+      await loadData();
       setSelectedSolutions([]);
       setSelectedTests([]);
       setError("");
@@ -97,6 +97,14 @@ const InvocationsTab = () => {
     );
   };
 
+  const selectAllSolutions = () => {
+    setSelectedSolutions(solutions.map((solution) => solution.id));
+  };
+
+  const selectAllTests = () => {
+    setSelectedTests(tests.map((test) => test.id));
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -105,23 +113,31 @@ const InvocationsTab = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div className="invocation-creator">
-        <h3>Create New Invocation</h3>
         <div className="selector-section">
           <div className="solutions-selector">
             <h4>Select Solutions</h4>
+            {solutions.length > 0 && (
+              <button onClick={selectAllSolutions} className="select-all-btn">
+                Select All
+              </button>
+            )}
             {solutions.length === 0 ? (
               <p>No solutions available</p>
             ) : (
-              <div className="checkbox-list">
+              <div className="selector-list">
                 {solutions.map((solution) => (
-                  <label key={solution.id}>
-                    <input
-                      type="checkbox"
-                      checked={selectedSolutions.includes(solution.id)}
-                      onChange={() => toggleSolution(solution.id)}
-                    />
-                    {solution.name} ({solution.language})
-                  </label>
+                  <div
+                    key={solution.id}
+                    className={`selector-item ${
+                      selectedSolutions.includes(solution.id) ? "selected" : ""
+                    }`}
+                    onClick={() => toggleSolution(solution.id)}
+                  >
+                    <div>{solution.name}</div>
+                    <div className="subtext">
+                      {solution.language}, {solution.type}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -129,19 +145,25 @@ const InvocationsTab = () => {
 
           <div className="tests-selector">
             <h4>Select Tests</h4>
+            {tests.length > 0 && (
+              <button onClick={selectAllTests} className="select-all-btn">
+                Select All
+              </button>
+            )}
             {tests.length === 0 ? (
               <p>No tests available</p>
             ) : (
-              <div className="checkbox-list">
+              <div className="selector-list">
                 {tests.map((test) => (
-                  <label key={test.id}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTests.includes(test.id)}
-                      onChange={() => toggleTest(test.id)}
-                    />
+                  <div
+                    key={test.id}
+                    className={`selector-item ${
+                      selectedTests.includes(test.id) ? "selected" : ""
+                    }`}
+                    onClick={() => toggleTest(test.id)}
+                  >
                     Test {test.id}
-                  </label>
+                  </div>
                 ))}
               </div>
             )}
@@ -165,6 +187,7 @@ const InvocationsTab = () => {
             { key: "solutions", label: "Solutions" },
             { key: "tests", label: "Tests" },
             { key: "status", label: "Status" },
+            { key: "createdAt", label: "Created At" },
             { key: "actions", label: "Actions" },
           ]}
           rows={invocations}
@@ -173,6 +196,10 @@ const InvocationsTab = () => {
             if (key === "solutions") return inv.solutionIds?.length || 0;
             if (key === "tests") return inv.testIds?.length || 0;
             if (key === "status") return inv.status || "Pending";
+            if (key === "createdAt")
+              return inv.createdAt
+                ? new Date(inv.createdAt).toLocaleString()
+                : "N/A";
             if (key === "actions") {
               return (
                 <button onClick={() => handleViewMatrix(inv.id)}>
@@ -196,54 +223,61 @@ const InvocationsTab = () => {
               <Table
                 className="results-matrix"
                 headers={[
-                  { key: "solution", label: "Solution" },
-                  ...(matrixData.tests?.map((test) => ({
-                    key: `test-${test.id}`,
-                    label: `Test ${test.id}`,
+                  { key: "test", label: "Test" },
+                  ...(matrixData.solutions?.map((solution) => ({
+                    key: `solution-${solution.id}`,
+                    label: solution.name,
                   })) || []),
-                  { key: "summary", label: "Summary" },
                 ]}
-                rows={matrixData.solutions || []}
-                renderCell={(solution, key, index) => {
-                  if (key === "solution") return solution.name;
-                  if (key.startsWith("test-")) {
-                    const testId = key.replace("test-", "");
-                    const results = matrixData.results?.[solution.id] || {};
-                    const result = results[testId];
-                    return result ? (
-                      <div>
-                        <div className="verdict">{result.verdict}</div>
-                        <div className="time">{result.timeMs}ms</div>
-                        <div className="memory">{result.memoryKb}KB</div>
-                      </div>
-                    ) : (
-                      <span>-</span>
-                    );
+                rows={[...(matrixData.tests || []), { isSummary: true }]}
+                renderCell={(row, key, index) => {
+                  if (row.isSummary) {
+                    if (key === "test") return "Summary";
+                    if (key.startsWith("solution-")) {
+                      const solutionId = key.replace("solution-", "");
+                      const results = matrixData.results?.[solutionId] || {};
+                      const passedCount = Object.values(results).filter(
+                        (r) => r?.verdict === "OK" || r?.verdict === "AC",
+                      ).length;
+                      const maxTime = Math.max(
+                        ...Object.values(results)
+                          .map((r) => r?.timeMs || 0)
+                          .filter((t) => t > 0),
+                      );
+                      const maxMemory = Math.max(
+                        ...Object.values(results)
+                          .map((r) => r?.memoryKb || 0)
+                          .filter((m) => m > 0),
+                      );
+                      return (
+                        <div>
+                          Passed: {passedCount}{" "}
+                          <span style={{ fontSize: "smaller", color: "grey" }}>
+                            Max: {maxTime}ms / {maxMemory}KB
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  } else {
+                    if (key === "test") return `Test ${row.id}`;
+                    if (key.startsWith("solution-")) {
+                      const solutionId = key.replace("solution-", "");
+                      const results = matrixData.results?.[solutionId] || {};
+                      const result = results[row.id];
+                      return result ? (
+                        <div>
+                          {result.verdict}{" "}
+                          <span style={{ fontSize: "smaller", color: "grey" }}>
+                            {result.timeMs}ms / {result.memoryKb}KB
+                          </span>
+                        </div>
+                      ) : (
+                        <span>-</span>
+                      );
+                    }
+                    return null;
                   }
-                  if (key === "summary") {
-                    const results = matrixData.results?.[solution.id] || {};
-                    const passedCount = Object.values(results).filter(
-                      (r) => r?.verdict === "OK" || r?.verdict === "AC",
-                    ).length;
-                    const maxTime = Math.max(
-                      ...Object.values(results)
-                        .map((r) => r?.timeMs || 0)
-                        .filter((t) => t > 0),
-                    );
-                    const maxMemory = Math.max(
-                      ...Object.values(results)
-                        .map((r) => r?.memoryKb || 0)
-                        .filter((m) => m > 0),
-                    );
-                    return (
-                      <div>
-                        <div>Passed: {passedCount}</div>
-                        <div>Max Time: {maxTime}ms</div>
-                        <div>Max Memory: {maxMemory}KB</div>
-                      </div>
-                    );
-                  }
-                  return null;
                 }}
                 emptyMessage="No matrix data"
               />

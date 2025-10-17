@@ -218,11 +218,31 @@ const mockData = {
         id: "1",
         solutionIds: ["1", "2"],
         testIds: ["1", "2"],
+        status: "Completed",
         createdAt: "2023-01-01T00:00:00Z",
       },
     ],
     2: [],
     3: [],
+  },
+  invocationMatrices: {
+    "1:1": {
+      solutions: [
+        { id: "1", name: "Solution A", language: "cpp" },
+        { id: "2", name: "Solution B", language: "python" },
+      ],
+      tests: [{ id: "1" }, { id: "2" }],
+      results: {
+        1: {
+          1: { verdict: "OK", timeMs: 100, memoryKb: 1024 },
+          2: { verdict: "OK", timeMs: 150, memoryKb: 2048 },
+        },
+        2: {
+          1: { verdict: "WA", timeMs: 200, memoryKb: 1536 },
+          2: { verdict: "OK", timeMs: 120, memoryKb: 1024 },
+        },
+      },
+    },
   },
 };
 
@@ -1284,8 +1304,53 @@ export const invocationsAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If creation fails
    */
-  create: (taskId, invocation) =>
-    api.post(`/tasks/${taskId}/invocations`, invocation),
+  create: (taskId, invocation) => {
+    if (UI_TEST) {
+      const invs = mockData.invocations[taskId] || [];
+      const newId = String(
+        Math.max(...invs.map((i) => parseInt(i.id, 10)), 0) + 1,
+      );
+      const newInv = {
+        id: newId,
+        solutionIds: invocation.solutionIds || [],
+        testIds: invocation.testIds || [],
+        status: invocation.status || "Completed",
+        createdAt: new Date().toISOString(),
+      };
+      if (!mockData.invocations[taskId]) mockData.invocations[taskId] = [];
+      mockData.invocations[taskId].push(newInv);
+
+      // Build a simple matrix entry for UI testing
+      const solutions = (mockData.solutions[taskId] || []).filter((s) =>
+        newInv.solutionIds.includes(s.id),
+      );
+      const tests = (mockData.tests[taskId] || []).filter((t) =>
+        newInv.testIds.includes(t.id),
+      );
+      const results = {};
+      solutions.forEach((sol, si) => {
+        results[sol.id] = {};
+        tests.forEach((test, ti) => {
+          // deterministic sample verdict based on ids
+          const verdict = (si + ti) % 3 === 0 ? "WA" : "OK";
+          results[sol.id][test.id] = {
+            verdict,
+            timeMs: 100 + (si + ti) * 10,
+            memoryKb: 1024 + (si + ti) * 100,
+          };
+        });
+      });
+
+      if (!mockData.invocationMatrices) mockData.invocationMatrices = {};
+      mockData.invocationMatrices[`${taskId}:${newId}`] = {
+        solutions,
+        tests,
+        results,
+      };
+      return Promise.resolve({ data: newInv });
+    }
+    return api.post(`/tasks/${taskId}/invocations`, invocation);
+  },
 
   /**
    * Lists invocations for a task
@@ -1293,7 +1358,12 @@ export const invocationsAPI = {
    * @returns {Promise} Axios response with invocations array
    * @throws {Error} If fetch fails
    */
-  list: (taskId) => api.get(`/tasks/${taskId}/invocations`),
+  list: (taskId) => {
+    if (UI_TEST) {
+      return Promise.resolve({ data: mockData.invocations[taskId] || [] });
+    }
+    return api.get(`/tasks/${taskId}/invocations`);
+  },
 
   /**
    * Gets an invocation
@@ -1312,8 +1382,40 @@ export const invocationsAPI = {
    * @returns {Promise} Axios response with matrix data
    * @throws {Error} If fetch fails
    */
-  matrix: (taskId, invocationId) =>
-    api.get(`/tasks/${taskId}/invocations/${invocationId}/matrix`),
+  matrix: (taskId, invocationId) => {
+    if (UI_TEST) {
+      const key = `${taskId}:${invocationId}`;
+      if (mockData.invocationMatrices && mockData.invocationMatrices[key]) {
+        return Promise.resolve({ data: mockData.invocationMatrices[key] });
+      }
+      // Fallback: try to build matrix from invocation entry
+      const inv = (mockData.invocations[taskId] || []).find(
+        (i) => i.id === invocationId,
+      );
+      if (!inv) {
+        return Promise.reject(new Error("Invocation not found"));
+      }
+      const solutions = (mockData.solutions[taskId] || []).filter((s) =>
+        inv.solutionIds.includes(s.id),
+      );
+      const tests = (mockData.tests[taskId] || []).filter((t) =>
+        inv.testIds.includes(t.id),
+      );
+      const results = {};
+      solutions.forEach((sol, si) => {
+        results[sol.id] = {};
+        tests.forEach((test, ti) => {
+          results[sol.id][test.id] = {
+            verdict: "OK",
+            timeMs: 100 + (si + ti) * 10,
+            memoryKb: 1024,
+          };
+        });
+      });
+      return Promise.resolve({ data: { solutions, tests, results } });
+    }
+    return api.get(`/tasks/${taskId}/invocations/${invocationId}/matrix`);
+  },
 };
 
 export default api;

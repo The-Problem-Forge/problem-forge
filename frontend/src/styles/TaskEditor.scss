@@ -213,3 +213,47 @@
   font-size: $font-size-sm;
   @include button($primary-color, $primary-hover);
 }
+
+.invocations-tab .selector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.invocations-tab .selector-item {
+  padding: $spacing-sm $spacing-md;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+
+  &:hover {
+    background-color: darken($light-gray, 10%);
+    cursor: pointer;
+  }
+
+  &.selected {
+    background-color: $success-color;
+    color: white;
+  }
+}
+
+.invocations-tab .selector-item .subtext {
+  font-size: smaller;
+  color: grey;
+}
+
+.invocations-tab .selector-item.selected .subtext {
+  color: white;
+}
+
+.invocations-tab .create-invocation-btn {
+  @include button($primary-color, $primary-hover);
+  margin-top: $spacing-md;
+}
+
+.invocations-tab .select-all-btn {
+  @include button($secondary-color, $secondary-hover);
+  margin-bottom: $spacing-sm;
+}

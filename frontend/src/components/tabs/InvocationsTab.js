@@ -98,11 +98,15 @@ const InvocationsTab = () => {
   };
 
   const selectAllSolutions = () => {
-    setSelectedSolutions(solutions.map((solution) => solution.id));
+    const allIds = solutions.map((solution) => solution.id);
+    const isAllSelected = allIds.every((id) => selectedSolutions.includes(id));
+    setSelectedSolutions(isAllSelected ? [] : allIds);
   };
 
   const selectAllTests = () => {
-    setSelectedTests(tests.map((test) => test.id));
+    const allIds = tests.map((test) => test.id);
+    const isAllSelected = allIds.every((id) => selectedTests.includes(id));
+    setSelectedTests(isAllSelected ? [] : allIds);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -118,7 +122,11 @@ const InvocationsTab = () => {
             <h4>Select Solutions</h4>
             {solutions.length > 0 && (
               <button onClick={selectAllSolutions} className="select-all-btn">
-                Select All
+                {solutions.every((solution) =>
+                  selectedSolutions.includes(solution.id),
+                )
+                  ? "Deselect All"
+                  : "Select All"}
               </button>
             )}
             {solutions.length === 0 ? (
@@ -147,7 +155,9 @@ const InvocationsTab = () => {
             <h4>Select Tests</h4>
             {tests.length > 0 && (
               <button onClick={selectAllTests} className="select-all-btn">
-                Select All
+                {tests.every((test) => selectedTests.includes(test.id))
+                  ? "Deselect All"
+                  : "Select All"}
               </button>
             )}
             {tests.length === 0 ? (

@@ -1,0 +1,30 @@
+.login-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+}
+
+.login-form div {
+  margin-bottom: 15px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 8px;
+}
+
+.login-error {
+  color: red;
+  margin-bottom: 15px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 10px;
+}
+
+.toggle-button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+}

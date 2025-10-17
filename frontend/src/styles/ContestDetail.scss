@@ -3,6 +3,13 @@
 
 .contest-header {
   margin-bottom: $spacing-lg;
+  position: relative;
+}
+
+.contest-header .back-button {
+  @include button($secondary-color, $secondary-hover);
+  text-decoration: none;
+  margin-bottom: $spacing-md;
 }
 
 .contest-header h1 {
@@ -33,6 +40,10 @@
   padding: $spacing-md;
   margin-bottom: $spacing-sm;
   border-radius: $border-radius;
+}
+
+.task-item:hover {
+  background-color: $light-gray;
 }
 
 .task-info {

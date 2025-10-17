@@ -9,5 +9,5 @@
 - [ ] Preview pdf in the statement page?
 - [ ] Drag'n'drop task reordering on contest page
 - [ ] Make sure reordering does not mess up ids in the url
-- [ ] Adding a task make it display twice
-- [ ] Go into task by clicking the task, not the edit button
+- [x] Adding a task makes it display twice
+- [x] Go into task by clicking the task, not the edit button

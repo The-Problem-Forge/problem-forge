@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { contestsAPI, tasksAPI } from "../services/api";
 import "../styles/main.scss";
 
@@ -9,6 +9,7 @@ import "../styles/main.scss";
  */
 const ContestDetail = () => {
   const { contestId } = useParams();
+  const navigate = useNavigate();
   const [contest, setContest] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,9 +43,9 @@ const ContestDetail = () => {
 
     try {
       const response = await tasksAPI.create(contestId, newTask);
-      setTasks([...tasks, response.data]);
       setNewTask({ title: "", description: "" });
       setShowModal(false);
+      await loadData();
     } catch (err) {
       console.error("Failed to create task:", err);
       setError("Failed to create task");
@@ -91,6 +92,9 @@ const ContestDetail = () => {
   return (
     <div>
       <div className="contest-header">
+        <Link to="/contests" className="back-button">
+          ← Back to Contests
+        </Link>
         <h1>{contest.name}</h1>
         {contest.description && <p>{contest.description}</p>}
       </div>
@@ -103,7 +107,11 @@ const ContestDetail = () => {
         <ul className="tasks-list">
           {tasks.map((task, index) => (
             <li key={task.id} className="task-item">
-              <div className="task-info">
+              <div
+                className="task-info"
+                onClick={() => navigate(`/contests/${contestId}/tasks/${task.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <h3>{task.title}</h3>
                 {task.description && <p>{task.description}</p>}
               </div>
@@ -122,12 +130,6 @@ const ContestDetail = () => {
                 >
                   ↓
                 </button>
-                <Link
-                  to={`/contests/${contestId}/tasks/${task.id}`}
-                  className="edit-task-btn"
-                >
-                  Edit
-                </Link>
               </div>
             </li>
           ))}

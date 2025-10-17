@@ -150,6 +150,30 @@ const SolutionsTab = () => {
     }
   };
 
+  /**
+   * Handles updating solution metadata
+   * @param {Object} updatedSolution - Updated solution object
+   * @returns {Promise<void>}
+   */
+  const handleUpdateSolution = async (updatedSolution) => {
+    try {
+      await solutionsAPI.update(taskId, updatedSolution.id, {
+        name: updatedSolution.name,
+        language: updatedSolution.language,
+        type: updatedSolution.type,
+      });
+      setSolutions((prevSolutions) =>
+        prevSolutions.map((solution) =>
+          solution.id === updatedSolution.id ? updatedSolution : solution,
+        ),
+      );
+      setError("");
+    } catch (err) {
+      console.error("Failed to update solution:", err);
+      setError("Failed to update solution");
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -171,44 +195,92 @@ const SolutionsTab = () => {
             <label>Solutions:</label>
             <Table
               headers={[
-                { key: "name", label: "Name" },
-                { key: "language", label: "Language" },
-                { key: "type", label: "Type" },
+                {
+                  key: "name",
+                  label: "Name",
+                  editable: true,
+                  type: "text",
+                },
+                {
+                  key: "language",
+                  label: "Language",
+                  editable: true,
+                  type: "select",
+                  options: [
+                    { value: "cpp", label: "C++" },
+                    { value: "python", label: "Python" },
+                    { value: "java", label: "Java" },
+                    { value: "c", label: "C" },
+                    { value: "js", label: "JavaScript" },
+                  ],
+                },
+                {
+                  key: "type",
+                  label: "Type",
+                  editable: true,
+                  type: "select",
+                  options: [
+                    {
+                      value: "Main correct solution",
+                      label: "Main correct solution",
+                    },
+                    { value: "Correct", label: "Correct" },
+                    { value: "Incorrect", label: "Incorrect" },
+                    {
+                      value: "Time limit exceeded",
+                      label: "Time limit exceeded",
+                    },
+                    {
+                      value: "Time limit exceeded or correct",
+                      label: "Time limit exceeded or correct",
+                    },
+                    {
+                      value: "Time limit exceeded or memory limit exceeded",
+                      label: "Time limit exceeded or memory limit exceeded",
+                    },
+                    { value: "Wrong answer", label: "Wrong answer" },
+                    {
+                      value: "Presentation error",
+                      label: "Presentation error",
+                    },
+                    {
+                      value: "Memory limit exceeded",
+                      label: "Memory limit exceeded",
+                    },
+                    { value: "Do not run", label: "Do not run" },
+                    { value: "Failed", label: "Failed" },
+                  ],
+                },
+                { key: "verdict", label: "Compile Verdict" },
                 { key: "actions", label: "Actions" },
               ]}
-              rows={solutions}
-              renderRow={(solution, index) => (
-                <React.Fragment key={solution.id}>
-                  <tr>
-                    <td>{solution.name || `Solution ${solution.id}`}</td>
-                    <td>{solution.language || "Unknown"}</td>
-                    <td>{solution.type || "Unknown"}</td>
-                    <td>
-                      <button
-                        onClick={() => handleCompile(solution.id)}
-                        disabled={compiling[solution.id]}
-                      >
-                        {compiling[solution.id] ? "Compiling..." : "Compile"}
-                      </button>
-                      <button onClick={() => handleViewSource(solution.id)}>
-                        View/Edit
-                      </button>
-                      <button onClick={() => handleDownload(solution.id)}>
-                        Download
-                      </button>
-                    </td>
-                  </tr>
-                  {compileResults[solution.id] && (
-                    <tr>
-                      <td colSpan="4" style={{ backgroundColor: "#f9f9f9" }}>
-                        <strong>Compile Result:</strong> Verdict:{" "}
-                        {compileResults[solution.id].verdict}; Stdout:{" "}
-                        {compileResults[solution.id].stdout}; Stderr:{" "}
-                        {compileResults[solution.id].stderr}
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
+              rows={solutions.map((solution) => ({
+                ...solution,
+                verdict: compileResults[solution.id]?.verdict || "Not compiled",
+              }))}
+              onSave={(solutionId, key, value) => {
+                const updatedSolution = solutions.find(
+                  (solution) => solution.id === solutionId,
+                );
+                if (updatedSolution) {
+                  handleUpdateSolution({ ...updatedSolution, [key]: value });
+                }
+              }}
+              renderActions={(solution) => (
+                <>
+                  <button
+                    onClick={() => handleCompile(solution.id)}
+                    disabled={compiling[solution.id]}
+                  >
+                    {compiling[solution.id] ? "Compiling..." : "Compile"}
+                  </button>
+                  <button onClick={() => handleViewSource(solution.id)}>
+                    View/Edit
+                  </button>
+                  <button onClick={() => handleDownload(solution.id)}>
+                    Download
+                  </button>
+                </>
               )}
               emptyMessage="No solutions yet"
             />

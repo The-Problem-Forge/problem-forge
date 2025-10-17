@@ -108,7 +108,11 @@ const Table = ({
                         ? () => handleEdit(row.id, header.key)
                         : undefined
                     }
-                    style={isEditable && header.type !== "select" ? { cursor: "pointer" } : {}}
+                    style={
+                      isEditable && header.type !== "select"
+                        ? { cursor: "pointer" }
+                        : {}
+                    }
                   >
                     {isEditing ? (
                       <EditableCell

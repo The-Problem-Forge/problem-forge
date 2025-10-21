@@ -16,7 +16,7 @@ class TaskController(
 
     @GetMapping
     fun getUserTasks(@AuthenticationPrincipal userDetails: UserDetails): List<TaskDto> {
-        val user = userService.findUserByLogin(userDetails.username)
+        val user = userService.findUserByHandle(userDetails.username)
         return taskService.getUserTasks(user.id!!)
     }
 
@@ -25,7 +25,7 @@ class TaskController(
         @RequestBody taskDto: TaskDto,
         @AuthenticationPrincipal userDetails: UserDetails
     ): TaskDto {
-        val user = userService.findUserByLogin(userDetails.username)
+        val user = userService.findUserByHandle(userDetails.username)
         return taskService.createTask(taskDto, user)
     }
 }

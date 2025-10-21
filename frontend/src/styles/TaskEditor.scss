@@ -115,17 +115,20 @@
   @include button($primary-color, $primary-hover);
 }
 
-.checker-tab .field-group button {
+.checker-tab .field-group button,
+.validator-tab .field-group button {
   @include button($primary-color, $primary-hover);
 }
 
-.checker-tab .source-controls {
+.checker-tab .source-controls,
+.validator-tab .source-controls {
   display: flex;
   gap: 10px;
   margin-bottom: 5px;
 }
 
-.checker-tab .test-controls {
+.checker-tab .test-controls,
+.validator-tab .test-controls {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { validatorAPI } from "../../services/api";
 import Table from "../Table";
+import EditableCell from "../EditableCell";
 
 /**
  * ValidatorTab component for editing validator source and tests
@@ -19,12 +20,12 @@ const ValidatorTab = () => {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [runResults, setRunResults] = useState({});
-  const [editingTest, setEditingTest] = useState(null);
   const [newTest, setNewTest] = useState({
     input: "",
-    output: "",
-    expected: "",
+    verdict: "VALID",
   });
+  const [showAddTestModal, setShowAddTestModal] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -66,33 +67,42 @@ const ValidatorTab = () => {
     }
   };
 
+  /**
+   * Handles file upload for validator source
+   * @param {Event} e - File input change event
+   */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const content = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => resolve(event.target.result);
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
-    setData({ ...data, source: content });
-    const formData = new FormData();
-    formData.append("source", file);
-    formData.append("language", data.language);
-    try {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const content = event.target.result;
+      setData({ ...data, source: content });
+      const formData = new FormData();
+      formData.append("source", file);
+      formData.append("language", data.language);
       if (process.env.REACT_APP_UI_TEST === "true") {
-        await validatorAPI.updateSource(taskId, {
-          source: content,
-          language: data.language,
-        });
+        try {
+          await validatorAPI.updateSource(taskId, {
+            source: content,
+            language: data.language,
+          });
+          setError("");
+        } catch (err) {
+          console.error("Failed to upload source file:", err);
+          setError("Failed to upload source file");
+        }
       } else {
-        await validatorAPI.uploadSource(taskId, formData);
+        try {
+          await validatorAPI.uploadSource(taskId, formData);
+          setError("");
+        } catch (err) {
+          console.error("Failed to upload source file:", err);
+          setError("Failed to upload source file");
+        }
       }
-      setError("");
-    } catch (err) {
-      console.error("Failed to upload source file:", err);
-      setError("Failed to upload source file");
-    }
+    };
+    reader.readAsText(file);
   };
 
   const handleRunTests = async () => {
@@ -111,37 +121,18 @@ const ValidatorTab = () => {
 
   const handleAddTest = async () => {
     try {
-      const response = await validatorAPI.createTest(taskId, newTest);
+      await validatorAPI.createTest(taskId, newTest);
+      const testsRes = await validatorAPI.listTests(taskId);
       setData((prevData) => ({
         ...prevData,
-        tests: [...prevData.tests, response.data],
+        tests: testsRes.data || [],
       }));
-      setNewTest({ input: "", output: "", expected: "" });
+      setNewTest({ input: "", verdict: "VALID" });
+      setShowAddTestModal(false);
       setError("");
     } catch (err) {
       console.error("Failed to add test:", err);
       setError("Failed to add test");
-    }
-  };
-
-  const handleEditTest = (test) => {
-    setEditingTest(test);
-  };
-
-  const handleUpdateTest = async () => {
-    try {
-      await validatorAPI.updateTest(taskId, editingTest.id, editingTest);
-      setData((prevData) => ({
-        ...prevData,
-        tests: prevData.tests.map((test) =>
-          test.id === editingTest.id ? editingTest : test,
-        ),
-      }));
-      setEditingTest(null);
-      setError("");
-    } catch (err) {
-      console.error("Failed to update test:", err);
-      setError("Failed to update test");
     }
   };
 
@@ -165,14 +156,6 @@ const ValidatorTab = () => {
     <div className="validator-tab">
       <h2>Validator</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <div className="validator-controls">
-        <button onClick={handleSaveSource} disabled={saving}>
-          {saving ? "Saving..." : "Save Source"}
-        </button>
-        <button onClick={handleRunTests} disabled={running}>
-          {running ? "Running..." : "Run Tests"}
-        </button>
-      </div>
       <div className="validator-editor">
         <div className="validator-fields">
           <div className="field-group">
@@ -188,10 +171,20 @@ const ValidatorTab = () => {
           </div>
           <div className="field-group">
             <label>Source Code:</label>
+            <div className="source-controls">
+              <button onClick={() => fileInputRef.current.click()}>
+                Load from file
+              </button>
+              <button onClick={handleSaveSource} disabled={saving}>
+                {saving ? "Saving..." : "Save Source"}
+              </button>
+            </div>
             <input
               type="file"
               accept=".cpp,.py,.java,.c,.js"
               onChange={handleFileUpload}
+              ref={fileInputRef}
+              style={{ display: "none" }}
             />
             <textarea
               value={data.source}
@@ -202,25 +195,22 @@ const ValidatorTab = () => {
           </div>
           <div className="field-group">
             <label>Tests:</label>
+            <div className="test-controls">
+              <button onClick={handleRunTests} disabled={running}>
+                {running ? "Running..." : "Run Tests"}
+              </button>
+              <button onClick={() => setShowAddTestModal(true)}>
+                Add test
+              </button>
+            </div>
             <Table
               headers={[
                 {
                   key: "input",
                   label: "Input",
                   editable: true,
-                  type: "textarea",
-                },
-                {
-                  key: "output",
-                  label: "Output",
-                  editable: true,
-                  type: "textarea",
-                },
-                {
-                  key: "expected",
-                  label: "Expected",
-                  editable: true,
-                  type: "textarea",
+                  type: "text",
+                  placeholder: "Input",
                 },
                 {
                   key: "verdict",
@@ -235,85 +225,74 @@ const ValidatorTab = () => {
                 { key: "actions", label: "Actions" },
               ]}
               rows={data.tests}
-              onSave={(testId, key, value) => {
-                const updatedTest = data.tests.find(
-                  (test) => test.id === testId,
-                );
-                if (updatedTest) {
-                  handleUpdateTest({ ...updatedTest, [key]: value });
+              onSave={async (rowId, columnKey, newValue) => {
+                try {
+                  const test = data.tests.find((t) => t.id === rowId);
+                  const updateData = {
+                    input: columnKey === "input" ? newValue : test.input,
+                    verdict: columnKey === "verdict" ? newValue : test.verdict,
+                  };
+                  await validatorAPI.updateTest(taskId, rowId, updateData);
+                  setData((prevData) => ({
+                    ...prevData,
+                    tests: prevData.tests.map((test) =>
+                      test.id === rowId ? { ...test, ...updateData } : test,
+                    ),
+                  }));
+                  setError("");
+                } catch (err) {
+                  console.error("Failed to update test:", err);
+                  setError("Failed to update test");
                 }
               }}
+              renderCell={(test, key) => {
+                if (key === "input") return test.input;
+                if (key === "verdict") return test.verdict || "VALID";
+                return null;
+              }}
               renderActions={(test) => (
-                <>
-                  <button onClick={() => handleDeleteTest(test.id)}>
-                    Delete
-                  </button>
-                </>
+                <button onClick={() => handleDeleteTest(test.id)}>
+                  Delete
+                </button>
               )}
               emptyMessage="No tests yet"
             />
-            <div className="add-test">
-              <h4>Add New Test</h4>
-              <input
-                type="text"
-                placeholder="Input"
+          </div>
+        </div>
+      </div>
+      {showAddTestModal && (
+        <div className="modal" onClick={() => setShowAddTestModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Add New Test</h3>
+            <div className="form-group">
+              <label>Input:</label>
+              <textarea
                 value={newTest.input}
                 onChange={(e) =>
                   setNewTest({ ...newTest, input: e.target.value })
                 }
+                placeholder="Enter input"
               />
-              <input
-                type="text"
-                placeholder="Output"
-                value={newTest.output}
-                onChange={(e) =>
-                  setNewTest({ ...newTest, output: e.target.value })
-                }
-              />
-              <input
-                type="text"
-                placeholder="Expected"
-                value={newTest.expected}
-                onChange={(e) =>
-                  setNewTest({ ...newTest, expected: e.target.value })
-                }
-              />
-              <button onClick={handleAddTest}>Add Test</button>
             </div>
-            {editingTest && (
-              <div className="edit-test">
-                <h4>Edit Test</h4>
-                <input
-                  type="text"
-                  placeholder="Input"
-                  value={editingTest.input}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, input: e.target.value })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Output"
-                  value={editingTest.output}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, output: e.target.value })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Expected"
-                  value={editingTest.expected}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, expected: e.target.value })
-                  }
-                />
-                <button onClick={handleUpdateTest}>Update Test</button>
-                <button onClick={() => setEditingTest(null)}>Cancel</button>
-              </div>
-            )}
+            <div className="form-group">
+              <label>Verdict:</label>
+              <select
+                value={newTest.verdict}
+                onChange={(e) =>
+                  setNewTest({ ...newTest, verdict: e.target.value })
+                }
+              >
+                <option value="VALID">VALID</option>
+                <option value="INVALID">INVALID</option>
+              </select>
+            </div>
+            <div className="modal-buttons">
+              <button onClick={handleAddTest}>Add</button>
+              <button onClick={() => setShowAddTestModal(false)}>Cancel</button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

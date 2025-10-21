@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { checkerAPI } from "../../services/api";
 import Table from "../Table";
@@ -24,7 +24,10 @@ const CheckerTab = () => {
     input: "",
     output: "",
     expected: "",
+    verdict: "OK",
   });
+  const [showAddTestModal, setShowAddTestModal] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -120,12 +123,14 @@ const CheckerTab = () => {
 
   const handleAddTest = async () => {
     try {
-      const response = await checkerAPI.createTest(taskId, newTest);
+      await checkerAPI.createTest(taskId, newTest);
+      const testsRes = await checkerAPI.listTests(taskId);
       setData((prevData) => ({
         ...prevData,
-        tests: [...prevData.tests, response.data],
+        tests: testsRes.data || [],
       }));
-      setNewTest({ input: "", output: "", expected: "" });
+      setNewTest({ input: "", output: "", expected: "", verdict: "OK" });
+      setShowAddTestModal(false);
       setError("");
     } catch (err) {
       console.error("Failed to add test:", err);
@@ -153,14 +158,6 @@ const CheckerTab = () => {
     <div className="checker-tab">
       <h2>Checker</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <div className="checker-controls">
-        <button onClick={handleSaveSource} disabled={saving}>
-          {saving ? "Saving..." : "Save Source"}
-        </button>
-        <button onClick={handleRunTests} disabled={running}>
-          {running ? "Running..." : "Run Tests"}
-        </button>
-      </div>
       <div className="checker-editor">
         <div className="checker-fields">
           <div className="field-group">
@@ -176,10 +173,20 @@ const CheckerTab = () => {
           </div>
           <div className="field-group">
             <label>Source Code:</label>
+            <div className="source-controls">
+              <button onClick={() => fileInputRef.current.click()}>
+                Load from file
+              </button>
+              <button onClick={handleSaveSource} disabled={saving}>
+                {saving ? "Saving..." : "Save Source"}
+              </button>
+            </div>
             <input
               type="file"
               accept=".cpp,.py,.java,.c,.js"
               onChange={handleFileUpload}
+              ref={fileInputRef}
+              style={{ display: "none" }}
             />
             <textarea
               value={data.source}
@@ -190,6 +197,14 @@ const CheckerTab = () => {
           </div>
           <div className="field-group">
             <label>Tests:</label>
+            <div className="test-controls">
+              <button onClick={handleRunTests} disabled={running}>
+                {running ? "Running..." : "Run Tests"}
+              </button>
+              <button onClick={() => setShowAddTestModal(true)}>
+                Add test
+              </button>
+            </div>
             <Table
               headers={[
                 {
@@ -268,37 +283,64 @@ const CheckerTab = () => {
               )}
               emptyMessage="No tests yet"
             />
-            <div className="add-test">
-              <h4>Add New Test</h4>
-              <input
-                type="text"
-                placeholder="Input"
+          </div>
+        </div>
+      </div>
+      {showAddTestModal && (
+        <div className="modal" onClick={() => setShowAddTestModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Add New Test</h3>
+            <div className="form-group">
+              <label>Input:</label>
+              <textarea
                 value={newTest.input}
                 onChange={(e) =>
                   setNewTest({ ...newTest, input: e.target.value })
                 }
+                placeholder="Enter input"
               />
-              <input
-                type="text"
-                placeholder="Output"
+            </div>
+            <div className="form-group">
+              <label>Output:</label>
+              <textarea
                 value={newTest.output}
                 onChange={(e) =>
                   setNewTest({ ...newTest, output: e.target.value })
                 }
+                placeholder="Enter output"
               />
-              <input
-                type="text"
-                placeholder="Expected"
+            </div>
+            <div className="form-group">
+              <label>Expected:</label>
+              <textarea
                 value={newTest.expected}
                 onChange={(e) =>
                   setNewTest({ ...newTest, expected: e.target.value })
                 }
+                placeholder="Enter expected"
               />
-              <button onClick={handleAddTest}>Add Test</button>
+            </div>
+            <div className="form-group">
+              <label>Verdict:</label>
+              <select
+                value={newTest.verdict}
+                onChange={(e) =>
+                  setNewTest({ ...newTest, verdict: e.target.value })
+                }
+              >
+                <option value="OK">OK</option>
+                <option value="WRONG_ANSWER">WRONG_ANSWER</option>
+                <option value="PRESENTATION_ERROR">PRESENTATION_ERROR</option>
+                <option value="CRASHED">CRASHED</option>
+              </select>
+            </div>
+            <div className="modal-buttons">
+              <button onClick={handleAddTest}>Add</button>
+              <button onClick={() => setShowAddTestModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

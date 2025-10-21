@@ -115,6 +115,56 @@
   @include button($primary-color, $primary-hover);
 }
 
+.checker-tab .field-group button {
+  @include button($primary-color, $primary-hover);
+}
+
+.checker-tab .source-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.checker-tab .test-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.modal {
+  @include modal;
+}
+
+.modal-content {
+  @include modal-content;
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.modal .form-group {
+  @include form-group;
+  label {
+    @include label;
+  }
+  textarea {
+    @include textarea;
+  }
+  select {
+    width: 100%;
+    padding: $spacing-sm;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+  }
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: $spacing-md;
+}
+
 .checker-tab .checker-editor,
 .validator-tab .validator-editor,
 .tests-tab .tests-editor,

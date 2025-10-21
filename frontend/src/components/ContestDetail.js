@@ -109,8 +109,10 @@ const ContestDetail = () => {
             <li key={task.id} className="task-item">
               <div
                 className="task-info"
-                onClick={() => navigate(`/contests/${contestId}/tasks/${task.id}`)}
-                style={{ cursor: 'pointer' }}
+                onClick={() =>
+                  navigate(`/contests/${contestId}/tasks/${task.id}`)
+                }
+                style={{ cursor: "pointer" }}
               >
                 <h3>{task.title}</h3>
                 {task.description && <p>{task.description}</p>}

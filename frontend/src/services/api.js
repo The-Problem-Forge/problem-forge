@@ -266,7 +266,14 @@ export const authAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If login fails
    */
-  login: (login, password) => api.post("/auth/login", { login, password }),
+  login: (login, password) => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: { token: "mock-jwt-token", login: login },
+      });
+    }
+    return api.post("/auth/login", { login, password });
+  },
 
   /**
    * Registers a new user
@@ -275,15 +282,28 @@ export const authAPI = {
    * @returns {Promise} Axios response
    * @throws {Error} If registration fails
    */
-  register: (login, password) =>
-    api.post("/auth/register", { login, password }),
+  register: (login, password) => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: { token: "mock-jwt-token", login: login },
+      });
+    }
+    return api.post("/auth/register", { login, password });
+  },
 
   /**
    * Gets current user info
    * @returns {Promise} Axios response with user data
    * @throws {Error} If not authenticated or endpoint unavailable
    */
-  me: () => api.get("/auth/me"),
+  me: () => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: { login: localStorage.getItem("login") || "mock-user" },
+      });
+    }
+    return api.get("/auth/me");
+  },
 };
 
 /**

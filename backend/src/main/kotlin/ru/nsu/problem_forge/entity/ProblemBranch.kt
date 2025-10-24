@@ -1,6 +1,8 @@
 package ru.nsu.problem_forge.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import ru.nsu.problem_forge.convert.ChangelogConverter
 import ru.nsu.problem_forge.convert.ProblemInfoConverter
 import ru.nsu.problem_forge.type.Changelog
@@ -16,11 +18,13 @@ class ProblemBranch {
     var id: Long = 0
 
     @Column(name = "problem_info", nullable = false, columnDefinition = "JSONB")
-    @Convert(converter = ProblemInfoConverter::class)
+//    @Convert(converter = ProblemInfoConverter::class)
+    @JdbcTypeCode(SqlTypes.JSON)
     var problemInfo: ProblemInfo = ProblemInfo()
 
     @Column(name = "current_changes", nullable = false, columnDefinition = "JSONB")
-    @Convert(converter = ChangelogConverter::class)
+    // @Convert(converter = ChangelogConverter::class)
+    @JdbcTypeCode(SqlTypes.JSON)
     var currentChanges: Changelog = Changelog()
 
     @Column(name = "created_at", nullable = false)

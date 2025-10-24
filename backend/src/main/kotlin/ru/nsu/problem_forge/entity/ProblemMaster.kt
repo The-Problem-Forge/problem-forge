@@ -2,8 +2,8 @@ package ru.nsu.problem_forge.entity
 
 
 import jakarta.persistence.*
-import ru.nsu.problem_forge.convert.ChangelogConverter
-import ru.nsu.problem_forge.convert.ProblemInfoConverter
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import ru.nsu.problem_forge.type.Changelog
 import ru.nsu.problem_forge.type.ProblemInfo
 import java.time.LocalDateTime
@@ -19,12 +19,14 @@ class ProblemMaster {
     @Column(nullable = false, length = 40)
     var tag: String = ""
 
-    @Column(name = "problem_info", nullable = false, columnDefinition = "JSONB")
-    @Convert(converter = ProblemInfoConverter::class)
+    @Column(name = "problem_info", nullable = false, columnDefinition = "JSON")
+//    @Convert(converter = ProblemInfoConverter::class)
+    @JdbcTypeCode(SqlTypes.JSON)
     var problemInfo: ProblemInfo = ProblemInfo()
 
-    @Column(name = "changelog", nullable = false, columnDefinition = "JSONB")
-    @Convert(converter = ChangelogConverter::class)
+    @Column(name = "changelog", nullable = false, columnDefinition = "JSON")
+    //@Convert(converter = ChangelogConverter::class)
+    @JdbcTypeCode(SqlTypes.JSON)
     var changelog: Changelog = Changelog()
 
     @Column(name = "created_at", nullable = false)
@@ -32,10 +34,6 @@ class ProblemMaster {
 
     @Column(name = "modified_at", nullable = false)
     var modifiedAt: LocalDateTime = LocalDateTime.now()
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner", nullable = false)
-    var owner: User? = null
 
     @OneToMany(mappedBy = "problem", cascade = [CascadeType.ALL], orphanRemoval = true)
     var branches: List<ProblemBranch> = emptyList()

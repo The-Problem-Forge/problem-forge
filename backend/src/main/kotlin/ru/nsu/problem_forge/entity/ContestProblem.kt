@@ -1,7 +1,6 @@
 package ru.nsu.problem_forge.entity
 
 import jakarta.persistence.*
-import java.time.LocalDateTime
 
 @Entity
 @Table(name = "contest_problems")
@@ -16,5 +15,5 @@ class ContestProblem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
-    var problem: ProblemMaster? = null
+    var problem: Problem? = null
 }

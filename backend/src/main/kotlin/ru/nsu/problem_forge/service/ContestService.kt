@@ -7,14 +7,12 @@ import ru.nsu.problem_forge.entity.Contest
 import ru.nsu.problem_forge.entity.ContestUser
 import ru.nsu.problem_forge.entity.User
 import ru.nsu.problem_forge.repository.ContestRepository
-import ru.nsu.problem_forge.repository.UserRepository
 import ru.nsu.problem_forge.type.Role
 import java.time.LocalDateTime
 
 @Service
 class ContestService(
-    private val contestRepository: ContestRepository,
-    private val userRepository: UserRepository
+    private val contestRepository: ContestRepository
 ) {
 
     fun getContestsForUser(userId: Long): List<ContestDto> {

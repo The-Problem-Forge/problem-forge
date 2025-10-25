@@ -1,5 +1,6 @@
 package ru.nsu.problem_forge.exception
 
+import jakarta.transaction.NotSupportedException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -18,6 +19,12 @@ class GlobalExceptionHandler {
     fun handleForbidden(e: SecurityException): ResponseEntity<ErrorResponse> {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(e.message ?: "Access denied"))
+    }
+
+    @ExceptionHandler(NotSupportedException::class)
+    fun handleNotSupported(e: NotSupportedException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse(e.message ?: "This feature is not supported now"))
     }
 
     @ExceptionHandler(Exception::class)

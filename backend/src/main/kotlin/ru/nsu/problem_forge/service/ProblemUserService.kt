@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ru.nsu.problem_forge.dto.*
 import ru.nsu.problem_forge.entity.ProblemUser
-import ru.nsu.problem_forge.repository.ProblemMasterRepository
+import ru.nsu.problem_forge.repository.ProblemRepository
 import ru.nsu.problem_forge.repository.ProblemUserRepository
 import ru.nsu.problem_forge.repository.UserRepository
 import ru.nsu.problem_forge.type.Role
@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 @Service
 class ProblemUserService(
     private val problemUserRepository: ProblemUserRepository,
-    private val problemMasterRepository: ProblemMasterRepository,
+    private val problemRepository: ProblemRepository,
     private val userRepository: UserRepository
 ) {
 
@@ -27,7 +27,7 @@ class ProblemUserService(
             throw SecurityException("Only owner can add users to problem")
         }
 
-        val problem = problemMasterRepository.findById(problemId)
+        val problem = problemRepository.findById(problemId)
             .orElseThrow { IllegalArgumentException("Problem not found with id: $problemId") }
 
         val userToAdd = userRepository.findById(request.userId)

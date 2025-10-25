@@ -1,23 +1,24 @@
 package ru.nsu.problem_forge.type
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import ru.nsu.problem_forge.type.problem.General
+import ru.nsu.problem_forge.type.problem.ProblemSolution
+import ru.nsu.problem_forge.type.problem.ProblemTest
+import ru.nsu.problem_forge.type.problem.Statement
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ProblemInfo(
-    val title: String = "",
-    val statement: String = "",
-    val inputFormat: String = "",
-    val outputFormat: String = "",
-    val constraints: String = "",
-    val examples: List<Example> = emptyList(),
-    val timeLimit: Int = 1000,
-    val memoryLimit: Int = 256,
-    val tags: List<String> = emptyList(),
-    val difficulty: String = "EASY"
-) {
-    data class Example(
-        val input: String = "",
-        val output: String = "",
-        val explanation: String? = null
-    )
-}
+    val general: General = General(),
+    val statement: Statement = Statement(),
+
+    // Currently without attachments
+    val attachments: List<Long> = emptyList(), // list of file_id
+
+    val generators: List<Long> = emptyList(),  // list of file_id
+    val checker:   Long? = null, // file_id actually
+
+    // Currently without validator
+    // val validator: Long? = null, // file_id actually
+    val tests:     List<ProblemTest> = emptyList(),
+    val solutions: List<ProblemSolution> = emptyList()// path to files with additional info
+)

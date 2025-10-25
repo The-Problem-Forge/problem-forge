@@ -1,7 +1,7 @@
 package ru.nsu.problem_forge.type
 
 enum class Role {
-    OWNER,
+    VIEWER,
     EDITOR,
-    VIEWER
+    OWNER
 }

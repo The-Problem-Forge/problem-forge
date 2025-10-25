@@ -15,7 +15,7 @@ data class ProblemUser(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
-    val problem: ProblemMaster,
+    val problem: Problem,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

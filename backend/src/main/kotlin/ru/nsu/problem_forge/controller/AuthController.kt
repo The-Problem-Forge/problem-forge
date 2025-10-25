@@ -23,21 +23,21 @@ class AuthController(
             UsernamePasswordAuthenticationToken(authRequest.login, authRequest.password)
         )
         
-        val user = userService.findUserByLogin(authRequest.login)
-        val token = jwtUtil.generateToken(user.login)
+        val user = userService.findUserByHandle(authRequest.login)
+        val token = jwtUtil.generateToken(user.handle)
         
-        return ResponseEntity.ok(AuthResponse(token, user.login))
+        return ResponseEntity.ok(AuthResponse(token, user.handle))
     }
 
     @PostMapping("/register")
     fun register(@RequestBody authRequest: AuthRequest): ResponseEntity<AuthResponse> {
         val user = userService.createUser(
-            login = authRequest.login,
+            handle = authRequest.login,
             password = authRequest.password,
             email = "${authRequest.login}@example.com"
         )
         
-        val token = jwtUtil.generateToken(user.login) 
-        return ResponseEntity.ok(AuthResponse(token, user.login))
+        val token = jwtUtil.generateToken(user.handle)
+        return ResponseEntity.ok(AuthResponse(token, user.handle))
     }
 }

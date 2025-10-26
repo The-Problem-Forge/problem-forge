@@ -23,11 +23,6 @@ class ProblemGeneralService(
         val problemUser = problemUserRepository.findByProblemIdAndUserId(problemId, userId)
             ?: throw SecurityException("No access to problem")
 
-//        // Check if this is a branch (has parent)
-//        if (problem.parentProblemId == null) {
-//            throw IllegalArgumentException("Cannot edit main problem branch")
-//        }
-
         val general = problem.problemInfo.general
         return GeneralResponse(
             inputFile = general.inputFile,
@@ -48,11 +43,6 @@ class ProblemGeneralService(
         if (problemUser.role < Role.EDITOR) {
             throw SecurityException("Editor role required")
         }
-
-//        // Check if this is a branch (has parent)
-//        if (problem.parentProblemId == null) {
-//            throw IllegalStateException("Cannot edit main problem branch")
-//        }
 
         // Validate input
         validateGeneral(updateDto)

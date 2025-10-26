@@ -2,7 +2,6 @@ package ru.nsu.problem_forge.entity
 
 import jakarta.persistence.*
 import ru.nsu.problem_forge.type.FileFormat
-import ru.nsu.problem_forge.type.problem.FileType
 import java.time.LocalDateTime
 
 @Entity
@@ -13,16 +12,9 @@ class File {
     @Column(name = "file_id")
     var id: Long = 0
 
-    @Column(nullable = false, length = 255)
-    var checksum: String = ""
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255)
     var format: FileFormat = FileFormat.TEXT
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 255)
-    var type: FileType = FileType.ATTACHMENT
 
     @Column(nullable = false)
     @Lob
@@ -43,5 +35,5 @@ class File {
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String = "File(id=$id, type=$type, format=$format)"
+    override fun toString(): String = "File(id=$id, format=$format)"
 }

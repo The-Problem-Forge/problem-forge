@@ -1,6 +1,6 @@
 package ru.nsu.problem_forge.dto.problem
 
-import ru.nsu.problem_forge.type.FileFormat
+import ru.nsu.problem_forge.type.problem.FileFormat
 
 data class CheckerDto(
     val file: String, // Base64 encoded file content

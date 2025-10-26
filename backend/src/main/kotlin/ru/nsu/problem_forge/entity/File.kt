@@ -1,7 +1,7 @@
 package ru.nsu.problem_forge.entity
 
 import jakarta.persistence.*
-import ru.nsu.problem_forge.type.FileFormat
+import ru.nsu.problem_forge.type.problem.FileFormat
 import java.time.LocalDateTime
 
 @Entity

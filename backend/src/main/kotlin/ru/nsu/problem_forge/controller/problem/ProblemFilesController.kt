@@ -10,10 +10,13 @@ import ru.nsu.problem_forge.dto.problem.GeneratorDto
 import ru.nsu.problem_forge.dto.problem.GeneratorResponse
 import ru.nsu.problem_forge.dto.problem.SolutionDto
 import ru.nsu.problem_forge.dto.problem.SolutionResponse
+import ru.nsu.problem_forge.dto.problem.TestDto
+import ru.nsu.problem_forge.dto.problem.TestResponse
 import ru.nsu.problem_forge.service.problem.ProblemCheckerService
 import ru.nsu.problem_forge.service.problem.ProblemSolutionsService
 import ru.nsu.problem_forge.service.UserService
 import ru.nsu.problem_forge.service.problem.ProblemGeneratorService
+import ru.nsu.problem_forge.service.problem.ProblemTestsService
 
 @RestController
 @RequestMapping("/api/problems/{problemId}")
@@ -21,6 +24,7 @@ class ProblemFilesController(
     private val problemSolutionsService: ProblemSolutionsService,
     private val problemCheckerService: ProblemCheckerService,
     private val problemGeneratorService: ProblemGeneratorService,
+    private val problemTestsService: ProblemTestsService,
     private val userService: UserService
 ) {
 
@@ -144,5 +148,62 @@ class ProblemFilesController(
         val user = userService.findUserByHandle(userDetails.username)
         problemGeneratorService.deleteGenerator(problemId, generatorId, user.id!!)
         return ResponseEntity.noContent().build()
+    }
+
+    // Test endpoints (NEW)
+    @GetMapping("/tests")
+    fun getTests(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<TestResponse>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val tests = problemTestsService.getTests(problemId, user.id!!)
+        return ResponseEntity.ok(tests)
+    }
+
+    @PostMapping("/tests")
+    fun addTest(
+        @PathVariable problemId: Long,
+        @RequestBody testDto: TestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<TestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemTestsService.addTest(problemId, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @PutMapping("/tests/{testNumber}")
+    fun updateTest(
+        @PathVariable problemId: Long,
+        @PathVariable testNumber: Int,
+        @RequestBody testDto: TestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<TestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemTestsService.updateTest(problemId, testNumber, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @DeleteMapping("/tests/{testNumber}")
+    fun deleteTest(
+        @PathVariable problemId: Long,
+        @PathVariable testNumber: Int,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        problemTestsService.deleteTest(problemId, testNumber, user.id!!)
+        return ResponseEntity.noContent().build()
+    }
+
+    // NEW: Reorder tests endpoint
+    @PostMapping("/tests/reorder")
+    fun reorderTests(
+        @PathVariable problemId: Long,
+        @RequestBody newOrder: List<Int>, // List of test numbers in new order
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<TestResponse>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val tests = problemTestsService.reorderTests(problemId, user.id!!, newOrder)
+        return ResponseEntity.ok(tests)
     }
 }

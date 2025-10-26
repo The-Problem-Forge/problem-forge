@@ -1,4 +1,4 @@
-package ru.nsu.problem_forge.type
+package ru.nsu.problem_forge.type.problem
 
 import com.fasterxml.jackson.annotation.JsonCreator
 

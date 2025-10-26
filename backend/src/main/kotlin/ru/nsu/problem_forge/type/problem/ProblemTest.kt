@@ -1,14 +1,21 @@
 package ru.nsu.problem_forge.type.problem
 
-data class ProblemTest(
-    val number: Int,
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class ProblemTest @JsonCreator constructor(
+    @JsonProperty("testType")
     val testType: TestType,
 
-    // Contains plain test data if TestType::RAW
-    // Contains generator string if TestType::Generated
+    @JsonProperty("content")
     val content: String = "",
 
+    @JsonProperty("description")
     val description: String = "",
+
+    @JsonProperty("sample")
     val sample: Boolean = false,
+
+    @JsonProperty("points")
     val points: Int = 1
 )

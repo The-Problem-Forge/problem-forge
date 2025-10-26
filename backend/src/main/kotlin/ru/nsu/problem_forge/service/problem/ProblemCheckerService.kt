@@ -8,7 +8,7 @@ import ru.nsu.problem_forge.entity.File
 import ru.nsu.problem_forge.repository.FileRepository
 import ru.nsu.problem_forge.repository.ProblemRepository
 import ru.nsu.problem_forge.repository.ProblemUserRepository
-import ru.nsu.problem_forge.type.FileFormat
+import ru.nsu.problem_forge.type.problem.FileFormat
 import ru.nsu.problem_forge.type.Role
 import java.time.LocalDateTime
 import java.util.*

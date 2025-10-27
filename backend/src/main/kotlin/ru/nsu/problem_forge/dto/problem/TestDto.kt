@@ -39,7 +39,6 @@ data class TestPreview(
     val input: String? = null,
     val output: String? = null,
     val status: TestPreviewStatus,
-    val cached: Boolean = false,
     val message: String? = null  // Added for error messages
 )
 

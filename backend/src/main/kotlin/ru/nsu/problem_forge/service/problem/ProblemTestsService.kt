@@ -116,6 +116,18 @@ class ProblemTestsService(
         return calculateChecksum(checksumData.toString())
     }
 
+    fun calculateOutputChecksum(solutionContent: String, solutionFormat: FileFormat): String {
+        return calculateChecksum(solutionContent + solutionFormat)
+    }
+
+    fun calculateRawInputChecksum(inputContent: String): String {
+        return calculateChecksum(inputContent)
+    }
+
+    fun calculateGeneratedInputChecksum(generatorSource: String, callerString: String): String {
+        return calculateChecksum(generatorSource + callerString)
+    }
+
     private fun isAllTestsCachedAndValid(problem: Problem): Boolean {
         return problem.problemInfo.tests.all { test ->
             test.inputFileId != null &&
@@ -133,7 +145,7 @@ class ProblemTestsService(
         when (test.testType) {
             TestType.RAW -> {
                 // For RAW tests: checksum = inputContent + test.content
-                val currentChecksum = calculateChecksum(test.content)
+                val currentChecksum = calculateRawInputChecksum(test.content)
                 return currentChecksum == test.inputChecksum
             }
 
@@ -146,7 +158,7 @@ class ProblemTestsService(
                     ?: return false // Generator file not found
 
                 val generatorSource = String(generatorFile.content)
-                val currentChecksum = calculateChecksum(generatorSource + test.content)
+                val currentChecksum = calculateGeneratedInputChecksum(generatorSource, test.content)
                 return currentChecksum == test.inputChecksum
             }
         }
@@ -164,7 +176,7 @@ class ProblemTestsService(
 
         val solutionSource = String(solutionFile.content)
 
-        val currentChecksum = calculateChecksum(solutionSource + solutionFile.format)
+        val currentChecksum = calculateOutputChecksum(solutionSource, solutionFile.format)
         return currentChecksum == test.outputChecksum
     }
 
@@ -237,8 +249,7 @@ class ProblemTestsService(
                             testNumber = testNumber,
                             input = inputContent,
                             output = outputContent,
-                            status = TestPreviewStatus.COMPLETED,
-                            cached = false
+                            status = TestPreviewStatus.COMPLETED
                         )
                     )
                 } else {
@@ -255,8 +266,7 @@ class ProblemTestsService(
                             testNumber = testNumber,
                             input = inputContent,
                             output = outputContent,
-                            status = TestPreviewStatus.COMPLETED,
-                            cached = true
+                            status = TestPreviewStatus.COMPLETED
                         )
                     )
                     updatedTests.add(test)
@@ -337,12 +347,12 @@ class ProblemTestsService(
 
         // Calculate appropriate checksum based on test type
         val checksum = when (test.testType) {
-            TestType.RAW -> calculateChecksum(inputContent)
+            TestType.RAW -> calculateRawInputChecksum(inputContent)
             TestType.GENERATED -> {
                 val generator = generators.find { it.alias == test.content.split(" ")[0] }!!
                 val generatorFile = fileRepository.findById(generator.file).get()
                 val generatorSource = String(generatorFile.content)
-                calculateChecksum(generatorSource + test.content)
+                calculateGeneratedInputChecksum(generatorSource, test.content)
             }
         }
 
@@ -362,7 +372,7 @@ class ProblemTestsService(
         }
 
         val outputContent = runOutputs[0].outputContent
-        val checksum = calculateChecksum(outputContent + solutionSource + inputContent)
+        val checksum = calculateOutputChecksum(solutionSource, solutionFormat)
 
         return Pair(outputContent, checksum)
     }
@@ -408,8 +418,7 @@ class ProblemTestsService(
                 input = inputContent,
                 output = outputContent,
                 status = if (inputContent != null && outputContent != null)
-                    TestPreviewStatus.COMPLETED else TestPreviewStatus.ERROR,
-                cached = true
+                    TestPreviewStatus.COMPLETED else TestPreviewStatus.ERROR
             )
         }
 

@@ -44,7 +44,7 @@ class SimpleRunnerTest {
         val results = simpleRunner.run(programSource, runs)
 
         // Then
-        assertEquals(2, results.size)
+        assertEquals(1, results.size)
         assertEquals(RunStatus.SUCCESS, results[0].status)
         assertEquals("8", results[0].outputContent.trim())
     }

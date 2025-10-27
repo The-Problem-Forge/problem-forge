@@ -105,8 +105,7 @@ class ProblemTestsServiceTest {
                     testNumber = 1,
                     input = "cached input",
                     output = "cached output",
-                    status = TestPreviewStatus.COMPLETED,
-                    cached = true
+                    status = TestPreviewStatus.COMPLETED
                 )
             )
         )

@@ -1,0 +1,35 @@
+name: Build Kotlin Project
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
+
+    - name: Build with Gradle
+      working-directory: ./backend
+      run: gradle build
+
+    - name: Run tests
+      working-directory: ./backend
+      run: gradle test

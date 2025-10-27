@@ -28,7 +28,9 @@ jobs:
         gradle-version: '8.5'
 
     - name: Build with Gradle
+      working-directory: ./backend
       run: gradle build
 
     - name: Run tests
+      working-directory: ./backend
       run: gradle test

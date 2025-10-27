@@ -53,4 +53,14 @@ class ContestController(
         val contest = contestService.updateContest(contestId, request, user.id!!)
         return ResponseEntity.ok(contest)
     }
+
+    @GetMapping("/{contestId}/tasks")
+    fun getTasks(
+        @PathVariable contestId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<TaskDto>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val tasks = contestService.getTasksForContest(contestId, user.id!!)
+        return ResponseEntity.ok(tasks)
+    }
 }

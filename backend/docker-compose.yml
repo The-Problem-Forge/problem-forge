@@ -19,24 +19,24 @@ services:
       timeout: 5s
       retries: 5
 
-#  backend:
-#    container_name: problem-forge-backend
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/problem_forge_db
-#      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    networks:
-#      - problem-forge-network
-#    restart: unless-stopped
+  backend:
+    container_name: problem-forge-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/problem_forge_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - problem-forge-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

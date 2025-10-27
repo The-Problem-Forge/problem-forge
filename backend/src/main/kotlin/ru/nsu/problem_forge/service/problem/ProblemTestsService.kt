@@ -2,20 +2,427 @@ package ru.nsu.problem_forge.service.problem
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import ru.nsu.problem_forge.dto.problem.TestDto
-import ru.nsu.problem_forge.dto.problem.TestResponse
+import ru.nsu.problem_forge.dto.problem.*
+import ru.nsu.problem_forge.entity.File
+import ru.nsu.problem_forge.entity.Problem
+import ru.nsu.problem_forge.repository.FileRepository
 import ru.nsu.problem_forge.repository.ProblemRepository
 import ru.nsu.problem_forge.repository.ProblemUserRepository
+import ru.nsu.problem_forge.runner.Runner
 import ru.nsu.problem_forge.type.Role
-import ru.nsu.problem_forge.type.problem.ProblemTest
-import ru.nsu.problem_forge.type.problem.TestType
+import ru.nsu.problem_forge.type.problem.*
+import java.security.MessageDigest
 import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class ProblemTestsService(
     private val problemRepository: ProblemRepository,
-    private val problemUserRepository: ProblemUserRepository
+    private val problemUserRepository: ProblemUserRepository,
+    private val fileRepository: FileRepository,
+    private val runner: Runner
 ) {
+
+    val previewStatusCache = ConcurrentHashMap<Long, PreviewStatus>()
+    val previewGenerationCache = ConcurrentHashMap<Long, TestPreviewResponse>()
+    val problemChecksumCache = ConcurrentHashMap<Long, String>()
+
+    @Transactional(readOnly = true)
+    fun getTestsPreview(problemId: Long, userId: Long): TestPreviewResponse {
+        val problem = problemRepository.findById(problemId)
+            .orElseThrow { IllegalArgumentException("Problem not found") }
+
+        val problemUser = problemUserRepository.findByProblemIdAndUserId(problemId, userId)
+            ?: throw SecurityException("No access to problem")
+
+        if (problemUser.role < Role.VIEWER) {
+            throw SecurityException("Viewer role required")
+        }
+
+        // Check for main solution
+        if (problem.problemInfo.solutions.none { it.solutionType == SolutionType.MAIN_AC }) {
+            throw IllegalArgumentException("No main correct solution found")
+        }
+
+        // Check if generation is in progress
+        if (previewStatusCache[problemId] == PreviewStatus.IN_PROGRESS) {
+            return TestPreviewResponse(
+                status = PreviewStatus.IN_PROGRESS,
+                message = "Test preview generation is in progress. Please wait..."
+            )
+        }
+
+        // Calculate current problem checksum
+        val currentChecksum = calculateProblemChecksum(problem)
+
+        // Check if we have valid cached preview
+        val cachedPreview = previewGenerationCache[problemId]
+        val cachedChecksum = problemChecksumCache[problemId]
+
+        if (cachedPreview != null && cachedChecksum == currentChecksum) {
+            return cachedPreview
+        }
+
+        // Check if database has valid cached data
+        if (isAllTestsCachedAndValid(problem)) {
+            val preview = buildPreviewFromCache(problem.problemInfo.tests)
+            previewGenerationCache[problemId] = preview
+            problemChecksumCache[problemId] = currentChecksum
+            return preview
+        }
+
+        // Start async generation
+        startAsyncPreviewGeneration(problemId, userId, currentChecksum)
+
+        return TestPreviewResponse(
+            status = PreviewStatus.PENDING,
+            message = "Starting test preview generation..."
+        )
+    }
+
+    fun calculateProblemChecksum(problem: Problem): String {
+        val checksumData = StringBuilder()
+
+        // Include problem ID and modification time
+        checksumData.append(problem.id)
+
+        // Include tests data
+        problem.problemInfo.tests.forEach { test ->
+            checksumData.append(test.testType)
+            checksumData.append(test.content)
+        }
+
+        // Include generators data
+        problem.problemInfo.generators.forEach { generator ->
+            val generatorFile = fileRepository.findById(generator.file).orElse(null)
+            if (generatorFile != null) {
+                checksumData.append(generator.generatorId)
+                checksumData.append(generator.alias)
+                checksumData.append(String(generatorFile.content))
+            }
+        }
+
+        // Include main solution data
+        val mainSolution = problem.problemInfo.solutions.find { it.solutionType == SolutionType.MAIN_AC }
+        if (mainSolution != null) {
+            val solutionFile = fileRepository.findById(mainSolution.file).orElse(null)
+            if (solutionFile != null) {
+                checksumData.append(mainSolution.solutionId)
+                checksumData.append(String(solutionFile.content))
+            }
+        }
+
+        return calculateChecksum(checksumData.toString())
+    }
+
+    private fun isAllTestsCachedAndValid(problem: Problem): Boolean {
+        return problem.problemInfo.tests.all { test ->
+            test.inputFileId != null &&
+                    test.outputFileId != null &&
+                    test.inputChecksum != null &&
+                    test.outputChecksum != null &&
+                    isTestInputValid(test, problem) &&
+                    isTestOutputValid(test, problem)
+        }
+    }
+
+    private fun isTestInputValid(test: ProblemTest, problem: Problem): Boolean {
+        if (test.inputFileId == null || test.inputChecksum == null) return false
+
+        when (test.testType) {
+            TestType.RAW -> {
+                // For RAW tests: checksum = inputContent + test.content
+                val currentChecksum = calculateChecksum(test.content)
+                return currentChecksum == test.inputChecksum
+            }
+
+            TestType.GENERATED -> {
+                // For GENERATED tests: checksum = inputContent + generator_source + test.content
+                val generator = problem.problemInfo.generators.find { it.alias == test.content.split(" ")[0] }
+                    ?: return false // Generator not found
+
+                val generatorFile = fileRepository.findById(generator.file).orElse(null)
+                    ?: return false // Generator file not found
+
+                val generatorSource = String(generatorFile.content)
+                val currentChecksum = calculateChecksum(generatorSource + test.content)
+                return currentChecksum == test.inputChecksum
+            }
+        }
+    }
+
+    private fun isTestOutputValid(test: ProblemTest, problem: Problem): Boolean {
+        // Here we know that input did not changed...
+        if (test.outputFileId == null || test.outputChecksum == null) return false
+
+        val mainSolution = problem.problemInfo.solutions.find { it.solutionType == SolutionType.MAIN_AC }
+        if (mainSolution == null) return false
+
+        val solutionFile = fileRepository.findById(mainSolution.file).orElse(null) ?: return false
+
+
+        val solutionSource = String(solutionFile.content)
+
+        val currentChecksum = calculateChecksum(solutionSource + solutionFile.format)
+        return currentChecksum == test.outputChecksum
+    }
+
+    private fun startAsyncPreviewGeneration(problemId: Long, userId: Long, checksum: String) {
+        previewStatusCache[problemId] = PreviewStatus.IN_PROGRESS
+
+        Thread {
+            try {
+                val result = generatePreview(problemId, userId)
+                previewGenerationCache[problemId] = result
+                problemChecksumCache[problemId] = checksum
+                previewStatusCache[problemId] = PreviewStatus.COMPLETED
+            } catch (e: Exception) {
+                previewStatusCache[problemId] = PreviewStatus.ERROR
+                println("Error in async preview generation for problem $problemId: ${e.message}")
+            }
+        }.start()
+    }
+
+    @Transactional
+    fun generatePreview(problemId: Long, userId: Long): TestPreviewResponse {
+        val problem = problemRepository.findById(problemId)
+            .orElseThrow { IllegalArgumentException("Problem not found") }
+
+        val mainSolution = problem.problemInfo.solutions.find { it.solutionType == SolutionType.MAIN_AC }
+            ?: throw IllegalArgumentException("No main correct solution found")
+
+        val tests = problem.problemInfo.tests
+        val generators = problem.problemInfo.generators
+
+        val mainSolutionFile = fileRepository.findById(mainSolution.file)
+            .orElseThrow { IllegalArgumentException("Main solution file not found") }
+
+        val mainSolutionSource = String(mainSolutionFile.content)
+
+        val previewTests = mutableListOf<TestPreview>()
+        val updatedTests = mutableListOf<ProblemTest>()
+
+        tests.forEachIndexed { index, test ->
+            val testNumber = index + 1
+
+            try {
+                val needsRegeneration = needsTestRegeneration(test, problem)
+
+                if (needsRegeneration) {
+                    val (inputContent, inputChecksum) = generateInput(test, generators)
+                    val (outputContent, outputChecksum) = generateOutput(
+                        mainSolutionSource,
+                        mainSolutionFile.format,
+                        inputContent,
+                    )
+
+                    val (inputFileId, outputFileId) = saveTestFiles(
+                        inputContent,
+                        outputContent,
+                        inputChecksum,
+                        outputChecksum
+                    )
+
+                    val updatedTest = test.copy(
+                        inputFileId = inputFileId,
+                        inputChecksum = inputChecksum,
+                        outputFileId = outputFileId,
+                        outputChecksum = outputChecksum
+                    )
+                    updatedTests.add(updatedTest)
+
+                    previewTests.add(
+                        TestPreview(
+                            testNumber = testNumber,
+                            input = inputContent,
+                            output = outputContent,
+                            status = TestPreviewStatus.COMPLETED,
+                            cached = false
+                        )
+                    )
+                } else {
+                    val inputContent = test.inputFileId?.let { fileId ->
+                        fileRepository.findById(fileId).map { String(it.content) }.orElse(null)
+                    }
+
+                    val outputContent = test.outputFileId?.let { fileId ->
+                        fileRepository.findById(fileId).map { String(it.content) }.orElse(null)
+                    }
+
+                    previewTests.add(
+                        TestPreview(
+                            testNumber = testNumber,
+                            input = inputContent,
+                            output = outputContent,
+                            status = TestPreviewStatus.COMPLETED,
+                            cached = true
+                        )
+                    )
+                    updatedTests.add(test)
+                }
+
+            } catch (e: Exception) {
+                previewTests.add(
+                    TestPreview(
+                        testNumber = testNumber,
+                        input = null,
+                        output = null,
+                        status = TestPreviewStatus.ERROR,
+                        message = e.message
+                    )
+                )
+                updatedTests.add(test)
+            }
+        }
+
+        // Save changes to database
+        if (updatedTests != tests) {
+            val updatedProblemInfo = problem.problemInfo.copy(tests = updatedTests)
+            problem.problemInfo = updatedProblemInfo
+            problemRepository.save(problem)
+        }
+
+        return TestPreviewResponse(
+            status = PreviewStatus.COMPLETED,
+            tests = previewTests
+        )
+    }
+
+
+    private fun needsTestRegeneration(test: ProblemTest, problem: Problem): Boolean {
+        // If test has no cached data, it needs regeneration
+        if (test.inputFileId == null || test.outputFileId == null) {
+            return true
+        }
+
+        // Check if input is still valid
+        if (!isTestInputValid(test, problem)) {
+            return true
+        }
+
+        // Check if output is still valid
+        if (!isTestOutputValid(test, problem)) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun generateInput(test: ProblemTest, generators: List<ProblemGenerator>): Pair<String, String> {
+        val inputContent = when (test.testType) {
+            TestType.RAW -> test.content
+            TestType.GENERATED -> {
+                val alias = test.content.split(" ")[0]
+                val args = test.content.split(" ").subList(1, test.content.split(" ").size)
+                val generator = generators.find { it.alias == alias }
+                    ?: throw IllegalArgumentException("Generator with alias '${alias}' not found")
+
+                val generatorFile = fileRepository.findById(generator.file)
+                    .orElseThrow { IllegalArgumentException("Generator file not found") }
+
+                val generatorSource = String(generatorFile.content)
+
+                // Run generator to produce input
+                val runInputs = listOf(Runner.RunInput(inputContent = "", args = args, testlibNeeded = true))
+                val runOutputs = runner.run(generatorSource, runInputs)
+
+                if (runOutputs.isEmpty() || runOutputs[0].status != Runner.RunStatus.SUCCESS) {
+                    throw IllegalArgumentException("Generator execution failed: ${runOutputs.getOrNull(0)?.status}")
+                }
+
+                runOutputs[0].outputContent
+            }
+        }
+
+        // Calculate appropriate checksum based on test type
+        val checksum = when (test.testType) {
+            TestType.RAW -> calculateChecksum(inputContent)
+            TestType.GENERATED -> {
+                val generator = generators.find { it.alias == test.content.split(" ")[0] }!!
+                val generatorFile = fileRepository.findById(generator.file).get()
+                val generatorSource = String(generatorFile.content)
+                calculateChecksum(generatorSource + test.content)
+            }
+        }
+
+        return Pair(inputContent, checksum)
+    }
+
+    private fun generateOutput(
+        solutionSource: String,
+        solutionFormat: FileFormat,
+        inputContent: String
+    ): Pair<String, String> {
+        val runInputs = listOf(Runner.RunInput(inputContent = inputContent))
+        val runOutputs = runner.run(solutionSource, runInputs)
+
+        if (runOutputs.isEmpty() || runOutputs[0].status != Runner.RunStatus.SUCCESS) {
+            throw IllegalArgumentException("Solution execution failed: ${runOutputs.getOrNull(0)?.status}")
+        }
+
+        val outputContent = runOutputs[0].outputContent
+        val checksum = calculateChecksum(outputContent + solutionSource + inputContent)
+
+        return Pair(outputContent, checksum)
+    }
+
+    private fun saveTestFiles(
+        inputContent: String,
+        outputContent: String,
+        inputChecksum: String,
+        outputChecksum: String
+    ): Pair<Long, Long> {
+        // Always create new files to ensure consistency
+        val inputFile = File().apply {
+            format = FileFormat.TEXT
+            content = inputContent.toByteArray()
+            createdAt = LocalDateTime.now()
+            modifiedAt = LocalDateTime.now()
+        }
+        val savedInputFile = fileRepository.save(inputFile)
+
+        val outputFile = File().apply {
+            format = FileFormat.TEXT
+            content = outputContent.toByteArray()
+            createdAt = LocalDateTime.now()
+            modifiedAt = LocalDateTime.now()
+        }
+        val savedOutputFile = fileRepository.save(outputFile)
+
+        return Pair(savedInputFile.id, savedOutputFile.id)
+    }
+
+    private fun buildPreviewFromCache(tests: List<ProblemTest>): TestPreviewResponse {
+        val previewTests = tests.mapIndexed { index, test ->
+            val inputContent = test.inputFileId?.let { fileId ->
+                fileRepository.findById(fileId).map { String(it.content) }.orElse(null)
+            }
+
+            val outputContent = test.outputFileId?.let { fileId ->
+                fileRepository.findById(fileId).map { String(it.content) }.orElse(null)
+            }
+
+            TestPreview(
+                testNumber = index + 1,
+                input = inputContent,
+                output = outputContent,
+                status = if (inputContent != null && outputContent != null)
+                    TestPreviewStatus.COMPLETED else TestPreviewStatus.ERROR,
+                cached = true
+            )
+        }
+
+        return TestPreviewResponse(
+            status = PreviewStatus.COMPLETED,
+            tests = previewTests
+        )
+    }
+
+    private fun calculateChecksum(data: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(data.toByteArray())
+        return Base64.getEncoder().encodeToString(bytes)
+    }
 
     fun getTests(problemId: Long, userId: Long): List<TestResponse> {
         val problem = problemRepository.findById(problemId)
@@ -220,6 +627,7 @@ class ProblemTestsService(
             TestType.RAW -> {
                 require(testDto.content.isNotBlank()) { "Content is required for RAW tests" }
             }
+
             TestType.GENERATED -> {
                 require(testDto.content.isNotBlank()) { "Generator alias is required for GENERATED tests" }
             }

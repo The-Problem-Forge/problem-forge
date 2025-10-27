@@ -11,6 +11,7 @@ import ru.nsu.problem_forge.dto.problem.GeneratorResponse
 import ru.nsu.problem_forge.dto.problem.SolutionDto
 import ru.nsu.problem_forge.dto.problem.SolutionResponse
 import ru.nsu.problem_forge.dto.problem.TestDto
+import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestResponse
 import ru.nsu.problem_forge.service.problem.ProblemCheckerService
 import ru.nsu.problem_forge.service.problem.ProblemSolutionsService
@@ -195,7 +196,6 @@ class ProblemFilesController(
         return ResponseEntity.noContent().build()
     }
 
-    // NEW: Reorder tests endpoint
     @PostMapping("/tests/reorder")
     fun reorderTests(
         @PathVariable problemId: Long,
@@ -205,5 +205,15 @@ class ProblemFilesController(
         val user = userService.findUserByHandle(userDetails.username)
         val tests = problemTestsService.reorderTests(problemId, user.id!!, newOrder)
         return ResponseEntity.ok(tests)
+    }
+
+    @GetMapping("/tests/preview")
+    fun getTestsPreview(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<TestPreviewResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val preview = problemTestsService.getTestsPreview(problemId, user.id!!)
+        return ResponseEntity.ok(preview)
     }
 }

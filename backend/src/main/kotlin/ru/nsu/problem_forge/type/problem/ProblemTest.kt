@@ -17,5 +17,17 @@ data class ProblemTest @JsonCreator constructor(
     val sample: Boolean = false,
 
     @JsonProperty("points")
-    val points: Int = 1
+    val points: Int = 1,
+
+    @JsonProperty("inputFileId")
+    val inputFileId: Long? = null,
+
+    @JsonProperty("inputChecksum")
+    val inputChecksum: String? = null,
+
+    @JsonProperty("outputFileId")
+    val outputFileId: Long? = null,
+
+    @JsonProperty("outputChecksum")
+    val outputChecksum: String? = null
 )

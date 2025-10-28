@@ -262,11 +262,11 @@ int main(int argc, char *argv[]) {
         """.trimIndent()
 
         val runs = listOf(
-            RunInput(testlibNeeded = true, inputContent = "", args = listOf("100", "100", "0", "0", "5"))
+            RunInput(inputContent = "", args = listOf("100", "100", "0", "0", "5"))
         )
 
         // When
-        val results = simpleRunner.run(programSource, runs)
+        val results = simpleRunner.run(programSource, runs, true)
 
         // Then
         assertEquals(1, results.size)
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
         """.trimIndent()
 
         val runs = listOf(
-            RunInput(testlibNeeded = false, inputContent = "")
+            RunInput(inputContent = "")
         )
 
         // When

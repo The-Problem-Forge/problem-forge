@@ -3,7 +3,6 @@ package ru.nsu.problem_forge.runner
 interface Runner {
 
     data class RunInput (
-        val testlibNeeded: Boolean = false,
         val args: List<String> = emptyList(),
         val inputContent: String,
         val timeLimit: Long = 5000,
@@ -21,6 +20,7 @@ interface Runner {
         val outputContent: String
     )
 
-    fun run(programSource: String, runs: List<RunInput>) : List<RunOutput>
+    fun run(programSource: String, runs: List<RunInput>, testlibNeeded: Boolean = false) : List<RunOutput>
 
+    fun compileToBinary(programSource: String, testlibNeeded: Boolean = false): ByteArray?
 }

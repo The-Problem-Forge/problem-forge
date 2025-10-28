@@ -334,8 +334,8 @@ class ProblemTestsService(
                 val generatorSource = String(generatorFile.content)
 
                 // Run generator to produce input
-                val runInputs = listOf(Runner.RunInput(inputContent = "", args = args, testlibNeeded = true))
-                val runOutputs = runner.run(generatorSource, runInputs)
+                val runInputs = listOf(Runner.RunInput(inputContent = "", args = args))
+                val runOutputs = runner.run(generatorSource, runInputs, true)
 
                 if (runOutputs.isEmpty() || runOutputs[0].status != Runner.RunStatus.SUCCESS) {
                     throw IllegalArgumentException("Generator execution failed: ${runOutputs.getOrNull(0)?.status}")

@@ -186,7 +186,7 @@ class ProblemPackageService(
 
             // Add compiled checker to ZIP
             checkerBinary?.let { binary ->
-                zipOutputStream.putNextEntry(ZipEntry("checker.exe"))
+                zipOutputStream.putNextEntry(ZipEntry("check.exe"))
                 zipOutputStream.write(binary)
                 zipOutputStream.closeEntry()
             }

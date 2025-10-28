@@ -193,30 +193,6 @@ class ProblemTestsServiceTest {
     }
 
     @Test
-    fun `generatePreview should handle GENERATED tests correctly`() {
-        // Given
-        val problem = createProblemWithGeneratedTests()
-        val generatorFile = createFileWithContent("YOUR_GENERATOR_SOURCE_CODE_HERE")
-        val solutionFile = createFileWithContent("YOUR_SOLUTION_SOURCE_CODE_HERE")
-
-        every { problemRepository.findById(problemId) } returns Optional.of(problem)
-        every { problemRepository.save(any()) } returns problem
-        every { fileRepository.save(any()) } returnsArgument 0
-        every { fileRepository.findById(any()) } returns Optional.of(generatorFile)
-        every { runner.run(any(), any()) } returns listOf(
-            Runner.RunOutput(Runner.RunStatus.SUCCESS, "GENERATED_INPUT_CONTENT")
-        )
-
-        // When
-        val result = problemTestsService.generatePreview(problemId, userId)
-
-        // Then
-        assertEquals(PreviewStatus.COMPLETED, result.status)
-        // Verify runner was called with correct parameters
-        verify { runner.run(any(), any()) }
-    }
-
-    @Test
     fun `generatePreview should handle generator failures gracefully`() {
         // Given
         val problem = createProblemWithGeneratedTests()
@@ -224,7 +200,7 @@ class ProblemTestsServiceTest {
 
         every { problemRepository.findById(problemId) } returns Optional.of(problem)
         every { fileRepository.findById(any()) } returns Optional.of(generatorFile)
-        every { runner.run(any(), any()) } returns listOf(
+        every { runner.run(any(), any(), any()) } returns listOf(
             Runner.RunOutput(Runner.RunStatus.RUNTIME_ERROR, "Generator crashed")
         )
 

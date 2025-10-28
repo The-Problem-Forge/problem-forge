@@ -10,14 +10,15 @@ import org.springframework.security.core.userdetails.UserDetails
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id", nullable = false)
     val id: Long? = null,
-    
+
     @Column(unique = true, nullable = false, length = 50)
-    val login: String,
-    
+    val handle: String,
+
     @Column(name = "hashed_password", nullable = false, length = 255)
     val hashedPassword: String,
-    
+
     @Column(nullable = false, length = 100)
     val email: String
 ) : UserDetails {
@@ -26,7 +27,7 @@ data class User(
         mutableListOf(SimpleGrantedAuthority("ROLE_USER"))
     
     override fun getPassword(): String = hashedPassword
-    override fun getUsername(): String = login
+    override fun getUsername(): String = handle
     override fun isAccountNonExpired(): Boolean = true
     override fun isAccountNonLocked(): Boolean = true
     override fun isCredentialsNonExpired(): Boolean = true

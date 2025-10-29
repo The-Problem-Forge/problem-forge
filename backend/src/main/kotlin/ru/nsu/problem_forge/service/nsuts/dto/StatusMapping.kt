@@ -1,4 +1,4 @@
-package ru.nsu.problem_forge.dto.nsuts
+package ru.nsu.problem_forge.service.nsuts.dto
 
 object StatusMapping {
     private val statuses = mapOf(

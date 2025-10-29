@@ -1,4 +1,4 @@
-package ru.nsu.problem_forge.dto.nsuts
+package ru.nsu.problem_forge.service.nsuts.dto
 
 data class NsutsLoginRequest(
     val email: String,
@@ -33,18 +33,6 @@ data class NsutsTask(
     val rateSubmitsInTime: Int?
 )
 
-data class InvocationDto(
-    val solutionId: Long,
-    val testResults: List<InvocationTestDto>
-)
-
-data class InvocationTestDto(
-    val testNumber: Int,
-    val resultCode: String,
-    val resultDescription: String,
-    val usedTimeMs: Int,
-    val usedMemoryKb: Int
-)
 
 // SubmissionResponse.kt
 data class SubmissionResponse(

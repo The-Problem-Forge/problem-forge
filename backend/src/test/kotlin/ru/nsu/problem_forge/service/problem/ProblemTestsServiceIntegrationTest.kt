@@ -5,8 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Tag
-import ru.nsu.problem_forge.dto.*
-import ru.nsu.problem_forge.dto.problem.PreviewStatus
+import ru.nsu.problem_forge.dto.problem.JobStatus
 import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestPreviewStatus
 import ru.nsu.problem_forge.entity.File
@@ -165,7 +164,7 @@ class ProblemTestsServiceIntegrationTest {
         var result = problemTestsService.getTestsPreview(problemId, userId)
         result = waitForPreviewCompletion(result)
 
-        assertEquals(PreviewStatus.COMPLETED, result.status)
+        assertEquals(JobStatus.COMPLETED, result.status)
         assertEquals(4, result.tests.size)
         result.tests.forEach { test ->
             assertEquals(TestPreviewStatus.COMPLETED, test.status, "Test ${test.testNumber} failed: ${test.message}")
@@ -180,7 +179,7 @@ class ProblemTestsServiceIntegrationTest {
         println("=== Step 4: Second preview after generator change ===")
         result = problemTestsService.getTestsPreview(problemId, userId)
         result = waitForPreviewCompletion(result)
-        assertEquals(PreviewStatus.COMPLETED, result.status)
+        assertEquals(JobStatus.COMPLETED, result.status)
 
         // Step 5: Change main solution
         println("=== Step 5: Changing main solution ===")
@@ -190,7 +189,7 @@ class ProblemTestsServiceIntegrationTest {
         println("=== Step 6: Third preview after solution change ===")
         result = problemTestsService.getTestsPreview(problemId, userId)
         result = waitForPreviewCompletion(result)
-        assertEquals(PreviewStatus.COMPLETED, result.status)
+        assertEquals(JobStatus.COMPLETED, result.status)
 
         println("=== Integration test completed successfully ===")
     }
@@ -366,13 +365,13 @@ class ProblemTestsServiceIntegrationTest {
         var attempts = 0
         val maxAttempts = 30
 
-        while (result.status == PreviewStatus.IN_PROGRESS && attempts < maxAttempts) {
+        while (result.status == JobStatus.IN_PROGRESS && attempts < maxAttempts) {
             Thread.sleep(1000)
             result = problemTestsService.getTestsPreview(problemId, userId)
             attempts++
         }
 
-        if (result.status == PreviewStatus.IN_PROGRESS) {
+        if (result.status == JobStatus.IN_PROGRESS) {
             throw AssertionError("Preview generation timed out")
         }
 

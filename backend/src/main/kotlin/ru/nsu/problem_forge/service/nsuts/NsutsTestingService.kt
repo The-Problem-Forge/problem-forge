@@ -5,14 +5,16 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import org.springframework.stereotype.Service
-import ru.nsu.problem_forge.dto.nsuts.*
+import ru.nsu.problem_forge.dto.problem.InvocationResponseDto
+import ru.nsu.problem_forge.dto.problem.InvocationResponseTestDto
+import ru.nsu.problem_forge.service.nsuts.dto.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 private val objectMapper = ObjectMapper().registerKotlinModule()
 
 @Service
-class NsutsUploadService {
+class NsutsTestingService {
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -34,14 +36,14 @@ class NsutsUploadService {
     private val baseUrl = "http://91.218.244.146/nsuts-new"
 
     @Synchronized
-    fun uploadProblemPackage(
+    fun runSolutions(
         zipBytes: ByteArray,
         problemId: Long,
         timeLimit: Long,
         memoryLimit: Long,
         solutions: List<String>,
         deleteProblem: Boolean = true
-    ): List<InvocationDto> {
+    ): List<InvocationResponseDto> {
         try {
             // Step 1: Login
             val sessionCookie = login()
@@ -91,6 +93,7 @@ class NsutsUploadService {
             throw RuntimeException("Failed to upload package to NSUTS: ${e.message}", e)
         }
     }
+
     private fun login(): String {
         val loginRequest = NsutsLoginRequest(
             email = "ProblemForgeTester@mail.ru",
@@ -228,6 +231,7 @@ class NsutsUploadService {
             return parseTaskList(responseBody)
         }
     }
+
     private fun updateTask(sessionCookie: String, taskId: Long, problemId: Long, timeLimit: Long, memoryLimit: Long) {
         // Step 1: Get all tasks
         val allTasks = getAllTasks(sessionCookie)
@@ -474,11 +478,12 @@ class NsutsUploadService {
             testsMd5 = extractField("testsMd5").takeIf { it.isNotEmpty() }
         )
     }
+
     private fun gatherSubmissionResults(
         sessionCookie: String,
         solutionsCount: Int,
         taskId: String
-    ): List<InvocationDto> {
+    ): List<InvocationResponseDto> {
         val maxRetries = 100 // Maximum number of retries to prevent infinite loop
         var retries: Long = 0
 
@@ -541,8 +546,9 @@ class NsutsUploadService {
             throw IOException("Failed to parse submissions: ${e.message}")
         }
     }
-    private fun parseSubmissionToInvocation(solutionId: Long, submission: Submission): InvocationDto {
-        val testResults = mutableListOf<InvocationTestDto>()
+
+    private fun parseSubmissionToInvocation(solutionId: Long, submission: Submission): InvocationResponseDto {
+        val testResults = mutableListOf<InvocationResponseTestDto>()
 
         // Parse result codes only if res is not null and not empty
         submission.res?.forEachIndexed { index, char ->
@@ -553,7 +559,7 @@ class NsutsUploadService {
             val (timeMs, memoryKb) = parseTimeAndMemory(submission.time_and_memory, index + 1)
 
             testResults.add(
-                InvocationTestDto(
+                InvocationResponseTestDto(
                     testNumber = index + 1,
                     resultCode = resultCode,
                     resultDescription = statusInfo.english,
@@ -563,11 +569,12 @@ class NsutsUploadService {
             )
         }
 
-        return InvocationDto(
+        return InvocationResponseDto(
             solutionId = solutionId,
             testResults = testResults
         )
     }
+
     private fun parseTimeAndMemory(timeAndMemoryJson: String?, testNumber: Int): Pair<Int, Int> {
         if (timeAndMemoryJson == null) {
             return Pair(0, 0)

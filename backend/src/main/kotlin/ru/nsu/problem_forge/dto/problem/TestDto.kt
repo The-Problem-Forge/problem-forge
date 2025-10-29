@@ -19,7 +19,7 @@ data class TestResponse(
     val points: Int = 1
 )
 
-enum class PreviewStatus {
+enum class JobStatus {
     PENDING,
     IN_PROGRESS,
     COMPLETED,
@@ -47,7 +47,7 @@ data class TestPreviewRequest(
 )
 
 data class TestPreviewResponse(
-    val status: PreviewStatus,
+    val status: JobStatus,
     val message: String? = null,
     val tests: List<TestPreview> = emptyList()
 )

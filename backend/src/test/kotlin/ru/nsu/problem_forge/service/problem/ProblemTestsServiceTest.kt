@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.nsu.problem_forge.dto.problem.PreviewStatus
+import ru.nsu.problem_forge.dto.problem.JobStatus
 import ru.nsu.problem_forge.dto.problem.TestPreview
 import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestPreviewStatus
@@ -84,14 +84,14 @@ class ProblemTestsServiceTest {
         val result = problemTestsService.getTestsPreview(problemId, userId)
 
         // Then
-        assertEquals(PreviewStatus.PENDING, result.status)
+        assertEquals(JobStatus.PENDING, result.status)
         assertTrue(result.message!!.contains("Starting"))
 
         // Verify generation was started (status should be IN_PROGRESS now)
         // Note: This is async, so we need to wait a bit in real scenario
         Thread.sleep(50) // Small delay to let thread start
-        assertTrue(problemTestsService.previewStatusCache[problemId] == PreviewStatus.IN_PROGRESS ||
-                problemTestsService.previewStatusCache[problemId] == PreviewStatus.COMPLETED)
+        assertTrue(problemTestsService.jobStatusCache[problemId] == JobStatus.IN_PROGRESS ||
+                problemTestsService.jobStatusCache[problemId] == JobStatus.COMPLETED)
     }
 
     @Test
@@ -99,7 +99,7 @@ class ProblemTestsServiceTest {
         // Given
         val problem = createProblemWithMainSolution()
         val cachedPreview = TestPreviewResponse(
-            status = PreviewStatus.COMPLETED,
+            status = JobStatus.COMPLETED,
             tests = listOf(
                 TestPreview(
                     testNumber = 1,
@@ -125,7 +125,7 @@ class ProblemTestsServiceTest {
         val result = problemTestsService.getTestsPreview(problemId, userId)
 
         // Then
-        assertEquals(PreviewStatus.COMPLETED, result.status)
+        assertEquals(JobStatus.COMPLETED, result.status)
         assertEquals(1, result.tests.size)
         assertEquals("cached input", result.tests[0].input)
         assertEquals("cached output", result.tests[0].output)
@@ -136,7 +136,7 @@ class ProblemTestsServiceTest {
         // Given
         val problem = createProblemWithMainSolution()
         val oldPreview = TestPreviewResponse(
-            status = PreviewStatus.COMPLETED,
+            status = JobStatus.COMPLETED,
             tests = emptyList()
         )
 
@@ -156,7 +156,7 @@ class ProblemTestsServiceTest {
         val result = problemTestsService.getTestsPreview(problemId, userId)
 
         // Then
-        assertEquals(PreviewStatus.PENDING, result.status)
+        assertEquals(JobStatus.PENDING, result.status)
         assertTrue(result.message!!.contains("Starting"))
     }
 
@@ -182,7 +182,7 @@ class ProblemTestsServiceTest {
         val result = problemTestsService.generatePreview(problemId, userId)
 
         // Then
-        assertEquals(PreviewStatus.COMPLETED, result.status)
+        assertEquals(JobStatus.COMPLETED, result.status)
         assertEquals(1, result.tests.size)
         assertEquals(TestPreviewStatus.COMPLETED, result.tests[0].status)
         assertEquals("YOUR_RAW_TEST_CONTENT_HERE", result.tests[0].input) // RAW test uses test.content as input
@@ -208,7 +208,7 @@ class ProblemTestsServiceTest {
         val result = problemTestsService.generatePreview(problemId, userId)
 
         // Then
-        assertEquals(PreviewStatus.COMPLETED, result.status) // Overall completion
+        assertEquals(JobStatus.COMPLETED, result.status) // Overall completion
         assertEquals(TestPreviewStatus.ERROR, result.tests[0].status) // Individual test error
         assertTrue(result.tests[0].message!!.contains("Generator execution failed"))
     }

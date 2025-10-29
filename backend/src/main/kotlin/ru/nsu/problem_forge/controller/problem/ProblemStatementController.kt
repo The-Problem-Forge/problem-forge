@@ -1,5 +1,6 @@
 package ru.nsu.problem_forge.controller.problem
 
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
@@ -47,15 +48,6 @@ class ProblemStatementController(
         return problemStatementService.exportStatementToTex(problemId, user.id!!)
     }
 
-    @GetMapping("/export/pdf")
-    fun exportStatementToPdf(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<ByteArray> {
-        val user = userService.findUserByHandle(userDetails.username)
-        return problemStatementService.exportStatementToPdf(problemId, user.id!!)
-    }
-
     @GetMapping("/tutorial/export/tex")
     fun exportTutorialToTex(
         @PathVariable problemId: Long,
@@ -65,12 +57,23 @@ class ProblemStatementController(
         return problemStatementService.exportTutorialToTex(problemId, user.id!!)
     }
 
-    @GetMapping("/tutorial/export/pdf")
-    fun exportTutorialToPdf(
+    @GetMapping("/export/pdf")
+    fun downloadStatementPdf(
         @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<ByteArray> {
+        @AuthenticationPrincipal userDetails: UserDetails,
+        response: HttpServletResponse
+    ) {
         val user = userService.findUserByHandle(userDetails.username)
-        return problemStatementService.exportTutorialToPdf(problemId, user.id!!)
+        problemStatementService.downloadStatementPdf(problemId, user.id!!, response)
+    }
+
+    @GetMapping("/tutorial/export/pdf")
+    fun downloadTutorialPdf(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails,
+        response: HttpServletResponse
+    ) {
+        val user = userService.findUserByHandle(userDetails.username)
+        problemStatementService.downloadTutorialPdf(problemId, user.id!!, response)
     }
 }

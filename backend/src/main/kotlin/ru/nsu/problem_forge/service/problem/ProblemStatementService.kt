@@ -1,24 +1,26 @@
 package ru.nsu.problem_forge.service.problem
 
-import org.springframework.stereotype.Service
-import ru.nsu.problem_forge.repository.ProblemRepository
-import ru.nsu.problem_forge.repository.ProblemUserRepository
-import ru.nsu.problem_forge.type.Role
-import java.time.LocalDateTime
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
 import ru.nsu.problem_forge.dto.StatementDto
 import ru.nsu.problem_forge.dto.StatementResponse
 import ru.nsu.problem_forge.entity.Problem
+import ru.nsu.problem_forge.repository.ProblemRepository
+import ru.nsu.problem_forge.repository.ProblemUserRepository
+import ru.nsu.problem_forge.type.Role
 import ru.nsu.problem_forge.type.problem.Statement
+import java.time.LocalDateTime
 import javax.naming.ServiceUnavailableException
 
 @Service
 class ProblemStatementService(
     private val problemRepository: ProblemRepository,
     private val problemUserRepository: ProblemUserRepository,
-    private val pdfExportService: PdfExportService
+    private val latexGenerationService: LatexGenerationService,
+    private val latexCompilationService: LatexCompilationService
 ) {
 
     fun getStatement(problemId: Long, userId: Long): StatementResponse {
@@ -28,11 +30,6 @@ class ProblemStatementService(
         // Check permissions
         val problemUser = problemUserRepository.findByProblemIdAndUserId(problemId, userId)
             ?: throw SecurityException("No access to problem")
-
-//        // Check if this is a branch (has parent)
-//        if (problem.parentProblemId == null) {
-//            throw IllegalStateException("Cannot edit main problem branch")
-//        }
 
         val statement = problem.problemInfo.statement
         return StatementResponse(
@@ -57,11 +54,6 @@ class ProblemStatementService(
         if (problemUser.role < Role.EDITOR) {
             throw SecurityException("Editor role required")
         }
-
-//        // Check if this is a branch (has parent)
-//        if (problem.parentProblemId == null) {
-//            throw IllegalStateException("Cannot edit main problem branch")
-//        }
 
         // Update statement
         val currentStatement = problem.problemInfo.statement
@@ -95,8 +87,7 @@ class ProblemStatementService(
 
     fun exportStatementToTex(problemId: Long, userId: Long): ResponseEntity<String> {
         val problem = getProblemWithAccessCheck(problemId, userId)
-
-        val texContent = generateLatexStatement(problem)
+        val texContent = latexGenerationService.generateLatexStatement(problem) // Reuse here
 
         return ResponseEntity.ok()
             .contentType(MediaType.TEXT_PLAIN)
@@ -107,25 +98,9 @@ class ProblemStatementService(
             .body(texContent)
     }
 
-    fun exportStatementToPdf(problemId: Long, userId: Long): ResponseEntity<ByteArray> {
-        val problem = getProblemWithAccessCheck(problemId, userId)
-
-        val pdfBytes = pdfExportService.generateStatementPdf(problem)
-            ?: throw ServiceUnavailableException("PDF generation not available")
-
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_PDF)
-            .header(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"problem-${problem.id}-statement.pdf\""
-            )
-            .body(pdfBytes)
-    }
-
     fun exportTutorialToTex(problemId: Long, userId: Long): ResponseEntity<String> {
         val problem = getProblemWithAccessCheck(problemId, userId)
-
-        val texContent = generateLatexTutorial(problem)
+        val texContent = latexGenerationService.generateLatexTutorial(problem) // Reuse here
 
         return ResponseEntity.ok()
             .contentType(MediaType.TEXT_PLAIN)
@@ -134,21 +109,6 @@ class ProblemStatementService(
                 "attachment; filename=\"problem-${problem.tag}-tutorial.tex\""
             )
             .body(texContent)
-    }
-
-    fun exportTutorialToPdf(problemId: Long, userId: Long): ResponseEntity<ByteArray> {
-        val problem = getProblemWithAccessCheck(problemId, userId)
-
-        val pdfBytes = pdfExportService.generateTutorialPdf(problem)
-            ?: throw ServiceUnavailableException("PDF generation not available")
-
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_PDF)
-            .header(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"problem-${problem.id}-tutorial.pdf\""
-            )
-            .body(pdfBytes)
     }
 
     private fun getProblemWithAccessCheck(problemId: Long, userId: Long): Problem {
@@ -161,63 +121,43 @@ class ProblemStatementService(
         return problem
     }
 
-    private fun generateLatexStatement(problem: Problem): String {
-        val statement = problem.problemInfo.statement
-        // Simple LaTeX template - you can enhance this as needed
-        return """
-            \documentclass[12pt]{article}
-            \usepackage[utf8]{inputenc}
-            \usepackage{amsmath}
-            \usepackage{amssymb}
-            \usepackage{graphicx}
-            
-            \title{${statement.name}}
-            \author{}
-            \date{}
-            
-            \begin{document}
-            
-            \maketitle
-            
-            \section*{Problem Statement}
-            ${statement.legend}
-            
-            \section*{Input Format}
-            ${statement.inputFormat}
-            
-            \section*{Output Format}
-            ${statement.outputFormat}
-            
-            \section*{Scoring}
-            ${statement.scoring}
-            
-            \section*{Notes}
-            ${statement.notes}
-            
-            \end{document}
-        """.trimIndent()
+    fun downloadStatementPdf(problemId: Long, userId: Long, response: HttpServletResponse) {
+        val problem = getProblemWithAccessCheck(problemId, userId)
+
+        val pdfData = try {
+            val latexContent = latexGenerationService.generateLatexStatement(problem)
+            latexCompilationService.compileLatexToPdf(latexContent)
+        } catch (e: Exception) {
+            throw ServiceUnavailableException("PDF generation failed")
+        }
+
+        response.contentType = "application/pdf"
+        response.setHeader("Content-Disposition", "attachment; filename=\"problem_${problem.id}_statement.pdf\"")
+        response.setContentLength(pdfData.size)
+
+        response.outputStream.use { outputStream ->
+            outputStream.write(pdfData)
+            outputStream.flush()
+        }
     }
 
-    private fun generateLatexTutorial(problem: Problem): String {
-        val statement = problem.problemInfo.statement
-        return """
-            \documentclass[12pt]{article}
-            \usepackage[utf8]{inputenc}
-            \usepackage{amsmath}
-            \usepackage{amssymb}
-            \usepackage{graphicx}
-            
-            \title{Tutorial: ${statement.name}}
-            \author{}
-            \date{}
-            
-            \begin{document}
-            
-            \maketitle
-            
-            ${statement.tutorial}
-            
-            \end{document}
-        """.trimIndent()
+    fun downloadTutorialPdf(problemId: Long, userId: Long, response: HttpServletResponse) {
+        val problem = getProblemWithAccessCheck(problemId, userId)
+
+        val pdfData = try {
+            val latexContent = latexGenerationService.generateLatexTutorial(problem)
+            latexCompilationService.compileLatexToPdf(latexContent)
+        } catch (e: Exception) {
+            throw ServiceUnavailableException("PDF generation failed")
+        }
+
+        response.contentType = "application/pdf"
+        response.setHeader("Content-Disposition", "attachment; filename=\"problem_${problem.id}_tutorial.pdf\"")
+        response.setContentLength(pdfData.size)
+
+        response.outputStream.use { outputStream ->
+            outputStream.write(pdfData)
+            outputStream.flush()
+        }
     }
 }

@@ -6,16 +6,22 @@ import ru.nsu.problem_forge.dto.AddUserToContestRequest
 import ru.nsu.problem_forge.dto.ContestUserDto
 import ru.nsu.problem_forge.dto.UpdateUserPermissionRequest
 import ru.nsu.problem_forge.entity.ContestUser
+import ru.nsu.problem_forge.entity.ProblemUser
+import ru.nsu.problem_forge.repository.ContestProblemRepository
 import ru.nsu.problem_forge.repository.ContestRepository
 import ru.nsu.problem_forge.repository.ContestUserRepository
+import ru.nsu.problem_forge.repository.ProblemUserRepository
 import ru.nsu.problem_forge.repository.UserRepository
 import ru.nsu.problem_forge.type.Role
+import java.time.LocalDateTime
 
 @Service
 class ContestUserService(
     private val contestRepository: ContestRepository,
     private val userRepository: UserRepository,
-    private val contestUserRepository: ContestUserRepository
+    private val contestUserRepository: ContestUserRepository,
+    private val contestProblemRepository: ContestProblemRepository,
+    private val problemUserRepository: ProblemUserRepository
 ) {
 
     @Transactional
@@ -50,7 +56,31 @@ class ContestUserService(
         )
 
         val saved = contestUserRepository.save(contestUser)
+
+        // Give VIEWER permissions to all contest problems for the new user
+        grantContestProblemsAccessToUser(contestId, userToAdd.id)
+
         return toDto(saved)
+    }
+
+    private fun grantContestProblemsAccessToUser(contestId: Long, userId: Long) {
+        val contestProblems = contestProblemRepository.findAllByContestId(contestId)
+
+        contestProblems.forEach { contestProblem ->
+            val problemId = contestProblem.problem!!.id
+            // Check if user already has access to the problem
+            val existingAccess = problemUserRepository.findByProblemIdAndUserId(problemId, userId)
+            if (existingAccess == null) {
+                // Grant VIEWER permission
+                val problemUser = ProblemUser(
+                    problem = contestProblem.problem!!,
+                    user = userRepository.findById(userId).get(), // We know user exists
+                    role = Role.VIEWER,
+                    modifiedAt = LocalDateTime.now()
+                )
+                problemUserRepository.save(problemUser)
+            }
+        }
     }
 
     @Transactional

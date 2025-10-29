@@ -125,7 +125,7 @@ int main() {
             """.trimIndent()
 
     fun readZipFromResources(filename: String = "file.zip"): ByteArray {
-        return this::class.java.classLoader.getResourceAsStream(filename)
+        return javaClass.classLoader.getResourceAsStream(filename)
             ?.readBytes()
             ?: throw IllegalArgumentException("File $filename not found in resources")
     }

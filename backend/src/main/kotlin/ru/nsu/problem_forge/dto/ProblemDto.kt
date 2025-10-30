@@ -5,13 +5,13 @@ import java.time.LocalDateTime
 
 data class ProblemDto(
     val id: Long,
-    val tag: String,
+    val title: String,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 )
 
 data class CreateProblemRequest(
-    val tag: String,
+    val title: String,
 )
 
 data class AddUserToProblemRequest(

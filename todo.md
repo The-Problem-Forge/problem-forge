@@ -11,3 +11,4 @@
 - [ ] Make sure reordering does not mess up ids in the url
 - [x] Adding a task makes it display twice
 - [x] Go into task by clicking the task, not the edit button
+- [ ] Make tasks tab to see a list of available tasks

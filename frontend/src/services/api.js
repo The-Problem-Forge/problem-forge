@@ -32,6 +32,20 @@ const mockData = {
       updatedAt: "2023-01-02T00:00:00Z",
     },
   ],
+  problems: [
+    {
+      id: "1",
+      title: "A+B Problem",
+      createdAt: "2023-01-01T00:00:00Z",
+      modifiedAt: "2023-01-01T00:00:00Z",
+    },
+    {
+      id: "2",
+      title: "Hello World",
+      createdAt: "2023-01-02T00:00:00Z",
+      modifiedAt: "2023-01-02T00:00:00Z",
+    },
+  ],
   tasks: {
     1: [
       {
@@ -67,16 +81,19 @@ const mockData = {
       id: "1",
       title: "Task A",
       description: "First task in contest 1",
+      contestId: "1",
     },
     {
       id: "2",
       title: "Task B",
       description: "Second task in contest 1",
+      contestId: "1",
     },
     {
       id: "3",
       title: "Task C",
       description: "First task in contest 2",
+      contestId: "2",
     },
   ],
   general: {
@@ -319,7 +336,7 @@ export const taskAPI = {
     if (UI_TEST) {
       return Promise.resolve({ data: mockData.allTasks });
     }
-    return api.get("/tasks");
+    return api.get("/problems");
   },
 
   /**
@@ -335,11 +352,14 @@ export const taskAPI = {
           Math.max(...mockData.allTasks.map((t) => parseInt(t.id)), 0) + 1,
         ),
         ...task,
+        contestId: "1", // Default to first contest for UI_TEST
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       mockData.allTasks.push(newTask);
       return Promise.resolve({ data: newTask });
     }
-    return api.post("/tasks", task);
+    return api.post("/problems", { tag: task.title });
   },
 };
 
@@ -459,6 +479,47 @@ export const contestsAPI = {
       return Promise.resolve({ data: reorderedTasks });
     }
     return api.put(`/contests/${contestId}/tasks/reorder`, { order });
+  },
+};
+
+/**
+ * Problems API methods
+ */
+export const problemsAPI = {
+  /**
+   * Lists user's problems
+   * @returns {Promise} Axios response with problems array
+   * @throws {Error} If fetch fails
+   */
+  list: () => {
+    if (UI_TEST) {
+      return Promise.resolve({ data: mockData.allTasks });
+    }
+    return api.get("/problems");
+  },
+
+  /**
+   * Creates a new problem
+   * @param {Object} problem - Problem data
+   * @returns {Promise} Axios response with created problem
+   * @throws {Error} If creation fails
+   */
+  create: async (problem) => {
+    if (UI_TEST) {
+      const newProblem = {
+        id: String(
+          Math.max(...mockData.allTasks.map((t) => parseInt(t.id)), 0) + 1,
+        ),
+        ...problem,
+        contestId: "1", // Default to first contest for UI_TEST
+        description: problem.description || "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockData.allTasks.push(newProblem);
+      return Promise.resolve({ data: newProblem });
+    }
+    return api.post("/problems", { title: problem.title });
   },
 };
 
@@ -608,7 +669,7 @@ export const generalAPI = {
       }
       return Promise.resolve({ data });
     }
-    return api.get(`/tasks/${taskId}/general`);
+    return api.get(`/problems/${taskId}/general`);
   },
 
   /**
@@ -623,7 +684,7 @@ export const generalAPI = {
       mockData.general[taskId] = { ...mockData.general[taskId], ...data };
       return Promise.resolve({ data: mockData.general[taskId] });
     }
-    return api.put(`/tasks/${taskId}/general`, data);
+    return api.put(`/problems/${taskId}/general`, data);
   },
 };
 
@@ -645,7 +706,7 @@ export const statementAPI = {
       }
       return Promise.resolve({ data });
     }
-    return api.get(`/tasks/${taskId}/statement`);
+    return api.get(`/problems/${taskId}/statement`);
   },
 
   /**
@@ -660,7 +721,7 @@ export const statementAPI = {
       mockData.statement[taskId] = { ...mockData.statement[taskId], ...data };
       return Promise.resolve({ data: mockData.statement[taskId] });
     }
-    return api.put(`/tasks/${taskId}/statement`, data);
+    return api.put(`/problems/${taskId}/statement`, data);
   },
 
   /**
@@ -670,7 +731,9 @@ export const statementAPI = {
    * @throws {Error} If export fails
    */
   exportTex: (taskId) =>
-    api.get(`/tasks/${taskId}/statement/export/tex`, { responseType: "blob" }),
+    api.get(`/problems/${taskId}/statement/export/tex`, {
+      responseType: "blob",
+    }),
 
   /**
    * Exports PDF for a task
@@ -679,7 +742,9 @@ export const statementAPI = {
    * @throws {Error} If export fails
    */
   exportPdf: (taskId) =>
-    api.get(`/tasks/${taskId}/statement/export/pdf`, { responseType: "blob" }),
+    api.get(`/problems/${taskId}/statement/export/pdf`, {
+      responseType: "blob",
+    }),
 };
 
 /**
@@ -703,7 +768,7 @@ export const checkerAPI = {
         data: { message: "Source uploaded successfully" },
       });
     }
-    return api.post(`/tasks/${taskId}/checker/source`, formData);
+    return api.post(`/problems/${taskId}/checker`, formData);
   },
 
   /**
@@ -720,7 +785,7 @@ export const checkerAPI = {
       }
       return Promise.resolve({ data });
     }
-    return api.get(`/tasks/${taskId}/checker/source`);
+    return api.get(`/problems/${taskId}/checker`);
   },
 
   /**
@@ -735,7 +800,7 @@ export const checkerAPI = {
       mockData.checker[taskId] = { ...mockData.checker[taskId], ...data };
       return Promise.resolve({ data: mockData.checker[taskId] });
     }
-    return api.put(`/tasks/${taskId}/checker/source`, data);
+    return api.put(`/problems/${taskId}/checker`, data);
   },
 
   /**
@@ -752,7 +817,7 @@ export const checkerAPI = {
       }
       return Promise.resolve({ data: data.tests });
     }
-    return api.get(`/tasks/${taskId}/checker/tests`);
+    return api.get(`/problems/${taskId}/checker/tests`);
   },
 
   /**
@@ -772,7 +837,7 @@ export const checkerAPI = {
       data.tests.push(newTest);
       return Promise.resolve({ data: newTest });
     }
-    return api.post(`/tasks/${taskId}/checker/tests`, test);
+    return api.post(`/problems/${taskId}/checker/tests`, test);
   },
 
   /**
@@ -796,7 +861,7 @@ export const checkerAPI = {
       data.tests[index] = { ...data.tests[index], ...test };
       return Promise.resolve({ data: data.tests[index] });
     }
-    return api.put(`/tasks/${taskId}/checker/tests/${testId}`, test);
+    return api.put(`/problems/${taskId}/checker/tests/${testId}`, test);
   },
 
   /**
@@ -819,7 +884,7 @@ export const checkerAPI = {
       data.tests.splice(index, 1);
       return Promise.resolve({ data: null });
     }
-    return api.delete(`/tasks/${taskId}/checker/tests/${testId}`);
+    return api.delete(`/problems/${taskId}/checker/tests/${testId}`);
   },
 
   /**
@@ -845,7 +910,7 @@ export const checkerAPI = {
       data.runResults = results;
       return Promise.resolve({ data: results });
     }
-    return api.post(`/tasks/${taskId}/checker/run`, { testIds });
+    return api.post(`/problems/${taskId}/checker/run`, { testIds });
   },
 };
 
@@ -968,7 +1033,7 @@ export const testsAPI = {
     if (UI_TEST) {
       return Promise.resolve({ data: mockData.tests[taskId] || [] });
     }
-    return api.get(`/tasks/${taskId}/tests`);
+    return api.get(`/problems/${taskId}/tests`);
   },
 
   /**
@@ -992,7 +1057,7 @@ export const testsAPI = {
       mockData.tests[taskId].push(newTest);
       return Promise.resolve({ data: newTest });
     }
-    return api.post(`/tasks/${taskId}/tests`, test);
+    return api.post(`/problems/${taskId}/tests`, test);
   },
 
   /**
@@ -1019,7 +1084,7 @@ export const testsAPI = {
       mockData.tests[taskId].push(newTest);
       return Promise.resolve({ data: newTest });
     }
-    return api.post(`/tasks/${taskId}/tests`, formData);
+    return api.post(`/problems/${taskId}/tests`, formData);
   },
 
   /**
@@ -1052,7 +1117,7 @@ export const testsAPI = {
       taskTests[index] = updated;
       return Promise.resolve({ data: updated });
     }
-    return api.put(`/tasks/${taskId}/tests/${testId}`, test);
+    return api.put(`/problems/${taskId}/tests/${testId}`, test);
   },
 
   /**
@@ -1074,7 +1139,7 @@ export const testsAPI = {
       mockData.tests[taskId].splice(index, 1);
       return Promise.resolve({ data: null });
     }
-    return api.delete(`/tasks/${taskId}/tests/${testId}`);
+    return api.delete(`/problems/${taskId}/tests/${testId}`);
   },
 };
 
@@ -1093,7 +1158,7 @@ export const generatorsAPI = {
       // Return mock generators if any, otherwise empty array
       return Promise.resolve({ data: mockData.generators[taskId] || [] });
     }
-    return api.get(`/tasks/${taskId}/generators`);
+    return api.get(`/problems/${taskId}/generators`);
   },
 
   /**
@@ -1121,7 +1186,7 @@ export const generatorsAPI = {
       mockData.generators[taskId].push(newGenerator);
       return Promise.resolve({ data: newGenerator });
     }
-    return api.post(`/tasks/${taskId}/generators`, formData);
+    return api.post(`/problems/${taskId}/generators`, formData);
   },
 
   /**
@@ -1132,7 +1197,7 @@ export const generatorsAPI = {
    * @throws {Error} If fetch fails
    */
   getSource: (taskId, generatorId) =>
-    api.get(`/tasks/${taskId}/generators/${generatorId}`),
+    api.get(`/problems/${taskId}/generators/${generatorId}`),
 
   /**
    * Updates source for generator
@@ -1143,7 +1208,7 @@ export const generatorsAPI = {
    * @throws {Error} If update fails
    */
   updateSource: (taskId, generatorId, data) =>
-    api.put(`/tasks/${taskId}/generators/${generatorId}`, data),
+    api.put(`/problems/${taskId}/generators/${generatorId}`, data),
 
   /**
    * Runs a generator
@@ -1154,7 +1219,7 @@ export const generatorsAPI = {
    * @throws {Error} If run fails
    */
   run: (taskId, generatorId, params) =>
-    api.post(`/tasks/${taskId}/generators/${generatorId}/run`, params),
+    api.post(`/problems/${taskId}/generators/${generatorId}/run`, params),
 };
 
 /**
@@ -1171,7 +1236,7 @@ export const solutionsAPI = {
     if (UI_TEST) {
       return Promise.resolve({ data: mockData.solutions[taskId] || [] });
     }
-    return api.get(`/tasks/${taskId}/solutions`);
+    return api.get(`/problems/${taskId}/solutions`);
   },
 
   /**
@@ -1211,7 +1276,7 @@ export const solutionsAPI = {
       };
       return Promise.resolve({ data: newSolution });
     }
-    return api.post(`/tasks/${taskId}/solutions`, formData);
+    return api.post(`/problems/${taskId}/solutions`, formData);
   },
 
   /**
@@ -1235,7 +1300,7 @@ export const solutionsAPI = {
         data: { source: "// placeholder source code", language: "cpp" },
       });
     }
-    return api.get(`/tasks/${taskId}/solutions/${solutionId}`);
+    return api.get(`/problems/${taskId}/solutions/${solutionId}`);
   },
 
   /**
@@ -1265,7 +1330,7 @@ export const solutionsAPI = {
       }
       return Promise.resolve({ data: solutions[index] });
     }
-    return api.put(`/tasks/${taskId}/solutions/${solutionId}`, data);
+    return api.put(`/problems/${taskId}/solutions/${solutionId}`, data);
   },
 
   /**
@@ -1287,7 +1352,7 @@ export const solutionsAPI = {
       });
       return Promise.resolve({ data: blob });
     }
-    return api.get(`/tasks/${taskId}/solutions/${solutionId}/download`, {
+    return api.get(`/problems/${taskId}/solutions/${solutionId}/download`, {
       responseType: "blob",
     });
   },
@@ -1309,7 +1374,7 @@ export const solutionsAPI = {
         },
       });
     }
-    return api.post(`/tasks/${taskId}/solutions/${solutionId}/compile`);
+    return api.post(`/problems/${taskId}/solutions/${solutionId}/compile`);
   },
 };
 

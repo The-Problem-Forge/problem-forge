@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Contests from "./components/Contests";
+import Problems from "./components/Problems";
 import ContestDetail from "./components/ContestDetail";
 import TaskEditor from "./components/TaskEditor";
 import AuthGuard from "./components/AuthGuard";
@@ -47,6 +48,16 @@ function App() {
             <AuthGuard>
               <Layout login={user} onLogout={handleLogout}>
                 <Contests />
+              </Layout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/problems"
+          element={
+            <AuthGuard>
+              <Layout login={user} onLogout={handleLogout}>
+                <Problems />
               </Layout>
             </AuthGuard>
           }

@@ -28,6 +28,7 @@ const Layout = ({ children, login, onLogout }) => {
         </div>
         <div className="nav-links">
           <Link to="/contests">My Contests</Link>
+          <Link to="/problems">My Problems</Link>
           <span className="nav-user">Welcome, {login}!</span>
           <button className="logout-btn" onClick={handleLogout}>
             Logout

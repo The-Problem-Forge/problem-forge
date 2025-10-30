@@ -102,7 +102,7 @@ class ProblemStatementService(
             .contentType(MediaType.TEXT_PLAIN)
             .header(
                 HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"problem-${problem.tag}-statement.tex\""
+                "attachment; filename=\"problem-${problem.title}-statement.tex\""
             )
             .body(texContent)
     }
@@ -131,7 +131,7 @@ class ProblemStatementService(
             .contentType(MediaType.TEXT_PLAIN)
             .header(
                 HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"problem-${problem.tag}-tutorial.tex\""
+                "attachment; filename=\"problem-${problem.title}-tutorial.tex\""
             )
             .body(texContent)
     }

@@ -135,7 +135,7 @@ class ContestService(
             val problem = cp.problem!!
             TaskDto(
                 id = problem.id,
-                title = problem.tag,
+                title = problem.title,
                 description = problem.problemInfo.statement.legend.takeIf { it.isNotBlank() },
                 orderIndex = cp.orderIndex,
                 createdAt = problem.createdAt,

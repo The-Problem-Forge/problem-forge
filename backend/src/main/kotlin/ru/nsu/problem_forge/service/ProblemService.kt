@@ -27,7 +27,7 @@ class ProblemService(
     @Transactional
     fun createProblem(request: CreateProblemRequest, user: User): ProblemDto {
         val problem = Problem().apply {
-            tag = request.tag
+            title = request.title
             problemInfo = ProblemInfo()
             changelog = Changelog()
             createdAt = LocalDateTime.now()
@@ -61,7 +61,7 @@ class ProblemService(
     private fun Problem.toDto(): ProblemDto {
         return ProblemDto(
             id = this.id,
-            tag = this.tag,
+            title = this.title,
             createdAt = this.createdAt,
             modifiedAt = this.modifiedAt
         )

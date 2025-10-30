@@ -16,8 +16,8 @@ class Problem {
     @Column(name = "problem_id")
     var id: Long = 0
 
-    @Column(nullable = false, length = 40)
-    var tag: String = ""
+    @Column(name = "tag", nullable = false, length = 40)
+    var title: String = ""
 
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
@@ -52,7 +52,7 @@ class Problem {
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String = "ProblemMaster(id=$id, tag='$tag')"
+    override fun toString(): String = "ProblemMaster(id=$id, title='$title')"
 }
 
 /*

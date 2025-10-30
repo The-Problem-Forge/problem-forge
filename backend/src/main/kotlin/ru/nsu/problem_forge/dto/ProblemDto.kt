@@ -28,6 +28,7 @@ data class ProblemUserDto(
 )
 
 data class GeneralDto(
+    val title: String? = null,
     val inputFile: String? = null,
     val outputFile: String? = null,
     val timeLimit: Int? = null,
@@ -35,6 +36,7 @@ data class GeneralDto(
 )
 
 data class GeneralResponse(
+    val title: String,
     val inputFile: String,
     val outputFile: String,
     val timeLimit: Int,

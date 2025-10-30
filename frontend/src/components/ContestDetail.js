@@ -155,16 +155,6 @@ const ContestDetail = () => {
                   required
                 />
               </div>
-              <div>
-                <textarea
-                  placeholder="Description (optional)"
-                  value={newTask.description}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, description: e.target.value })
-                  }
-                  className="modal-input"
-                />
-              </div>
               <div className="modal-buttons">
                 <button type="button" onClick={() => setShowModal(false)}>
                   Cancel

@@ -9,11 +9,11 @@ import { generalAPI } from "../../services/api";
 const GeneralTab = () => {
   const { taskId } = useParams();
   const [data, setData] = useState({
-    name: "",
-    inFile: "",
-    outFile: "",
-    timeLimitMs: 1000,
-    memoryLimitMb: 256,
+    title: "",
+    inputFile: "",
+    outputFile: "",
+    timeLimit: 1000,
+    memoryLimit: 256,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,36 +59,36 @@ const GeneralTab = () => {
       <h2>General Settings</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <div className="form-group">
-        <label>Name:</label>
+        <label>Title:</label>
         <input
           type="text"
-          value={data.name}
-          onChange={(e) => handleChange("name", e.target.value)}
+          value={data.title}
+          onChange={(e) => handleChange("title", e.target.value)}
         />
       </div>
       <div className="form-group">
         <label>Input File:</label>
         <input
           type="text"
-          value={data.inFile}
-          onChange={(e) => handleChange("inFile", e.target.value)}
+          value={data.inputFile}
+          onChange={(e) => handleChange("inputFile", e.target.value)}
         />
       </div>
       <div className="form-group">
         <label>Output File:</label>
         <input
           type="text"
-          value={data.outFile}
-          onChange={(e) => handleChange("outFile", e.target.value)}
+          value={data.outputFile}
+          onChange={(e) => handleChange("outputFile", e.target.value)}
         />
       </div>
       <div className="form-group">
         <label>Time Limit (ms):</label>
         <input
           type="number"
-          value={data.timeLimitMs}
+          value={data.timeLimit}
           onChange={(e) =>
-            handleChange("timeLimitMs", parseInt(e.target.value))
+            handleChange("timeLimit", parseInt(e.target.value))
           }
         />
       </div>
@@ -96,9 +96,9 @@ const GeneralTab = () => {
         <label>Memory Limit (MB):</label>
         <input
           type="number"
-          value={data.memoryLimitMb}
+          value={data.memoryLimit}
           onChange={(e) =>
-            handleChange("memoryLimitMb", parseInt(e.target.value))
+            handleChange("memoryLimit", parseInt(e.target.value))
           }
         />
       </div>

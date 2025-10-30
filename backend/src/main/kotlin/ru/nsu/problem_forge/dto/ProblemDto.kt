@@ -12,6 +12,7 @@ data class ProblemDto(
 
 data class CreateProblemRequest(
     val title: String,
+    val contestId: Long? = null
 )
 
 data class AddUserToProblemRequest(

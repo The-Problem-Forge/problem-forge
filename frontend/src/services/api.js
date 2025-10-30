@@ -46,36 +46,7 @@ const mockData = {
       modifiedAt: "2023-01-02T00:00:00Z",
     },
   ],
-  tasks: {
-    1: [
-      {
-        id: "1",
-        title: "Task A",
-        description: "First task in contest 1",
-        orderIndex: 0,
-        createdAt: "2023-01-01T00:00:00Z",
-        updatedAt: "2023-01-01T00:00:00Z",
-      },
-      {
-        id: "2",
-        title: "Task B",
-        description: "Second task in contest 1",
-        orderIndex: 1,
-        createdAt: "2023-01-01T00:00:00Z",
-        updatedAt: "2023-01-01T00:00:00Z",
-      },
-    ],
-    2: [
-      {
-        id: "3",
-        title: "Task C",
-        description: "First task in contest 2",
-        orderIndex: 0,
-        createdAt: "2023-01-02T00:00:00Z",
-        updatedAt: "2023-01-02T00:00:00Z",
-      },
-    ],
-  },
+
   allTasks: [
     {
       id: "1",
@@ -324,46 +295,6 @@ export const authAPI = {
 };
 
 /**
- * Task API methods
- */
-export const taskAPI = {
-  /**
-   * Gets all tasks
-   * @returns {Promise} Axios response with tasks array
-   * @throws {Error} If fetch fails
-   */
-  getTasks: () => {
-    if (UI_TEST) {
-      return Promise.resolve({ data: mockData.allTasks });
-    }
-    return api.get("/problems");
-  },
-
-  /**
-   * Creates a new task
-   * @param {Object} task - Task data
-   * @returns {Promise} Axios response with created task
-   * @throws {Error} If creation fails
-   */
-  createTask: (task) => {
-    if (UI_TEST) {
-      const newTask = {
-        id: String(
-          Math.max(...mockData.allTasks.map((t) => parseInt(t.id)), 0) + 1,
-        ),
-        ...task,
-        contestId: "1", // Default to first contest for UI_TEST
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      mockData.allTasks.push(newTask);
-      return Promise.resolve({ data: newTask });
-    }
-    return api.post("/problems", { tag: task.title });
-  },
-};
-
-/**
  * Contests API methods
  */
 export const contestsAPI = {
@@ -453,7 +384,6 @@ export const contestsAPI = {
         return Promise.reject(new Error("Contest not found"));
       }
       mockData.contests.splice(index, 1);
-      delete mockData.tasks[id];
       return Promise.resolve({ data: null });
     }
     return api.delete(`/contests/${id}`);
@@ -468,14 +398,20 @@ export const contestsAPI = {
    */
   reorderTasks: (contestId, order) => {
     if (UI_TEST) {
-      const tasks = mockData.tasks[contestId] || [];
+      const contestTasks = mockData.allTasks.filter(
+        (t) => t.contestId === contestId,
+      );
       const reorderedTasks = order
         .map((taskId, index) => {
-          const task = tasks.find((t) => t.id === taskId);
+          const task = contestTasks.find((t) => t.id === taskId);
           return task ? { ...task, orderIndex: index } : null;
         })
         .filter(Boolean);
-      mockData.tasks[contestId] = reorderedTasks;
+      // Update allTasks
+      reorderedTasks.forEach((updated) => {
+        const index = mockData.allTasks.findIndex((t) => t.id === updated.id);
+        if (index !== -1) mockData.allTasks[index] = updated;
+      });
       return Promise.resolve({ data: reorderedTasks });
     }
     return api.put(`/contests/${contestId}/tasks/reorder`, { order });
@@ -504,14 +440,14 @@ export const problemsAPI = {
    * @returns {Promise} Axios response with created problem
    * @throws {Error} If creation fails
    */
-  create: async (problem) => {
+  create: (problem, contestId = null) => {
     if (UI_TEST) {
       const newProblem = {
         id: String(
           Math.max(...mockData.allTasks.map((t) => parseInt(t.id)), 0) + 1,
         ),
         ...problem,
-        contestId: "1", // Default to first contest for UI_TEST
+        contestId: contestId || "1",
         description: problem.description || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -519,135 +455,52 @@ export const problemsAPI = {
       mockData.allTasks.push(newProblem);
       return Promise.resolve({ data: newProblem });
     }
-    return api.post("/problems", { title: problem.title });
+    return api.post("/problems", {
+      title: problem.title,
+      contestId: contestId,
+    });
   },
-};
 
-/**
- * Tasks API methods
- */
-export const tasksAPI = {
-  /**
-   * Lists tasks by contest
-   * @param {string} contestId - Contest ID
-   * @returns {Promise} Axios response with tasks array
-   * @throws {Error} If fetch fails
-   */
   listByContest: (contestId) => {
     if (UI_TEST) {
-      return Promise.resolve({ data: mockData.tasks[contestId] || [] });
+      return Promise.resolve({
+        data: mockData.allTasks.filter((t) => t.contestId === contestId),
+      });
     }
-    return api.get(`/contests/${contestId}/tasks`);
+    return api.get(`/problems/contest/${contestId}`);
   },
 
-  /**
-   * Gets a task by ID
-   * @param {string} taskId - Task ID
-   * @returns {Promise} Axios response with task data
-   * @throws {Error} If fetch fails
-   */
   get: (taskId) => {
     if (UI_TEST) {
-      for (const contestTasks of Object.values(mockData.tasks)) {
-        const task = contestTasks.find((t) => t.id === taskId);
-        if (task) {
-          return Promise.resolve({ data: task });
-        }
-      }
-      return Promise.reject(new Error("Task not found"));
+      const task = mockData.allTasks.find((t) => t.id === taskId);
+      if (!task) return Promise.reject(new Error("Task not found"));
+      return Promise.resolve({ data: task });
     }
-    return api.get(`/tasks/${taskId}`);
+    return api.get(`/problems/${taskId}`);
   },
 
-  /**
-   * Creates a new task in a contest
-   * @param {string} contestId - Contest ID
-   * @param {Object} task - Task data
-   * @returns {Promise} Axios response with created task
-   * @throws {Error} If creation fails
-   */
-  create: (contestId, task) => {
-    if (UI_TEST) {
-      const contestTasks = mockData.tasks[contestId] || [];
-      const newTask = {
-        id: String(
-          Math.max(
-            ...Object.values(mockData.tasks)
-              .flat()
-              .map((t) => parseInt(t.id)),
-            0,
-          ) + 1,
-        ),
-        ...task,
-        orderIndex: contestTasks.length,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      if (!mockData.tasks[contestId]) {
-        mockData.tasks[contestId] = [];
-      }
-      mockData.tasks[contestId].push(newTask);
-      mockData.allTasks.push(newTask);
-      return Promise.resolve({ data: newTask });
-    }
-    return api.post(`/contests/${contestId}/tasks`, task);
-  },
-
-  /**
-   * Updates a task
-   * @param {string} taskId - Task ID
-   * @param {Object} task - Updated task data
-   * @returns {Promise} Axios response
-   * @throws {Error} If update fails
-   */
   update: (taskId, task) => {
     if (UI_TEST) {
-      for (const contestId in mockData.tasks) {
-        const tasks = mockData.tasks[contestId];
-        const index = tasks.findIndex((t) => t.id === taskId);
-        if (index !== -1) {
-          tasks[index] = {
-            ...tasks[index],
-            ...task,
-            updatedAt: new Date().toISOString(),
-          };
-          // Update in allTasks too
-          const allIndex = mockData.allTasks.findIndex((t) => t.id === taskId);
-          if (allIndex !== -1) {
-            mockData.allTasks[allIndex] = tasks[index];
-          }
-          return Promise.resolve({ data: tasks[index] });
-        }
-      }
-      return Promise.reject(new Error("Task not found"));
+      const index = mockData.allTasks.findIndex((t) => t.id === taskId);
+      if (index === -1) return Promise.reject(new Error("Task not found"));
+      mockData.allTasks[index] = {
+        ...mockData.allTasks[index],
+        ...task,
+        updatedAt: new Date().toISOString(),
+      };
+      return Promise.resolve({ data: mockData.allTasks[index] });
     }
-    return api.put(`/tasks/${taskId}`, task);
+    return api.put(`/problems/${taskId}`, task);
   },
 
-  /**
-   * Deletes a task
-   * @param {string} taskId - Task ID
-   * @returns {Promise} Axios response
-   * @throws {Error} If deletion fails
-   */
   delete: (taskId) => {
     if (UI_TEST) {
-      for (const contestId in mockData.tasks) {
-        const tasks = mockData.tasks[contestId];
-        const index = tasks.findIndex((t) => t.id === taskId);
-        if (index !== -1) {
-          tasks.splice(index, 1);
-          // Remove from allTasks
-          const allIndex = mockData.allTasks.findIndex((t) => t.id === taskId);
-          if (allIndex !== -1) {
-            mockData.allTasks.splice(allIndex, 1);
-          }
-          return Promise.resolve({ data: null });
-        }
-      }
-      return Promise.reject(new Error("Task not found"));
+      const index = mockData.allTasks.findIndex((t) => t.id === taskId);
+      if (index === -1) return Promise.reject(new Error("Task not found"));
+      mockData.allTasks.splice(index, 1);
+      return Promise.resolve({ data: null });
     }
-    return api.delete(`/tasks/${taskId}`);
+    return api.delete(`/problems/${taskId}`);
   },
 };
 
@@ -928,7 +781,7 @@ export const validatorAPI = {
         data: { message: "Source uploaded successfully" },
       });
     }
-    return api.post(`/tasks/${taskId}/validator/source`, formData);
+    return api.post(`/problems/${taskId}/validator/source`, formData);
   },
   getSource: (taskId) => {
     if (UI_TEST) {
@@ -938,14 +791,14 @@ export const validatorAPI = {
       }
       return Promise.resolve({ data });
     }
-    return api.get(`/tasks/${taskId}/validator/source`);
+    return api.get(`/problems/${taskId}/validator/source`);
   },
   updateSource: (taskId, data) => {
     if (UI_TEST) {
       mockData.validator[taskId] = { ...mockData.validator[taskId], ...data };
       return Promise.resolve({ data: mockData.validator[taskId] });
     }
-    return api.put(`/tasks/${taskId}/validator/source`, data);
+    return api.put(`/problems/${taskId}/validator/source`, data);
   },
   listTests: (taskId) => {
     if (UI_TEST) {
@@ -955,7 +808,7 @@ export const validatorAPI = {
       }
       return Promise.resolve({ data: data.tests });
     }
-    return api.get(`/tasks/${taskId}/validator/tests`);
+    return api.get(`/problems/${taskId}/validator/tests`);
   },
   createTest: (taskId, test) => {
     if (UI_TEST) {
@@ -967,7 +820,7 @@ export const validatorAPI = {
       data.tests.push(newTest);
       return Promise.resolve({ data: newTest });
     }
-    return api.post(`/tasks/${taskId}/validator/tests`, test);
+    return api.post(`/problems/${taskId}/validator/tests`, test);
   },
   updateTest: (taskId, testId, test) => {
     if (UI_TEST) {
@@ -982,7 +835,7 @@ export const validatorAPI = {
       data.tests[index] = { ...data.tests[index], ...test };
       return Promise.resolve({ data: data.tests[index] });
     }
-    return api.put(`/tasks/${taskId}/validator/tests/${testId}`, test);
+    return api.put(`/problems/${taskId}/validator/tests/${testId}`, test);
   },
   deleteTest: (taskId, testId) => {
     if (UI_TEST) {
@@ -997,7 +850,7 @@ export const validatorAPI = {
       data.tests.splice(index, 1);
       return Promise.resolve({ data: null });
     }
-    return api.delete(`/tasks/${taskId}/validator/tests/${testId}`);
+    return api.delete(`/problems/${taskId}/validator/tests/${testId}`);
   },
   runTests: (taskId, testIds) => {
     if (UI_TEST) {
@@ -1015,7 +868,7 @@ export const validatorAPI = {
       data.runResults = results;
       return Promise.resolve({ data: results });
     }
-    return api.post(`/tasks/${taskId}/validator/run`, { testIds });
+    return api.post(`/problems/${taskId}/validator/run`, { testIds });
   },
 };
 
@@ -1434,7 +1287,7 @@ export const invocationsAPI = {
       };
       return Promise.resolve({ data: newInv });
     }
-    return api.post(`/tasks/${taskId}/invocations`, invocation);
+    return api.post(`/problems/${taskId}/invocations`, invocation);
   },
 
   /**
@@ -1447,7 +1300,7 @@ export const invocationsAPI = {
     if (UI_TEST) {
       return Promise.resolve({ data: mockData.invocations[taskId] || [] });
     }
-    return api.get(`/tasks/${taskId}/invocations`);
+    return api.get(`/problems/${taskId}/invocations`);
   },
 
   /**
@@ -1458,7 +1311,7 @@ export const invocationsAPI = {
    * @throws {Error} If fetch fails
    */
   get: (taskId, invocationId) =>
-    api.get(`/tasks/${taskId}/invocations/${invocationId}`),
+    api.get(`/problems/${taskId}/invocations/${invocationId}`),
 
   /**
    * Gets matrix for an invocation
@@ -1499,7 +1352,7 @@ export const invocationsAPI = {
       });
       return Promise.resolve({ data: { solutions, tests, results } });
     }
-    return api.get(`/tasks/${taskId}/invocations/${invocationId}/matrix`);
+    return api.get(`/problems/${taskId}/invocations/${invocationId}/matrix`);
   },
 };
 

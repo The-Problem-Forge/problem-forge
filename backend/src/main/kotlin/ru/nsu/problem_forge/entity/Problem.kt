@@ -16,7 +16,7 @@ class Problem {
     @Column(name = "problem_id")
     var id: Long = 0
 
-    @Column(name = "tag", nullable = false, length = 40)
+    @Column(name = "title", nullable = false, length = 40)
     var title: String = ""
 
     @Column(name = "created_at", nullable = false)

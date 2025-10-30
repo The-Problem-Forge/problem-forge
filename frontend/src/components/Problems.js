@@ -36,13 +36,13 @@ const Problems = () => {
     try {
       await problemsAPI.create(newProblem);
       setNewProblem({ title: "", description: "" });
-      setShowModal(false);
       await loadProblems(); // Reload the list to ensure consistency
     } catch (err) {
       console.error("Failed to create problem:", err);
       setError("Failed to create problem");
     } finally {
       setLoading(false);
+      setShowModal(false);
     }
   };
 

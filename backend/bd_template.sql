@@ -21,7 +21,7 @@ ALTER TABLE
 
 CREATE TABLE "problems_master"(
     "problem_id" BIGINT NOT NULL,
-    "tag" VARCHAR(40) NOT NULL,
+    "title" VARCHAR(40) NOT NULL,
     "owner" BIGINT NOT NULL REFERENCES users (user_id)
     "problem_info" JSON NOT NULL,
     "changelog" JSON NOT NULL

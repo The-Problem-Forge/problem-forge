@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { contestsAPI, tasksAPI } from "../services/api";
+import { contestsAPI, problemsAPI } from "../services/api";
 import "../styles/main.scss";
 
 /**
@@ -25,7 +25,7 @@ const ContestDetail = () => {
     try {
       const [contestRes, tasksRes] = await Promise.all([
         contestsAPI.get(contestId),
-        tasksAPI.listByContest(contestId),
+        problemsAPI.listByContest(contestId),
       ]);
       setContest(contestRes.data);
       setTasks(tasksRes.data);
@@ -42,7 +42,7 @@ const ContestDetail = () => {
     if (!newTask.title.trim()) return;
 
     try {
-      const response = await tasksAPI.create(contestId, newTask);
+      const response = await problemsAPI.create(newTask, contestId);
       setNewTask({ title: "", description: "" });
       setShowModal(false);
       await loadData();

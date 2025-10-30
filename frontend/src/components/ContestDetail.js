@@ -25,7 +25,7 @@ const ContestDetail = () => {
     try {
       const [contestRes, tasksRes] = await Promise.all([
         contestsAPI.get(contestId),
-        problemsAPI.listByContest(contestId),
+        contestsAPI.getProblems(contestId),
       ]);
       setContest(contestRes.data);
       setTasks(tasksRes.data);
@@ -76,7 +76,7 @@ const ContestDetail = () => {
   const updateOrder = async (orderedTasks) => {
     try {
       const order = orderedTasks.map((t) => t.id);
-      await contestsAPI.reorderTasks(contestId, order);
+      await contestsAPI.reorderProblems(contestId, order);
     } catch (err) {
       console.error("Failed to reorder tasks:", err);
       setError("Failed to reorder tasks");

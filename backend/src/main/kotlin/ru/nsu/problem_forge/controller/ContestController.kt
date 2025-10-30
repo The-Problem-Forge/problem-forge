@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 import ru.nsu.problem_forge.dto.*
+import ru.nsu.problem_forge.dto.ReorderTasksRequest
 import ru.nsu.problem_forge.service.ContestService
 import ru.nsu.problem_forge.service.ProblemService
 import ru.nsu.problem_forge.service.UserService
@@ -56,14 +57,25 @@ class ContestController(
         return ResponseEntity.ok(contest)
     }
 
-    @GetMapping("/{contestId}/tasks")
-    fun getTasks(
+    @GetMapping("/{contestId}/problems")
+    fun getProblems(
         @PathVariable contestId: Long,
         @AuthenticationPrincipal userDetails: UserDetails
     ): ResponseEntity<List<TaskDto>> {
         val user = userService.findUserByHandle(userDetails.username)
         val tasks = contestService.getTasksForContest(contestId, user.id!!)
         return ResponseEntity.ok(tasks)
+    }
+
+    @PutMapping("/{contestId}/problems/reorder")
+    fun reorderProblems(
+        @PathVariable contestId: Long,
+        @RequestBody request: ReorderTasksRequest,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        contestService.reorderTasks(contestId, user.id!!, request.order)
+        return ResponseEntity.ok().build()
     }
 
     @PostMapping("/{contestId}/problems/{problemId}")

@@ -153,6 +153,43 @@ class ContestService(
     }
 
     @Transactional
+    fun reorderTasks(contestId: Long, userId: Long, newOrder: List<Long>) {
+        logger.info("Reordering tasks in contest $contestId by user $userId")
+
+        // Check access to contest
+        val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
+        if (contestRole == null) {
+            logger.warn("User $userId has no access to contest $contestId")
+            throw SecurityException("No access to contest")
+        }
+
+        if (contestRole != "OWNER" && contestRole != "EDITOR") {
+            logger.warn("User $userId has insufficient permissions ($contestRole) to reorder tasks in contest $contestId")
+            throw SecurityException("Insufficient permissions to reorder tasks")
+        }
+
+        val contestProblems = contestProblemRepository.findByContestId(contestId)
+        val problemIds = contestProblems.map { it.problem?.id }
+
+        // Validate that all IDs in newOrder exist in the contest
+        if (newOrder.any { it !in problemIds }) {
+            logger.warn("Invalid problem IDs in reorder request for contest $contestId")
+            throw IllegalArgumentException("Invalid problem IDs")
+        }
+
+        // Update orderIndex for each contest problem
+        newOrder.forEachIndexed { index, problemId ->
+            val contestProblem = contestProblems.find { it.problem?.id == problemId }
+            if (contestProblem != null) {
+                contestProblem.orderIndex = index
+                contestProblemRepository.save(contestProblem)
+            }
+        }
+
+        logger.info("Successfully reordered tasks in contest $contestId")
+    }
+
+    @Transactional
     fun addProblemToContest(contestId: Long, problemId: Long, userId: Long) {
         logger.info("Adding problem $problemId to contest $contestId by user $userId")
 

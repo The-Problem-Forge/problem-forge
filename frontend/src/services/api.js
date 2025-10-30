@@ -390,13 +390,28 @@ export const contestsAPI = {
   },
 
   /**
-   * Reorders tasks in a contest
+   * Gets problems for a contest
    * @param {string} contestId - Contest ID
-   * @param {Array} order - Array of task IDs in new order
+   * @returns {Promise} Axios response with problems array
+   * @throws {Error} If fetch fails
+   */
+  getProblems: (contestId) => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: mockData.allTasks.filter((t) => t.contestId === contestId),
+      });
+    }
+    return api.get(`/contests/${contestId}/problems`);
+  },
+
+  /**
+   * Reorders problems in a contest
+   * @param {string} contestId - Contest ID
+   * @param {Array} order - Array of problem IDs in new order
    * @returns {Promise} Axios response
    * @throws {Error} If reorder fails
    */
-  reorderTasks: (contestId, order) => {
+  reorderProblems: (contestId, order) => {
     if (UI_TEST) {
       const contestTasks = mockData.allTasks.filter(
         (t) => t.contestId === contestId,
@@ -414,7 +429,7 @@ export const contestsAPI = {
       });
       return Promise.resolve({ data: reorderedTasks });
     }
-    return api.put(`/contests/${contestId}/tasks/reorder`, { order });
+    return api.put(`/contests/${contestId}/problems/reorder`, { order });
   },
 };
 
@@ -459,15 +474,6 @@ export const problemsAPI = {
       title: problem.title,
       contestId: contestId,
     });
-  },
-
-  listByContest: (contestId) => {
-    if (UI_TEST) {
-      return Promise.resolve({
-        data: mockData.allTasks.filter((t) => t.contestId === contestId),
-      });
-    }
-    return api.get(`/problems/contest/${contestId}`);
   },
 
   get: (taskId) => {

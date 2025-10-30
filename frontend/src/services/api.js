@@ -431,6 +431,44 @@ export const contestsAPI = {
     }
     return api.put(`/contests/${contestId}/problems/reorder`, { order });
   },
+
+  /**
+   * Adds a problem to a contest
+   * @param {string} contestId - Contest ID
+   * @param {string} problemId - Problem ID
+   * @returns {Promise} Axios response
+   * @throws {Error} If addition fails
+   */
+  addProblemToContest: (contestId, problemId) => {
+    if (UI_TEST) {
+      const task = mockData.allTasks.find((t) => t.id === problemId);
+      if (task) {
+        mockData.allTasks.push({ ...task, contestId });
+      }
+      return Promise.resolve({ data: null });
+    }
+    return api.post(`/contests/${contestId}/problems/${problemId}`);
+  },
+
+  /**
+   * Removes a problem from a contest
+   * @param {string} contestId - Contest ID
+   * @param {string} problemId - Problem ID
+   * @returns {Promise} Axios response
+   * @throws {Error} If removal fails
+   */
+  removeProblemFromContest: (contestId, problemId) => {
+    if (UI_TEST) {
+      const index = mockData.allTasks.findIndex(
+        (t) => t.contestId === contestId && t.id === problemId,
+      );
+      if (index !== -1) {
+        mockData.allTasks.splice(index, 1);
+      }
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/contests/${contestId}/problems/${problemId}`);
+  },
 };
 
 /**
@@ -483,6 +521,26 @@ export const problemsAPI = {
       return Promise.resolve({ data: task });
     }
     return api.get(`/problems/${taskId}`);
+  },
+
+  /**
+   * Gets contests for a problem
+   * @param {string} problemId - Problem ID
+   * @returns {Promise} Axios response with contests array
+   * @throws {Error} If fetch fails
+   */
+  getContests: (problemId) => {
+    if (UI_TEST) {
+      // Mock contests for the problem
+      const problemContests = mockData.allTasks
+        .filter((t) => t.id === problemId)
+        .map((t) => t.contestId)
+        .filter(Boolean)
+        .map((contestId) => mockData.contests.find((c) => c.id === contestId))
+        .filter(Boolean);
+      return Promise.resolve({ data: problemContests });
+    }
+    return api.get(`/problems/${problemId}/contests`);
   },
 
   update: (taskId, task) => {

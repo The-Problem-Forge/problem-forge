@@ -189,6 +189,53 @@ class ContestService(
         logger.info("Successfully reordered tasks in contest $contestId")
     }
 
+    fun getContestsForProblem(problemId: Long, userId: Long): List<ContestDto> {
+        // Check access to problem
+        val problemUser = problemRepository.findById(problemId)
+            .orElseThrow { IllegalArgumentException("Problem not found") }
+
+        // Find all contests that contain this problem
+        val contestProblems = contestProblemRepository.findByProblemId(problemId)
+
+        return contestProblems.mapNotNull { cp ->
+            val contest = cp.contest ?: return@mapNotNull null
+            val role = contestRepository.findUserRoleInContest(contest.id, userId)
+            if (role != null) {
+                ContestDto(
+                    id = contest.id,
+                    name = contest.title,
+                    description = contest.description,
+                    role = role,
+                    createdAt = contest.createdAt,
+                    updatedAt = contest.modifiedAt
+                )
+            } else null
+        }
+    }
+
+    @Transactional
+    fun removeProblemFromContest(contestId: Long, problemId: Long, userId: Long) {
+        logger.info("Removing problem $problemId from contest $contestId by user $userId")
+
+        // Check access to contest
+        val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
+        if (contestRole == null) {
+            logger.warn("User $userId has no access to contest $contestId")
+            throw SecurityException("No access to contest")
+        }
+
+        if (contestRole != "OWNER" && contestRole != "EDITOR") {
+            logger.warn("User $userId has insufficient permissions ($contestRole) to remove problems from contest $contestId")
+            throw SecurityException("Insufficient permissions to remove problems")
+        }
+
+        val contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+            ?: throw IllegalArgumentException("Problem not in contest")
+
+        contestProblemRepository.delete(contestProblem)
+        logger.info("Successfully removed problem $problemId from contest $contestId")
+    }
+
     @Transactional
     fun addProblemToContest(contestId: Long, problemId: Long, userId: Long) {
         logger.info("Adding problem $problemId to contest $contestId by user $userId")

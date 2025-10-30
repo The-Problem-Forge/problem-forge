@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 import ru.nsu.problem_forge.dto.*
+import ru.nsu.problem_forge.service.ContestService
 import ru.nsu.problem_forge.service.ProblemService
 import ru.nsu.problem_forge.service.UserService
 
@@ -13,6 +14,7 @@ import ru.nsu.problem_forge.service.UserService
 @RequestMapping("/api/problems")
 class ProblemController(
     private val problemService: ProblemService,
+    private val contestService: ContestService,
     private val userService: UserService
 ) {
 
@@ -41,5 +43,15 @@ class ProblemController(
         val user = userService.findUserByHandle(userDetails.username)
         val problem = problemService.getProblem(problemId, user.id!!)
         return ResponseEntity.ok(problem)
+    }
+
+    @GetMapping("/{problemId}/contests")
+    fun getContestsForProblem(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<ContestDto>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val contests = contestService.getContestsForProblem(problemId, user.id!!)
+        return ResponseEntity.ok(contests)
     }
 }

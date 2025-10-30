@@ -313,4 +313,158 @@
 
 .general-tab .save-btn {
   @include button($primary-color, $primary-hover);
+
+  &.has-changes {
+    background-color: $success-color;
+    border-color: $success-color;
+
+    &:hover:not(:disabled) {
+      background-color: darken($success-color, 10%);
+      border-color: darken($success-color, 10%);
+    }
+  }
+
+  &.no-changes {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: $secondary-color;
+      border-color: $secondary-color;
+    }
+  }
+}
+
+.contests-section {
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  h4 {
+    margin-bottom: $spacing-sm;
+  }
+}
+
+.contests-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.contest-item {
+  position: relative;
+  padding: $spacing-sm $spacing-md;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: darken($light-gray, 10%);
+  }
+
+  &.add-contest {
+    border: 2px dashed $border-color;
+    background-color: transparent;
+
+    .add-icon {
+      font-size: 24px;
+      color: $primary-color;
+      font-weight: bold;
+    }
+  }
+}
+
+.contest-name {
+  font-weight: 500;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: none;
+  border: none;
+  color: $danger-color;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: rgba($danger-color, 0.1);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: $spacing-lg;
+  border-radius: $border-radius;
+  max-width: 400px;
+  width: 90%;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.contest-search-input {
+  @include input;
+  width: 100%;
+  margin-bottom: $spacing-sm;
+}
+
+.contest-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+
+  .suggestion-item {
+    padding: $spacing-sm $spacing-md;
+    cursor: pointer;
+    border-bottom: 1px solid $light-gray;
+
+    &:hover {
+      background-color: $light-gray;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .no-suggestions {
+    padding: $spacing-sm $spacing-md;
+    color: $dark-gray;
+    font-style: italic;
+  }
+}
+
+.cancel-btn {
+  @include button($secondary-color, $secondary-hover);
 }

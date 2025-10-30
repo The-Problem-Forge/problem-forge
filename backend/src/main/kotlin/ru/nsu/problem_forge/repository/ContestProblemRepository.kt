@@ -10,4 +10,6 @@ interface ContestProblemRepository : JpaRepository<ContestProblem, Long> {
     fun findByContestIdAndProblemId(contestId: Long, problemId: Long): ContestProblem?
 
     fun findByContestId(contestId: Long): List<ContestProblem>
+
+    fun findByProblemId(problemId: Long): List<ContestProblem>
 }

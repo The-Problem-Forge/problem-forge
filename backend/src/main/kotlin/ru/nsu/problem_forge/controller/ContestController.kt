@@ -88,4 +88,15 @@ class ContestController(
         contestService.addProblemToContest(contestId, problemId, user.id!!)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
+
+    @DeleteMapping("/{contestId}/problems/{problemId}")
+    fun removeProblemFromContest(
+        @PathVariable contestId: Long,
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        contestService.removeProblemFromContest(contestId, problemId, user.id!!)
+        return ResponseEntity.ok().build()
+    }
 }

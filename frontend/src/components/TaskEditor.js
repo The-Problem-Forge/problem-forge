@@ -48,9 +48,6 @@ const TaskEditor = () => {
   return (
     <div className="task-editor">
       <div className="task-editor-header">
-        <Link to={`/contests/${contestId}`} className="back-button">
-          ← Back to {contest?.name || "Contest"}
-        </Link>
         <h1>Task Editor</h1>
       </div>
       <nav className="tab-nav">

@@ -123,4 +123,24 @@ class ContestService(
 
         contestRepository.delete(contest)
     }
+
+    fun getTasksForContest(contestId: Long, userId: Long): List<TaskDto> {
+        // Check access
+        val role = contestRepository.findUserRoleInContest(contestId, userId)
+            ?: throw SecurityException("No access to contest")
+
+        val contestProblems = contestRepository.findContestProblemsByContestId(contestId)
+
+        return contestProblems.map { cp ->
+            val problem = cp.problem!!
+            TaskDto(
+                id = problem.id,
+                title = problem.tag,
+                description = problem.problemInfo.statement.legend.takeIf { it.isNotBlank() },
+                orderIndex = cp.orderIndex,
+                createdAt = problem.createdAt,
+                updatedAt = problem.modifiedAt
+            )
+        }
+    }
 }

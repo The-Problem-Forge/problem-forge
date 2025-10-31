@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { statementAPI } from "../../services/api";
-import MathJaxWrapper from "../MathJaxWrapper";
+import KaTeXWrapper from "../KaTeXWrapper";
 
 /**
  * StatementTab component for editing task statement
@@ -10,11 +10,11 @@ import MathJaxWrapper from "../MathJaxWrapper";
 const StatementTab = () => {
   const { taskId } = useParams();
   const [data, setData] = useState({
-    statementTex: "",
-    inputFormatTex: "",
-    outputFormatTex: "",
-    notesTex: "",
-    tutorialTex: "",
+    legend: "",
+    inputFormat: "",
+    outputFormat: "",
+    notes: "",
+    tutorial: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,40 +102,40 @@ const StatementTab = () => {
           <div className="field-group">
             <label>Statement:</label>
             <textarea
-              value={data.statementTex}
-              onChange={(e) => handleChange("statementTex", e.target.value)}
+              value={data.legend}
+              onChange={(e) => handleChange("legend", e.target.value)}
               rows={6}
             />
           </div>
           <div className="field-group">
             <label>Input Format:</label>
             <textarea
-              value={data.inputFormatTex}
-              onChange={(e) => handleChange("inputFormatTex", e.target.value)}
+              value={data.inputFormat}
+              onChange={(e) => handleChange("inputFormat", e.target.value)}
               rows={4}
             />
           </div>
           <div className="field-group">
             <label>Output Format:</label>
             <textarea
-              value={data.outputFormatTex}
-              onChange={(e) => handleChange("outputFormatTex", e.target.value)}
+              value={data.outputFormat}
+              onChange={(e) => handleChange("outputFormat", e.target.value)}
               rows={4}
             />
           </div>
           <div className="field-group">
             <label>Notes:</label>
             <textarea
-              value={data.notesTex}
-              onChange={(e) => handleChange("notesTex", e.target.value)}
+              value={data.notes}
+              onChange={(e) => handleChange("notes", e.target.value)}
               rows={4}
             />
           </div>
           <div className="field-group">
             <label>Tutorial:</label>
             <textarea
-              value={data.tutorialTex}
-              onChange={(e) => handleChange("tutorialTex", e.target.value)}
+              value={data.tutorial}
+              onChange={(e) => handleChange("tutorial", e.target.value)}
               rows={4}
             />
           </div>
@@ -143,15 +143,15 @@ const StatementTab = () => {
         {showPreview && (
           <div className="statement-preview">
             <h3>Preview</h3>
-            <MathJaxWrapper content={data.statementTex} />
+            <KaTeXWrapper content={data.legend} />
             <h4>Input Format</h4>
-            <MathJaxWrapper content={data.inputFormatTex} />
+            <KaTeXWrapper content={data.inputFormat} />
             <h4>Output Format</h4>
-            <MathJaxWrapper content={data.outputFormatTex} />
+            <KaTeXWrapper content={data.outputFormat} />
             <h4>Notes</h4>
-            <MathJaxWrapper content={data.notesTex} />
+            <KaTeXWrapper content={data.notes} />
             <h4>Tutorial</h4>
-            <MathJaxWrapper content={data.tutorialTex} />
+            <KaTeXWrapper content={data.tutorial} />
           </div>
         )}
       </div>

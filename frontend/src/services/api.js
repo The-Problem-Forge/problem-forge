@@ -92,27 +92,26 @@ const mockData = {
   },
   statement: {
     1: {
-      statementTex: "Solve the equation $x^2 + 2x + 1 = 0$.",
-      inputFormatTex: "First line: $N$",
-      outputFormatTex: "Single integer",
-      notesTex: "Note that $x = -1$ is the solution.",
-      tutorialTex:
+      legend: "Solve the equation $x^2 + 2x + 1 = 0$.",
+      inputFormat: "First line: $N$",
+      outputFormat: "Single integer",
+      notes: "Note that $x = -1$ is the solution.",
+      tutorial:
         "Use the quadratic formula: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$",
     },
     2: {
-      statementTex:
-        "Another problem with $\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$.",
-      inputFormatTex: "Input format",
-      outputFormatTex: "Output format",
-      notesTex: "",
-      tutorialTex: "",
+      legend: "Another problem with $\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$.",
+      inputFormat: "Input format",
+      outputFormat: "Output format",
+      notes: "",
+      tutorial: "",
     },
     3: {
-      statementTex: "Third problem: $\\int_0^1 x^2 dx = \\frac{1}{3}$.",
-      inputFormatTex: "Format",
-      outputFormatTex: "Result",
-      notesTex: "Notes",
-      tutorialTex: "Tutorial",
+      legend: "Third problem: $\\int_0^1 x^2 dx = \\frac{1}{3}$.",
+      inputFormat: "Format",
+      outputFormat: "Result",
+      notes: "Notes",
+      tutorial: "Tutorial",
     },
   },
   checker: {

@@ -100,9 +100,9 @@ const ContestDetail = () => {
       </div>
 
       <div className="tasks-section">
-        <h2>Tasks</h2>
+        <h2>Problems</h2>
         <button className="add-task-btn" onClick={() => setShowModal(true)}>
-          Add Task
+          New Problem
         </button>
         <ul className="tasks-list">
           {tasks.map((task, index) => (

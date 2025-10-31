@@ -35,16 +35,13 @@ const CheckerTab = () => {
 
   const loadData = async () => {
     try {
-      const [sourceRes, testsRes] = await Promise.all([
-        checkerAPI.getSource(taskId),
-        checkerAPI.listTests(taskId),
-      ]);
+      const response = await checkerAPI.getSource(taskId);
       setData({
-        source: sourceRes.data.source || "",
-        language: sourceRes.data.language || "cpp",
-        tests: testsRes.data || [],
+        source: response.data.source || "",
+        language: response.data.language || "cpp",
+        tests: response.data.tests || [],
       });
-      setRunResults(sourceRes.data.runResults || {});
+      setRunResults(response.data.runResults || {});
     } catch (err) {
       console.error("Failed to load checker data:", err);
       setError("Failed to load checker data");
@@ -58,7 +55,6 @@ const CheckerTab = () => {
     try {
       await checkerAPI.updateSource(taskId, {
         source: data.source,
-        language: data.language,
       });
       setError("");
     } catch (err) {
@@ -66,6 +62,19 @@ const CheckerTab = () => {
       setError("Failed to save checker source");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLanguageChange = async (newLanguage) => {
+    try {
+      await checkerAPI.updateSource(taskId, {
+        language: newLanguage,
+      });
+      setData({ ...data, language: newLanguage });
+      setError("");
+    } catch (err) {
+      console.error("Failed to update checker language:", err);
+      setError("Failed to update checker language");
     }
   };
 
@@ -123,11 +132,10 @@ const CheckerTab = () => {
 
   const handleAddTest = async () => {
     try {
-      await checkerAPI.createTest(taskId, newTest);
-      const testsRes = await checkerAPI.listTests(taskId);
+      const response = await checkerAPI.createTest(taskId, newTest);
       setData((prevData) => ({
         ...prevData,
-        tests: testsRes.data || [],
+        tests: [...prevData.tests, response.data],
       }));
       setNewTest({ input: "", output: "", expected: "", verdict: "OK" });
       setShowAddTestModal(false);
@@ -162,10 +170,10 @@ const CheckerTab = () => {
         <div className="checker-fields">
           <div className="field-group">
             <label>Language:</label>
-            <select
-              value={data.language}
-              onChange={(e) => setData({ ...data, language: e.target.value })}
-            >
+             <select
+               value={data.language}
+               onChange={(e) => handleLanguageChange(e.target.value)}
+             >
               <option value="cpp">C++</option>
               <option value="python">Python</option>
               <option value="java">Java</option>

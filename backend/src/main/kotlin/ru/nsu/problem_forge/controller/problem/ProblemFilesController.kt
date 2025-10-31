@@ -5,8 +5,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import ru.nsu.problem_forge.dto.problem.CheckerDto
 import ru.nsu.problem_forge.dto.problem.CheckerResponse
+import ru.nsu.problem_forge.dto.problem.CheckerSourceDto
+import ru.nsu.problem_forge.dto.problem.CheckerTestDto
+import ru.nsu.problem_forge.dto.problem.CheckerTestResponse
+import ru.nsu.problem_forge.dto.problem.CheckerFullResponse
 import ru.nsu.problem_forge.dto.problem.GeneratorDto
 import ru.nsu.problem_forge.dto.problem.GeneratorResponse
 import ru.nsu.problem_forge.dto.problem.ProblemPackageResponse
@@ -108,6 +113,96 @@ class ProblemFilesController(
         val user = userService.findUserByHandle(userDetails.username)
         problemCheckerService.removeChecker(problemId, user.id!!)
         return ResponseEntity.noContent().build()
+    }
+
+    // New checker endpoints for source and tests
+    @GetMapping("/checker/source")
+    fun getCheckerSource(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<CheckerFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val checker = problemCheckerService.getCheckerSource(problemId, user.id!!)
+        return ResponseEntity.ok(checker)
+    }
+
+    @PutMapping("/checker/source")
+    fun updateCheckerSource(
+        @PathVariable problemId: Long,
+        @RequestBody checkerSourceDto: CheckerSourceDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<CheckerFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val checker = problemCheckerService.updateCheckerSource(problemId, user.id!!, checkerSourceDto)
+        return ResponseEntity.ok(checker)
+    }
+
+    @PostMapping("/checker/source")
+    fun uploadCheckerSource(
+        @PathVariable problemId: Long,
+        @RequestParam("source") sourceFile: MultipartFile,
+        @RequestParam("language") language: String,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<CheckerFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val source = String(sourceFile.bytes)
+        val dto = CheckerSourceDto(source, language)
+        val checker = problemCheckerService.updateCheckerSource(problemId, user.id!!, dto)
+        return ResponseEntity.ok(checker)
+    }
+
+    @GetMapping("/checker/tests")
+    fun getCheckerTests(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<CheckerTestResponse>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val tests = problemCheckerService.getCheckerTests(problemId, user.id!!)
+        return ResponseEntity.ok(tests)
+    }
+
+    @PostMapping("/checker/tests")
+    fun addCheckerTest(
+        @PathVariable problemId: Long,
+        @RequestBody testDto: CheckerTestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<CheckerTestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemCheckerService.addCheckerTest(problemId, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @PutMapping("/checker/tests/{testId}")
+    fun updateCheckerTest(
+        @PathVariable problemId: Long,
+        @PathVariable testId: Long,
+        @RequestBody testDto: CheckerTestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<CheckerTestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemCheckerService.updateCheckerTest(problemId, testId, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @DeleteMapping("/checker/tests/{testId}")
+    fun deleteCheckerTest(
+        @PathVariable problemId: Long,
+        @PathVariable testId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        problemCheckerService.deleteCheckerTest(problemId, testId, user.id!!)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/checker/run")
+    fun runCheckerTests(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Map<Long, String>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val results = problemCheckerService.runCheckerTests(problemId, user.id!!)
+        return ResponseEntity.ok(results)
     }
 
     // Generator endpoints (NEW)

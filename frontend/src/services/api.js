@@ -684,7 +684,7 @@ export const checkerAPI = {
         data: { message: "Source uploaded successfully" },
       });
     }
-    return api.post(`/problems/${taskId}/checker`, formData);
+    return api.post(`/problems/${taskId}/checker/source`, formData);
   },
 
   /**
@@ -701,7 +701,7 @@ export const checkerAPI = {
       }
       return Promise.resolve({ data });
     }
-    return api.get(`/problems/${taskId}/checker`);
+    return api.get(`/problems/${taskId}/checker/source`);
   },
 
   /**
@@ -716,7 +716,7 @@ export const checkerAPI = {
       mockData.checker[taskId] = { ...mockData.checker[taskId], ...data };
       return Promise.resolve({ data: mockData.checker[taskId] });
     }
-    return api.put(`/problems/${taskId}/checker`, data);
+    return api.put(`/problems/${taskId}/checker/source`, data);
   },
 
   /**

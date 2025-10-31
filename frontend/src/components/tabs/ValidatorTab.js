@@ -56,7 +56,6 @@ const ValidatorTab = () => {
     try {
       await validatorAPI.updateSource(taskId, {
         source: data.source,
-        language: data.language,
       });
       setError("");
     } catch (err) {
@@ -64,6 +63,19 @@ const ValidatorTab = () => {
       setError("Failed to save validator source");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLanguageChange = async (newLanguage) => {
+    try {
+      await validatorAPI.updateSource(taskId, {
+        language: newLanguage,
+      });
+      setData({ ...data, language: newLanguage });
+      setError("");
+    } catch (err) {
+      console.error("Failed to update validator language:", err);
+      setError("Failed to update validator language");
     }
   };
 
@@ -162,7 +174,7 @@ const ValidatorTab = () => {
             <label>Language:</label>
             <select
               value={data.language}
-              onChange={(e) => setData({ ...data, language: e.target.value })}
+              onChange={(e) => handleLanguageChange(e.target.value)}
             >
               <option value="cpp">C++</option>
               <option value="python">Python</option>

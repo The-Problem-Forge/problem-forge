@@ -25,4 +25,6 @@ interface Runner {
     fun compileToBinary(programSource: String, testlibNeeded: Boolean = false): ByteArray?
 
     fun runCheckerTest(checkerSource: String, language: String, input: String, output: String, expected: String): String
+
+    fun runValidatorTest(validatorSource: String, language: String, input: String): String
 }

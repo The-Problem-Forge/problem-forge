@@ -213,6 +213,11 @@ class SimpleRunner : Runner {
         }
     }
 
+    override fun runValidatorTest(validatorSource: String, language: String, input: String): String {
+        // Stub implementation: always return VALID
+        return "VALID"
+    }
+
     private fun copyTestlibToTemp(tempDir: File): File {
         val resource = javaClass.classLoader.getResource("testlib.h")
             ?: throw IllegalStateException("testlib.h not found in resources")

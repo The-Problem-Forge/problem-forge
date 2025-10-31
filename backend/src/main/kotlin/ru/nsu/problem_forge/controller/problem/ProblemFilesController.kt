@@ -20,22 +20,30 @@ import ru.nsu.problem_forge.dto.problem.SolutionResponse
 import ru.nsu.problem_forge.dto.problem.TestDto
 import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestResponse
+import ru.nsu.problem_forge.dto.problem.ValidatorFullResponse
+import ru.nsu.problem_forge.dto.problem.ValidatorSourceDto
+import ru.nsu.problem_forge.dto.problem.ValidatorTestDto
+import ru.nsu.problem_forge.dto.problem.ValidatorTestResponse
+import ru.nsu.problem_forge.repository.FileRepository
 import ru.nsu.problem_forge.service.problem.ProblemCheckerService
 import ru.nsu.problem_forge.service.problem.ProblemSolutionsService
 import ru.nsu.problem_forge.service.UserService
 import ru.nsu.problem_forge.service.problem.ProblemGeneratorService
 import ru.nsu.problem_forge.service.problem.ProblemPackageService
 import ru.nsu.problem_forge.service.problem.ProblemTestsService
+import ru.nsu.problem_forge.service.problem.ProblemValidatorService
 
 @RestController
 @RequestMapping("/api/problems/{problemId}")
 class ProblemFilesController(
     private val problemSolutionsService: ProblemSolutionsService,
     private val problemCheckerService: ProblemCheckerService,
+    private val problemValidatorService: ProblemValidatorService,
     private val problemGeneratorService: ProblemGeneratorService,
     private val problemTestsService: ProblemTestsService,
     private val problemPackageService: ProblemPackageService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val fileRepository: ru.nsu.problem_forge.repository.FileRepository
 ) {
 
     // Solutions endpoints
@@ -202,6 +210,96 @@ class ProblemFilesController(
     ): ResponseEntity<Map<Long, String>> {
         val user = userService.findUserByHandle(userDetails.username)
         val results = problemCheckerService.runCheckerTests(problemId, user.id!!)
+        return ResponseEntity.ok(results)
+    }
+
+    // Validator endpoints
+    @GetMapping("/validator/source")
+    fun getValidatorSource(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<ValidatorFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val validator = problemValidatorService.getValidatorSource(problemId, user.id!!)
+        return ResponseEntity.ok(validator)
+    }
+
+    @PutMapping("/validator/source")
+    fun updateValidatorSource(
+        @PathVariable problemId: Long,
+        @RequestBody validatorSourceDto: ValidatorSourceDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<ValidatorFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val validator = problemValidatorService.updateValidatorSource(problemId, user.id!!, validatorSourceDto)
+        return ResponseEntity.ok(validator)
+    }
+
+    @PostMapping("/validator/source")
+    fun uploadValidatorSource(
+        @PathVariable problemId: Long,
+        @RequestParam("source") sourceFile: MultipartFile,
+        @RequestParam("language") language: String,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<ValidatorFullResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val source = String(sourceFile.bytes)
+        val dto = ValidatorSourceDto(source, language)
+        val validator = problemValidatorService.updateValidatorSource(problemId, user.id!!, dto)
+        return ResponseEntity.ok(validator)
+    }
+
+    @GetMapping("/validator/tests")
+    fun getValidatorTests(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<List<ValidatorTestResponse>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val tests = problemValidatorService.getValidatorTests(problemId, user.id!!)
+        return ResponseEntity.ok(tests)
+    }
+
+    @PostMapping("/validator/tests")
+    fun addValidatorTest(
+        @PathVariable problemId: Long,
+        @RequestBody testDto: ValidatorTestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<ValidatorTestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemValidatorService.addValidatorTest(problemId, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @PutMapping("/validator/tests/{testId}")
+    fun updateValidatorTest(
+        @PathVariable problemId: Long,
+        @PathVariable testId: Long,
+        @RequestBody testDto: ValidatorTestDto,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<ValidatorTestResponse> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val test = problemValidatorService.updateValidatorTest(problemId, testId, user.id!!, testDto)
+        return ResponseEntity.ok(test)
+    }
+
+    @DeleteMapping("/validator/tests/{testId}")
+    fun deleteValidatorTest(
+        @PathVariable problemId: Long,
+        @PathVariable testId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        problemValidatorService.deleteValidatorTest(problemId, testId, user.id!!)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/validator/run")
+    fun runValidatorTests(
+        @PathVariable problemId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Map<Long, String>> {
+        val user = userService.findUserByHandle(userDetails.username)
+        val results = problemValidatorService.runValidatorTests(problemId, user.id!!)
         return ResponseEntity.ok(results)
     }
 

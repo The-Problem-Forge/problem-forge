@@ -167,10 +167,10 @@ const mockData = {
   },
   tests: {
     1: [
-      { id: "1", input: "1 2", description: "Test 1" },
-      { id: "2", input: "2 3", description: "Test 2" },
+      { id: "1", input: "1 2", description: "Test 1", points: 1 },
+      { id: "2", input: "2 3", description: "Test 2", points: 2 },
     ],
-    2: [{ id: "3", input: "1", description: "Test 3" }],
+    2: [{ id: "3", input: "1", description: "Test 3", points: 1 }],
     3: [],
   },
   solutions: {
@@ -945,11 +945,22 @@ export const testsAPI = {
    * @returns {Promise} Axios response with tests array
    * @throws {Error} If fetch fails
    */
-  list: (taskId) => {
+  list: async (taskId) => {
     if (UI_TEST) {
       return Promise.resolve({ data: mockData.tests[taskId] || [] });
     }
-    return api.get(`/problems/${taskId}/tests`);
+    const response = await api.get(`/problems/${taskId}/tests`);
+    // Transform backend TestResponse to frontend format
+    const transformedTests = response.data.map((test) => ({
+      id: test.testId,
+      input: test.content, // content is the input for RAW tests
+      output: null, // output will be fetched separately if needed
+      description: test.description,
+      testType: test.testType,
+      sample: test.sample,
+      points: test.points,
+    }));
+    return { data: transformedTests };
   },
 
   /**
@@ -965,6 +976,9 @@ export const testsAPI = {
         id: String(
           (mockData.tests[taskId] ? mockData.tests[taskId].length : 0) + 1,
         ),
+        input: test.inputText,
+        description: test.description,
+        points: test.points || 1,
         ...test,
       };
       if (!mockData.tests[taskId]) {
@@ -973,7 +987,15 @@ export const testsAPI = {
       mockData.tests[taskId].push(newTest);
       return Promise.resolve({ data: newTest });
     }
-    return api.post(`/problems/${taskId}/tests`, test);
+    // Transform frontend data to backend format
+    const backendTest = {
+      testType: "RAW",
+      content: test.inputText,
+      description: test.description,
+      sample: false,
+      points: test.points || 1,
+    };
+    return api.post(`/problems/${taskId}/tests`, backendTest);
   },
 
   /**
@@ -993,6 +1015,7 @@ export const testsAPI = {
         // No specific fields from formData; placeholder values
         input: "uploaded",
         description: "",
+        points: 1,
       };
       if (!mockData.tests[taskId]) {
         mockData.tests[taskId] = [];
@@ -1029,11 +1052,20 @@ export const testsAPI = {
         input: test.inputText !== undefined ? test.inputText : existing.input,
         inputText:
           test.inputText !== undefined ? test.inputText : existing.inputText,
+        points: test.points !== undefined ? test.points : existing.points,
       };
       taskTests[index] = updated;
       return Promise.resolve({ data: updated });
     }
-    return api.put(`/problems/${taskId}/tests/${testId}`, test);
+    // Transform frontend data to backend format
+    const backendTest = {
+      testType: "RAW",
+      content: test.inputText,
+      description: test.description,
+      sample: false,
+      points: test.points || 1,
+    };
+    return api.put(`/problems/${taskId}/tests/${testId}`, backendTest);
   },
 
   /**
@@ -1074,27 +1106,36 @@ export const generatorsAPI = {
       // Return mock generators if any, otherwise empty array
       return Promise.resolve({ data: mockData.generators[taskId] || [] });
     }
-    return api.get(`/problems/${taskId}/generators`);
+    return api.get(`/problems/${taskId}/generators`).then(response => {
+      // Transform backend response to frontend format
+      const transformedGenerators = response.data.map(gen => ({
+        id: gen.generatorId.toString(), // Convert Long to string
+        alias: gen.alias,
+        language: gen.format.toLowerCase().replace("_17", "").replace("_14", ""),
+        ...gen
+      }));
+      return { data: transformedGenerators };
+    });
   },
 
   /**
-   * Uploads source for generator
+   * Creates a generator
    * @param {string} taskId - Task ID
-   * @param {FormData} formData - Source file
+   * @param {Object} generatorData - Generator data with file, format, alias
    * @returns {Promise} Axios response
-   * @throws {Error} If upload fails
+   * @throws {Error} If creation fails
    */
-  uploadSource: (taskId, formData) => {
+  create: (taskId, generatorData) => {
     if (UI_TEST) {
       // Create a mock generator entry
-      const name = formData.get("name") || `Generator ${Date.now()}`;
       const newGenerator = {
         id: String(
           (mockData.generators[taskId]
             ? mockData.generators[taskId].length
             : 0) + 1,
         ),
-        name,
+        alias: generatorData.alias,
+        language: generatorData.format.toLowerCase().replace("_17", ""),
       };
       if (!mockData.generators[taskId]) {
         mockData.generators[taskId] = [];
@@ -1102,6 +1143,18 @@ export const generatorsAPI = {
       mockData.generators[taskId].push(newGenerator);
       return Promise.resolve({ data: newGenerator });
     }
+    return api.post(`/problems/${taskId}/generators`, generatorData);
+  },
+
+  /**
+   * Uploads source for generator (legacy - kept for compatibility)
+   * @param {string} taskId - Task ID
+   * @param {FormData} formData - Source file
+   * @returns {Promise} Axios response
+   * @throws {Error} If upload fails
+   */
+  uploadSource: (taskId, formData) => {
+    // This is now deprecated - use create() instead
     return api.post(`/problems/${taskId}/generators`, formData);
   },
 

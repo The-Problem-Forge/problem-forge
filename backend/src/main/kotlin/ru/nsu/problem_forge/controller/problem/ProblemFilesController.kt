@@ -20,6 +20,7 @@ import ru.nsu.problem_forge.dto.problem.SolutionResponse
 import ru.nsu.problem_forge.dto.problem.TestDto
 import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestResponse
+import ru.nsu.problem_forge.type.problem.TestType
 import ru.nsu.problem_forge.dto.problem.ValidatorFullResponse
 import ru.nsu.problem_forge.dto.problem.ValidatorSourceDto
 import ru.nsu.problem_forge.dto.problem.ValidatorTestDto
@@ -32,6 +33,7 @@ import ru.nsu.problem_forge.service.problem.ProblemGeneratorService
 import ru.nsu.problem_forge.service.problem.ProblemPackageService
 import ru.nsu.problem_forge.service.problem.ProblemTestsService
 import ru.nsu.problem_forge.service.problem.ProblemValidatorService
+import ru.nsu.problem_forge.type.problem.FileFormat
 
 @RestController
 @RequestMapping("/api/problems/{problemId}")
@@ -369,6 +371,8 @@ class ProblemFilesController(
         val test = problemTestsService.addTest(problemId, user.id!!, testDto)
         return ResponseEntity.ok(test)
     }
+
+
 
     @PutMapping("/tests/{testNumber}")
     fun updateTest(

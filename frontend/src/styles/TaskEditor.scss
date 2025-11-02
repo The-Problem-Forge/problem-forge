@@ -145,6 +145,31 @@
   }
 }
 
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $spacing-lg;
+}
+
+.modal-tabs button {
+  padding: $spacing-sm $spacing-md;
+  background: none;
+  border: none;
+  color: $dark-gray;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: inherit;
+
+  &.active {
+    color: $primary-color;
+    border-bottom-color: $primary-color;
+  }
+
+  &:hover {
+    color: $primary-color;
+  }
+}
+
 .modal .form-group {
   @include form-group;
   label {

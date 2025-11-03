@@ -979,6 +979,7 @@ export const testsAPI = {
         input: test.inputText,
         description: test.description,
         points: test.points || 1,
+        testType: test.testType || "RAW",
         ...test,
       };
       if (!mockData.tests[taskId]) {
@@ -989,7 +990,7 @@ export const testsAPI = {
     }
     // Transform frontend data to backend format
     const backendTest = {
-      testType: "RAW",
+      testType: test.testType || "RAW",
       content: test.inputText,
       description: test.description,
       sample: false,

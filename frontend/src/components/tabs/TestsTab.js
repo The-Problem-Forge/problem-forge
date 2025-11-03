@@ -23,7 +23,6 @@ const TestsTab = () => {
   });
   const [selectedGenerator, setSelectedGenerator] = useState(null);
   const [generatorArgs, setGeneratorArgs] = useState("");
-  const [generatorCount, setGeneratorCount] = useState(1);
   const [showGeneratorModal, setShowGeneratorModal] = useState(false);
   const [generatorFile, setGeneratorFile] = useState(null);
   const [generatorLanguage, setGeneratorLanguage] = useState("");
@@ -73,16 +72,16 @@ const TestsTab = () => {
         };
         response = await testsAPI.createText(taskId, testData);
       } else if (addMode === "generator" && selectedGenerator) {
-        // Run generator to create tests
-        const params = {
-          args: generatorArgs || undefined,
-          count: generatorCount,
+        // Add test with GENERATED type and bash command as content
+        const command =
+          `${selectedGenerator.alias} ${generatorArgs || ""}`.trim();
+        const testData = {
+          inputText: command,
+          description: newTest.description,
+          points: newTest.points || 1,
+          testType: "GENERATED",
         };
-        response = await generatorsAPI.run(
-          taskId,
-          selectedGenerator.id,
-          params,
-        );
+        response = await testsAPI.createText(taskId, testData);
       }
       if (response) {
         // Reload data to get updated preview with outputs
@@ -91,7 +90,6 @@ const TestsTab = () => {
         setGeneratorFile(null);
         setSelectedGenerator(null);
         setGeneratorArgs("");
-        setGeneratorCount(1);
         setShowAddModal(false);
         setError("");
       }
@@ -442,18 +440,7 @@ const TestsTab = () => {
                     onChange={(e) => setGeneratorArgs(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Count</label>
-                  <input
-                    type="number"
-                    placeholder="Count"
-                    value={generatorCount}
-                    onChange={(e) =>
-                      setGeneratorCount(parseInt(e.target.value))
-                    }
-                    min="1"
-                  />
-                </div>
+
                 <div className="modal-buttons">
                   <button type="submit">Add Test</button>
                   <button

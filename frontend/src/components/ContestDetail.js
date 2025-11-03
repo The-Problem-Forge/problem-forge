@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { contestsAPI, tasksAPI } from "../services/api";
+import { contestsAPI, problemsAPI } from "../services/api";
 import "../styles/main.scss";
 
 /**
@@ -25,7 +25,7 @@ const ContestDetail = () => {
     try {
       const [contestRes, tasksRes] = await Promise.all([
         contestsAPI.get(contestId),
-        tasksAPI.listByContest(contestId),
+        contestsAPI.getProblems(contestId),
       ]);
       setContest(contestRes.data);
       setTasks(tasksRes.data);
@@ -42,7 +42,7 @@ const ContestDetail = () => {
     if (!newTask.title.trim()) return;
 
     try {
-      const response = await tasksAPI.create(contestId, newTask);
+      const response = await problemsAPI.create(newTask, contestId);
       setNewTask({ title: "", description: "" });
       setShowModal(false);
       await loadData();
@@ -76,7 +76,7 @@ const ContestDetail = () => {
   const updateOrder = async (orderedTasks) => {
     try {
       const order = orderedTasks.map((t) => t.id);
-      await contestsAPI.reorderTasks(contestId, order);
+      await contestsAPI.reorderProblems(contestId, order);
     } catch (err) {
       console.error("Failed to reorder tasks:", err);
       setError("Failed to reorder tasks");
@@ -100,9 +100,9 @@ const ContestDetail = () => {
       </div>
 
       <div className="tasks-section">
-        <h2>Tasks</h2>
+        <h2>Problems</h2>
         <button className="add-task-btn" onClick={() => setShowModal(true)}>
-          Add Task
+          New Problem
         </button>
         <ul className="tasks-list">
           {tasks.map((task, index) => (
@@ -153,16 +153,6 @@ const ContestDetail = () => {
                   }
                   className="modal-input"
                   required
-                />
-              </div>
-              <div>
-                <textarea
-                  placeholder="Description (optional)"
-                  value={newTask.description}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, description: e.target.value })
-                  }
-                  className="modal-input"
                 />
               </div>
               <div className="modal-buttons">

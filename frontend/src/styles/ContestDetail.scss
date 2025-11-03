@@ -25,7 +25,7 @@
 }
 
 .add-task-btn {
-  @include button($success-color, $success-hover);
+  @include button($primary-color, $primary-hover);
   margin-bottom: $spacing-md;
 }
 

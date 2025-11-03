@@ -25,6 +25,7 @@ class ProblemGeneralService(
 
         val general = problem.problemInfo.general
         return GeneralResponse(
+            title = problem.title,
             inputFile = general.inputFile,
             outputFile = general.outputFile,
             timeLimit = general.timeLimit,
@@ -60,10 +61,12 @@ class ProblemGeneralService(
         val updatedProblemInfo = problem.problemInfo.copy(general = updatedGeneral)
         problem.problemInfo = updatedProblemInfo
         problem.modifiedAt = LocalDateTime.now()
+        problem.title = updateDto.title ?: problem.title
 
         problemRepository.save(problem)
 
         return GeneralResponse(
+            title = problem.title,
             inputFile = updatedGeneral.inputFile,
             outputFile = updatedGeneral.outputFile,
             timeLimit = updatedGeneral.timeLimit,

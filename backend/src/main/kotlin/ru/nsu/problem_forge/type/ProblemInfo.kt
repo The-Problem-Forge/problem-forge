@@ -14,6 +14,9 @@ data class ProblemInfo(
 
     val generators: List<ProblemGenerator> = emptyList(),
     var checker:   Long? = null, // file_id actually
+    var checkerLanguage: String? = null, // language for checker source
+    var validator: Long? = null, // file_id for validator source
+    var validatorLanguage: String? = null, // language for validator source
 
     val tests:     List<ProblemTest> = emptyList(),
     var solutions: List<ProblemSolution> = emptyList()

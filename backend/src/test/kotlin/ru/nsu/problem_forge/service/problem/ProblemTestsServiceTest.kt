@@ -220,6 +220,8 @@ class ProblemTestsServiceTest {
                 solutions = listOf(
                     ProblemSolution(
                         solutionId = 1L,
+                        name = "Test Solution 1",
+                        language = "cpp",
                         author = userId,
                         file = 1L,
                         solutionType = SolutionType.MAIN_AC
@@ -243,6 +245,8 @@ class ProblemTestsServiceTest {
                 solutions = listOf(
                     ProblemSolution(
                         solutionId = 1L,
+                        name = "Test Solution 2",
+                        language = "cpp",
                         author = userId,
                         file = 1L,
                         solutionType = SolutionType.MAIN_AC
@@ -266,6 +270,8 @@ class ProblemTestsServiceTest {
                 solutions = listOf(
                     ProblemSolution(
                         solutionId = 1L,
+                        name = "Test Solution 3",
+                        language = "cpp",
                         author = userId,
                         file = 1L,
                         solutionType = SolutionType.MAIN_AC

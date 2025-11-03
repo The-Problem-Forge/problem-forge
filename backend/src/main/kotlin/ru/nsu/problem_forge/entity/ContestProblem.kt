@@ -16,4 +16,7 @@ class ContestProblem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
     var problem: Problem? = null
+
+    @Column(name = "order_index", nullable = false)
+    var orderIndex: Int = 0
 }

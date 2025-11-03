@@ -16,10 +16,13 @@ const TestsTab = () => {
   const [error, setError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [addMode, setAddMode] = useState("text"); // text, file, generator
-  const [newTest, setNewTest] = useState({ inputText: "", description: "" });
+  const [newTest, setNewTest] = useState({
+    inputText: "",
+    description: "",
+    points: 1,
+  });
   const [selectedGenerator, setSelectedGenerator] = useState(null);
   const [generatorArgs, setGeneratorArgs] = useState("");
-  const [generatorCount, setGeneratorCount] = useState(1);
   const [showGeneratorModal, setShowGeneratorModal] = useState(false);
   const [generatorFile, setGeneratorFile] = useState(null);
   const [generatorLanguage, setGeneratorLanguage] = useState("");
@@ -34,6 +37,7 @@ const TestsTab = () => {
         testsAPI.list(taskId),
         generatorsAPI.list(taskId),
       ]);
+
       setTests(testsRes.data || []);
       setGenerators(generatorsRes.data || []);
     } catch (err) {
@@ -53,17 +57,39 @@ const TestsTab = () => {
       if (addMode === "text") {
         response = await testsAPI.createText(taskId, newTest);
       } else if (addMode === "file" && generatorFile) {
-        const formData = new FormData();
-        formData.append("file", generatorFile);
-        if (newTest.description) {
-          formData.append("description", newTest.description);
-        }
-        response = await testsAPI.createFile(taskId, formData);
+        // Read file content and send as text
+        const fileContent = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsText(generatorFile);
+        });
+
+        const testData = {
+          inputText: fileContent,
+          description: newTest.description || "",
+          points: newTest.points || 1,
+        };
+        response = await testsAPI.createText(taskId, testData);
+      } else if (addMode === "generator" && selectedGenerator) {
+        // Add test with GENERATED type and bash command as content
+        const command =
+          `${selectedGenerator.alias} ${generatorArgs || ""}`.trim();
+        const testData = {
+          inputText: command,
+          description: newTest.description,
+          points: newTest.points || 1,
+          testType: "GENERATED",
+        };
+        response = await testsAPI.createText(taskId, testData);
       }
       if (response) {
-        setTests([...tests, response.data]);
-        setNewTest({ inputText: "", description: "" });
+        // Reload data to get updated preview with outputs
+        await loadData();
+        setNewTest({ inputText: "", description: "", points: 1 });
         setGeneratorFile(null);
+        setSelectedGenerator(null);
+        setGeneratorArgs("");
         setShowAddModal(false);
         setError("");
       }
@@ -73,38 +99,11 @@ const TestsTab = () => {
     }
   };
 
-  const handleRunGenerator = async () => {
-    if (!selectedGenerator) return;
-
-    try {
-      const params = {
-        args: generatorArgs || undefined,
-        count: generatorCount,
-      };
-      const response = await generatorsAPI.run(
-        taskId,
-        selectedGenerator.id,
-        params,
-      );
-      // Append generated tests to list
-      if (response.data && Array.isArray(response.data)) {
-        setTests([...tests, ...response.data]);
-      }
-      setSelectedGenerator(null);
-      setGeneratorArgs("");
-      setGeneratorCount(1);
-      setShowGeneratorModal(false);
-      setError("");
-    } catch (err) {
-      console.error("Failed to run generator:", err);
-      setError("Failed to run generator");
-    }
-  };
-
   const handleDeleteTest = async (testId) => {
     try {
       await testsAPI.delete(taskId, testId);
-      setTests(tests.filter((t) => t.id !== testId));
+      // Reload data to get updated preview
+      await loadData();
       setError("");
     } catch (err) {
       console.error("Failed to delete test:", err);
@@ -120,10 +119,46 @@ const TestsTab = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("file", generatorFile);
-      formData.append("language", generatorLanguage);
-      await generatorsAPI.uploadSource(taskId, formData);
+      // Read file content and convert to base64
+      const fileContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          // Convert to base64
+          const base64 = btoa(e.target.result);
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsBinaryString(generatorFile);
+      });
+
+      // Determine format based on language
+      let format;
+      switch (generatorLanguage.toLowerCase()) {
+        case "cpp":
+          format = "CPP_17";
+          break;
+        case "python":
+          format = "PYTHON";
+          break;
+        case "java":
+          format = "JAVA_17";
+          break;
+        default:
+          format = "TEXT";
+      }
+
+      // Generate alias from filename
+      const filename = generatorFile.name;
+      const alias =
+        filename.substring(0, filename.lastIndexOf(".")) || filename;
+
+      const generatorData = {
+        file: fileContent,
+        format: format,
+        alias: alias,
+      };
+
+      await generatorsAPI.create(taskId, generatorData);
       setGeneratorFile(null);
       setGeneratorLanguage("");
       await loadData();
@@ -167,24 +202,52 @@ const TestsTab = () => {
                   placeholder: "Description",
                   editable: true,
                 },
+                {
+                  key: "points",
+                  label: "Points",
+                  type: "number",
+                  placeholder: "Points",
+                  editable: true,
+                },
                 { key: "actions", label: "Actions" },
               ]}
               rows={tests}
+              renderCell={(row, key, index, isEditing, onEdit) => {
+                if (key === "input") {
+                  const inputText = row[key] || "";
+                  const truncated =
+                    inputText.length > 100
+                      ? inputText.substring(0, 100) + "..."
+                      : inputText;
+                  return (
+                    <span
+                      title={inputText}
+                      style={{ cursor: "pointer" }}
+                      onClick={onEdit}
+                    >
+                      {truncated}
+                    </span>
+                  );
+                }
+                return null; // Let default rendering handle other columns
+              }}
               onSave={async (rowId, columnKey, newValue) => {
                 try {
-                  const updateData =
-                    columnKey === "input"
-                      ? {
-                          inputText: newValue,
-                          description:
-                            tests.find((t) => t.id === rowId)?.description ||
-                            "",
-                        }
-                      : {
-                          inputText:
-                            tests.find((t) => t.id === rowId)?.inputText || "",
-                          description: newValue,
-                        };
+                  const test = tests.find((t) => t.id === rowId);
+                  const updateData = {
+                    inputText: test?.input || "",
+                    description: test?.description || "",
+                    points: test?.points || 1,
+                  };
+
+                  if (columnKey === "input") {
+                    updateData.inputText = newValue;
+                  } else if (columnKey === "description") {
+                    updateData.description = newValue;
+                  } else if (columnKey === "points") {
+                    updateData.points = parseInt(newValue) || 1;
+                  }
+
                   await testsAPI.update(taskId, rowId, updateData);
                   const res = await testsAPI.list(taskId);
                   setTests(res.data || []);
@@ -201,51 +264,18 @@ const TestsTab = () => {
               )}
               emptyMessage="No tests yet"
             />
-            <div className="add-test">
-              <input
-                type="text"
-                placeholder="Input"
-                value={newTest.inputText}
-                onChange={(e) =>
-                  setNewTest({
-                    ...newTest,
-                    inputText: e.target.value,
-                  })
-                }
-              />
-              <input
-                type="text"
-                placeholder="Description (optional)"
-                value={newTest.description}
-                onChange={(e) =>
-                  setNewTest({
-                    ...newTest,
-                    description: e.target.value,
-                  })
-                }
-              />
-              <button onClick={handleAddTest}>Add Test</button>
-            </div>
           </div>
           <div className="field-group">
             <label>Generators:</label>
             <Table
               headers={[
-                { key: "name", label: "Generator" },
+                { key: "alias", label: "Generator" },
                 { key: "language", label: "Language" },
-                { key: "actions", label: "Actions" },
               ]}
               rows={generators}
               renderCell={(gen, key) => {
-                if (key === "name") return gen.name || gen.id;
+                if (key === "alias") return gen.alias;
                 if (key === "language") return gen.language || "N/A";
-                if (key === "actions") {
-                  return (
-                    <button onClick={() => setSelectedGenerator(gen)}>
-                      Run
-                    </button>
-                  );
-                }
                 return null;
               }}
               emptyMessage="No generators yet"
@@ -281,22 +311,46 @@ const TestsTab = () => {
 
             {addMode === "text" && (
               <form onSubmit={handleAddTest}>
-                <textarea
-                  placeholder="Input text"
-                  value={newTest.inputText}
-                  onChange={(e) =>
-                    setNewTest({ ...newTest, inputText: e.target.value })
-                  }
-                  rows={5}
-                />
-                <input
-                  type="text"
-                  placeholder="Description (optional)"
-                  value={newTest.description}
-                  onChange={(e) =>
-                    setNewTest({ ...newTest, description: e.target.value })
-                  }
-                />
+                <div className="form-group">
+                  <label>Input Text</label>
+                  <textarea
+                    placeholder="Input text"
+                    value={newTest.inputText}
+                    onChange={(e) =>
+                      setNewTest({ ...newTest, inputText: e.target.value })
+                    }
+                    rows={5}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Description (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={newTest.description}
+                    onChange={(e) =>
+                      setNewTest({ ...newTest, description: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Points</label>
+                  <input
+                    type="number"
+                    placeholder="Points"
+                    value={newTest.points}
+                    onChange={(e) =>
+                      setNewTest({
+                        ...newTest,
+                        points: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    min="1"
+                  />
+                </div>
+
                 <div className="modal-buttons">
                   <button type="submit">Add Test</button>
                   <button type="button" onClick={() => setShowAddModal(false)}>
@@ -308,22 +362,47 @@ const TestsTab = () => {
 
             {addMode === "file" && (
               <form onSubmit={handleAddTest}>
-                <input
-                  type="file"
-                  onChange={(e) => setGeneratorFile(e.target.files[0])}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Description (optional)"
-                  value={newTest.description}
-                  onChange={(e) =>
-                    setNewTest({ ...newTest, description: e.target.value })
-                  }
-                />
+                <div className="form-group">
+                  <label>Test File</label>
+                  <input
+                    type="file"
+                    onChange={(e) => setGeneratorFile(e.target.files[0])}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Description (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={newTest.description}
+                    onChange={(e) =>
+                      setNewTest({ ...newTest, description: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Points</label>
+                  <input
+                    type="number"
+                    placeholder="Points"
+                    value={newTest.points}
+                    onChange={(e) =>
+                      setNewTest({
+                        ...newTest,
+                        points: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    min="1"
+                  />
+                </div>
                 <div className="modal-buttons">
                   <button type="submit">Add Test</button>
-                  <button type="button" onClick={() => setShowAddModal(false)}>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setShowAddModal(false)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -332,8 +411,8 @@ const TestsTab = () => {
 
             {addMode === "generator" && (
               <form onSubmit={handleAddTest}>
-                <label>
-                  Generator:
+                <div className="form-group">
+                  <label>Generator</label>
                   <select
                     value={selectedGenerator ? selectedGenerator.id : ""}
                     onChange={(e) => {
@@ -347,27 +426,28 @@ const TestsTab = () => {
                     <option value="">Select generator</option>
                     {generators.map((gen) => (
                       <option key={gen.id} value={gen.id}>
-                        {gen.name || gen.id}
+                        {gen.alias || gen.name || gen.id}
                       </option>
                     ))}
                   </select>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Arguments (optional)"
-                  value={generatorArgs}
-                  onChange={(e) => setGeneratorArgs(e.target.value)}
-                />
-                <input
-                  type="number"
-                  placeholder="Count"
-                  value={generatorCount}
-                  onChange={(e) => setGeneratorCount(parseInt(e.target.value))}
-                  min="1"
-                />
+                </div>
+                <div className="form-group">
+                  <label>Arguments (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Arguments"
+                    value={generatorArgs}
+                    onChange={(e) => setGeneratorArgs(e.target.value)}
+                  />
+                </div>
+
                 <div className="modal-buttons">
-                  <button type="submit">Create Tests</button>
-                  <button type="button" onClick={() => setShowAddModal(false)}>
+                  <button type="submit">Add Test</button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setShowAddModal(false)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -382,58 +462,38 @@ const TestsTab = () => {
           <div className="modal-content">
             <h3>Upload Generator</h3>
             <form onSubmit={handleUploadGenerator}>
-              <input
-                type="file"
-                onChange={(e) => setGeneratorFile(e.target.files[0])}
-                required
-              />
-              <select
-                value={generatorLanguage}
-                onChange={(e) => setGeneratorLanguage(e.target.value)}
-                required
-              >
-                <option value="">Select language</option>
-                <option value="cpp">C++</option>
-                <option value="python">Python</option>
-                <option value="java">Java</option>
-              </select>
+              <div className="form-group">
+                <label>Generator File</label>
+                <input
+                  type="file"
+                  onChange={(e) => setGeneratorFile(e.target.files[0])}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Language</label>
+                <select
+                  value={generatorLanguage}
+                  onChange={(e) => setGeneratorLanguage(e.target.value)}
+                  required
+                >
+                  <option value="">Select language</option>
+                  <option value="cpp">C++</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                </select>
+              </div>
               <div className="modal-buttons">
                 <button type="submit">Upload</button>
                 <button
                   type="button"
+                  className="cancel-btn"
                   onClick={() => setShowGeneratorModal(false)}
                 >
                   Cancel
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {selectedGenerator && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>
-              Run Generator: {selectedGenerator.name || selectedGenerator.id}
-            </h3>
-            <input
-              type="text"
-              placeholder="Arguments (optional)"
-              value={generatorArgs}
-              onChange={(e) => setGeneratorArgs(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Count"
-              value={generatorCount}
-              onChange={(e) => setGeneratorCount(parseInt(e.target.value))}
-              min="1"
-            />
-            <div className="modal-buttons">
-              <button onClick={handleRunGenerator}>Run</button>
-              <button onClick={() => setSelectedGenerator(null)}>Cancel</button>
-            </div>
           </div>
         </div>
       )}

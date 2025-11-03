@@ -16,22 +16,6 @@ import "../styles/main.scss";
  */
 const TaskEditor = () => {
   const { contestId, taskId } = useParams();
-  const [contest, setContest] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadContest = async () => {
-      try {
-        const response = await contestsAPI.get(contestId);
-        setContest(response.data);
-      } catch (err) {
-        console.error("Failed to load contest:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadContest();
-  }, [contestId]);
 
   const tabs = [
     { path: "", label: "General", index: true },
@@ -43,14 +27,9 @@ const TaskEditor = () => {
     { path: "invocations", label: "Invocations" },
   ];
 
-  if (loading) return <div>Loading...</div>;
-
   return (
     <div className="task-editor">
       <div className="task-editor-header">
-        <Link to={`/contests/${contestId}`} className="back-button">
-          ← Back to {contest?.name || "Contest"}
-        </Link>
         <h1>Task Editor</h1>
       </div>
       <nav className="tab-nav">

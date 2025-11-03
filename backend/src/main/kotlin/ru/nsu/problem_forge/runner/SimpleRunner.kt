@@ -133,6 +133,91 @@ class SimpleRunner : Runner {
         }
     }
 
+    override fun runCheckerTest(checkerSource: String, language: String, input: String, output: String, expected: String): String {
+        var tempDir: File? = null
+        try {
+            tempDir = createTempDir("checker_test_")
+
+            // Write checker source
+            val sourceFile = when (language) {
+                "cpp" -> File(tempDir, "checker.cpp")
+                "python" -> File(tempDir, "checker.py")
+                "java" -> File(tempDir, "Checker.java")
+                else -> throw IllegalArgumentException("Unsupported language: $language")
+            }
+            sourceFile.writeText(checkerSource)
+
+            // Write test files
+            val inputFile = File(tempDir, "input.txt").apply { writeText(input) }
+            val outputFile = File(tempDir, "output.txt").apply { writeText(output) }
+            val expectedFile = File(tempDir, "expected.txt").apply { writeText(expected) }
+
+            // Compile if needed
+            val binaryFile = when (language) {
+                "cpp" -> {
+                    val bin = File(tempDir, "checker.out")
+                    val compileSuccess = compileProgram(sourceFile, bin, true, tempDir) // testlib needed for checkers
+                    if (!compileSuccess) return "CRASHED"
+                    bin.setExecutable(true)
+                    bin
+                }
+                "python" -> sourceFile // Python doesn't need compilation
+                "java" -> {
+                    // Compile Java
+                    val compileProcess = ProcessBuilder("javac", sourceFile.absolutePath)
+                        .directory(tempDir)
+                        .redirectErrorStream(true)
+                        .start()
+                    val compileSuccess = compileProcess.waitFor(10, TimeUnit.SECONDS)
+                    if (!compileSuccess || compileProcess.exitValue() != 0) return "CRASHED"
+                    File(tempDir, "Checker.class")
+                }
+                else -> throw IllegalArgumentException("Unsupported language: $language")
+            }
+
+            // Run the checker
+            val command = when (language) {
+                "cpp" -> listOf(binaryFile.absolutePath, inputFile.absolutePath, outputFile.absolutePath, expectedFile.absolutePath)
+                "python" -> listOf("python3", sourceFile.absolutePath, inputFile.absolutePath, outputFile.absolutePath, expectedFile.absolutePath)
+                "java" -> listOf("java", "-cp", tempDir.absolutePath, "Checker", inputFile.absolutePath, outputFile.absolutePath, expectedFile.absolutePath)
+                else -> throw IllegalArgumentException("Unsupported language: $language")
+            }
+
+            val runProcess = ProcessBuilder(command)
+                .directory(tempDir)
+                .redirectErrorStream(true)
+                .start()
+
+            val runSuccess = runProcess.waitFor(5000, TimeUnit.MILLISECONDS)
+
+            if (!runSuccess) {
+                runProcess.destroyForcibly()
+                return "CRASHED"
+            }
+
+            val exitCode = runProcess.exitValue()
+            val outputContent = runProcess.inputStream.bufferedReader().readText()
+
+            // Map exit codes to verdicts (common convention)
+            return when (exitCode) {
+                0 -> "OK"
+                1 -> "WRONG_ANSWER"
+                2 -> "PRESENTATION_ERROR"
+                else -> "CRASHED"
+            }
+
+        } catch (e: Exception) {
+            return "CRASHED"
+        } finally {
+            tempDir?.deleteRecursively()
+        }
+    }
+
+    override fun runValidatorTest(validatorSource: String, language: String, input: String): String {
+        // Stub implementation: always return VALID
+        return "VALID"
+    }
+
     private fun copyTestlibToTemp(tempDir: File): File {
         val resource = javaClass.classLoader.getResource("testlib.h")
             ?: throw IllegalStateException("testlib.h not found in resources")

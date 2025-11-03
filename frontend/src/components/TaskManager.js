@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { taskAPI } from "../services/api";
+import { problemsAPI } from "../services/api";
 
 const TaskManager = ({ login, onLogout }) => {
   // prop renamed
@@ -13,7 +13,7 @@ const TaskManager = ({ login, onLogout }) => {
 
   const loadTasks = async () => {
     try {
-      const response = await taskAPI.getTasks();
+      const response = await problemsAPI.list();
       setTasks(response.data);
     } catch (err) {
       console.error("Failed to load tasks:", err);
@@ -26,7 +26,7 @@ const TaskManager = ({ login, onLogout }) => {
 
     setLoading(true);
     try {
-      const response = await taskAPI.createTask(newTask);
+      const response = await problemsAPI.create(newTask);
       setTasks([...tasks, response.data]);
       setNewTask({ title: "", description: "" });
     } catch (err) {

@@ -7,6 +7,7 @@ enum class FileFormat {
     PDF,
     TEXT,
     MARKDOWN,
+    C,
     CPP_14,
     CPP_17,
     JAVA_17,

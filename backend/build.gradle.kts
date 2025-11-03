@@ -4,6 +4,7 @@ plugins {
     kotlin("plugin.jpa") version "1.9.22"
     id("org.springframework.boot") version "3.1.0"
     id("io.spring.dependency-management") version "1.1.0"
+    id("org.flywaydb.flyway") version "9.16.1"
 }
 
 group = "ru.nsu"
@@ -27,6 +28,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     implementation("org.postgresql:postgresql")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("org.flywaydb:flyway-core")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -41,9 +43,20 @@ dependencies {
     }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = "21"
+}
+
 tasks.test {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
     }
+}
+
+flyway {
+    url = "jdbc:postgresql://localhost:5432/problem_forge_db"
+    user = "postgres"
+    password = "password"
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
 }

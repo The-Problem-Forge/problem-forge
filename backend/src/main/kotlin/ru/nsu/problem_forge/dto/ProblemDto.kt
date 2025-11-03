@@ -5,13 +5,14 @@ import java.time.LocalDateTime
 
 data class ProblemDto(
     val id: Long,
-    val tag: String,
+    val title: String,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 )
 
 data class CreateProblemRequest(
-    val tag: String,
+    val title: String,
+    val contestId: Long? = null
 )
 
 data class AddUserToProblemRequest(
@@ -27,6 +28,7 @@ data class ProblemUserDto(
 )
 
 data class GeneralDto(
+    val title: String? = null,
     val inputFile: String? = null,
     val outputFile: String? = null,
     val timeLimit: Int? = null,
@@ -34,6 +36,7 @@ data class GeneralDto(
 )
 
 data class GeneralResponse(
+    val title: String,
     val inputFile: String,
     val outputFile: String,
     val timeLimit: Int,

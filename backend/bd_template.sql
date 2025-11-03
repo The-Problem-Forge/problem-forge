@@ -21,7 +21,7 @@ ALTER TABLE
 
 CREATE TABLE "problems_master"(
     "problem_id" BIGINT NOT NULL,
-    "tag" VARCHAR(40) NOT NULL,
+    "title" VARCHAR(40) NOT NULL,
     "owner" BIGINT NOT NULL REFERENCES users (user_id)
     "problem_info" JSON NOT NULL,
     "changelog" JSON NOT NULL
@@ -57,12 +57,13 @@ ALTER TABLE
 
 
 CREATE TABLE "contest_problems"(
-    "contest_id" BIGINT NOT NULL REFERENCES contest (contest_id),
-    "problem_id" BIGINT NOT NULL REFERENCES problems_master (problems_id),
+    "contest_id" BIGINT NOT NULL REFERENCES contests (contest_id),
+    "problem_id" BIGINT NOT NULL REFERENCES problems_master (problem_id),
+    "order_index" INT NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
 );
 ALTER TABLE
-    "contest_problems" ADD PRIMARY KEY("contest_id");
+    "contest_problems" ADD PRIMARY KEY("contest_id", "problem_id");
 
 
 CREATE TABLE "problem_users"(

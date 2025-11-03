@@ -113,7 +113,6 @@ class ProblemTestsServiceIntegrationTest {
         val problem = Problem().apply {
             this.problemInfo = problemInfo
             modifiedAt = LocalDateTime.now()
-            tag = "test-problem"
             createdAt = LocalDateTime.now()
         }
         return problemRepository.save(problem).id!!
@@ -201,6 +200,8 @@ class ProblemTestsServiceIntegrationTest {
                 solutions = listOf(
                     ProblemSolution(
                         solutionId = 1L,
+                        name = "Test Solution",
+                        language = "cpp",
                         author = userId,
                         file = solutionFileId,
                         solutionType = SolutionType.MAIN_AC
@@ -217,7 +218,6 @@ class ProblemTestsServiceIntegrationTest {
                 )
             )
             modifiedAt = LocalDateTime.now()
-            tag = "integration-test"
             createdAt = LocalDateTime.now()
         }
     }

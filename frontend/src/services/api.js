@@ -1292,7 +1292,7 @@ export const solutionsAPI = {
         data: { source: "// placeholder source code", language: "cpp" },
       });
     }
-    return api.get(`/problems/${taskId}/solutions/${solutionId}`);
+    return api.get(`/problems/${taskId}/solutions/${solutionId}/source`);
   },
 
   /**

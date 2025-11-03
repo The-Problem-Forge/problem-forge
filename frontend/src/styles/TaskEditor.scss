@@ -292,6 +292,25 @@
   @include button($primary-color, $primary-hover);
 }
 
+.table .actions-cell {
+  padding: $spacing-sm;
+}
+
+.table .actions-cell button {
+  margin: $spacing-xxs $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.table .actions-cell button:first-child {
+  margin-left: 0;
+}
+
+.table .actions-cell button:last-child {
+  margin-right: 0;
+}
+
 .invocations-tab .selector-list {
   display: flex;
   flex-wrap: wrap;
@@ -491,6 +510,21 @@
 }
 
 .cancel-btn {
+  @include button($secondary-color, $secondary-hover);
+}
+
+.editor-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: $spacing-md;
+}
+
+.editor-buttons button {
+  @include button($primary-color, $primary-hover);
+}
+
+.editor-buttons .cancel-btn {
   @include button($secondary-color, $secondary-hover);
 }
 

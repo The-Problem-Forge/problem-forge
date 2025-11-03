@@ -51,15 +51,6 @@ const SolutionsTab = () => {
   };
 
   /**
-   * Handles opening the edit solution modal
-   * @param {Object} solution - Solution to edit
-   */
-  const handleEditSolution = (solution) => {
-    setEditingSolution(solution);
-    setIsModalOpen(true);
-  };
-
-  /**
    * Handles saving a solution from the modal
    * @param {Object} formData - Form data from modal
    */
@@ -301,13 +292,10 @@ const SolutionsTab = () => {
                     {compiling[solution.id] ? "Compiling..." : "Compile"}
                   </button>
                   <button onClick={() => handleViewSource(solution.id)}>
-                    View/Edit
+                    Edit
                   </button>
                   <button onClick={() => handleDownload(solution.id)}>
                     Download
-                  </button>
-                  <button onClick={() => handleEditSolution(solution)}>
-                    Edit
                   </button>
                 </>
               )}
@@ -327,7 +315,12 @@ const SolutionsTab = () => {
                 <button onClick={handleSaveSource} disabled={savingSource}>
                   {savingSource ? "Saving..." : "Save"}
                 </button>
-                <button onClick={() => setEditingSource(null)}>Cancel</button>
+                <button
+                  className="cancel-btn"
+                  onClick={() => setEditingSource(null)}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}

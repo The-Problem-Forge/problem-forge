@@ -24,7 +24,7 @@ class ProblemTestsService(
     private val runner: Runner
 ) {
 
-    val previewStatusCache = ConcurrentHashMap<Long, PreviewStatus>()
+    val jobStatusCache = ConcurrentHashMap<Long, JobStatus>()
     val previewGenerationCache = ConcurrentHashMap<Long, TestPreviewResponse>()
     val problemChecksumCache = ConcurrentHashMap<Long, String>()
 
@@ -46,9 +46,9 @@ class ProblemTestsService(
         }
 
         // Check if generation is in progress
-        if (previewStatusCache[problemId] == PreviewStatus.IN_PROGRESS) {
+        if (jobStatusCache[problemId] == JobStatus.IN_PROGRESS) {
             return TestPreviewResponse(
-                status = PreviewStatus.IN_PROGRESS,
+                status = JobStatus.IN_PROGRESS,
                 message = "Test preview generation is in progress. Please wait..."
             )
         }
@@ -76,7 +76,7 @@ class ProblemTestsService(
         startAsyncPreviewGeneration(problemId, userId, currentChecksum)
 
         return TestPreviewResponse(
-            status = PreviewStatus.PENDING,
+            status = JobStatus.PENDING,
             message = "Starting test preview generation..."
         )
     }
@@ -181,16 +181,16 @@ class ProblemTestsService(
     }
 
     private fun startAsyncPreviewGeneration(problemId: Long, userId: Long, checksum: String) {
-        previewStatusCache[problemId] = PreviewStatus.IN_PROGRESS
+        jobStatusCache[problemId] = JobStatus.IN_PROGRESS
 
         Thread {
             try {
                 val result = generatePreview(problemId, userId)
                 previewGenerationCache[problemId] = result
                 problemChecksumCache[problemId] = checksum
-                previewStatusCache[problemId] = PreviewStatus.COMPLETED
+                jobStatusCache[problemId] = JobStatus.COMPLETED
             } catch (e: Exception) {
-                previewStatusCache[problemId] = PreviewStatus.ERROR
+                jobStatusCache[problemId] = JobStatus.ERROR
                 println("Error in async preview generation for problem $problemId: ${e.message}")
             }
         }.start()
@@ -294,7 +294,7 @@ class ProblemTestsService(
         }
 
         return TestPreviewResponse(
-            status = PreviewStatus.COMPLETED,
+            status = JobStatus.COMPLETED,
             tests = previewTests
         )
     }
@@ -423,7 +423,7 @@ class ProblemTestsService(
         }
 
         return TestPreviewResponse(
-            status = PreviewStatus.COMPLETED,
+            status = JobStatus.COMPLETED,
             tests = previewTests
         )
     }

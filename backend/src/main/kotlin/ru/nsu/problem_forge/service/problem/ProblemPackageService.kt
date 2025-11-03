@@ -3,7 +3,7 @@ package ru.nsu.problem_forge.service.problem
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import ru.nsu.problem_forge.dto.problem.PreviewStatus
+import ru.nsu.problem_forge.dto.problem.JobStatus
 import ru.nsu.problem_forge.dto.problem.ProblemPackageResponse
 import ru.nsu.problem_forge.repository.FileRepository
 import ru.nsu.problem_forge.repository.ProblemRepository
@@ -25,7 +25,9 @@ class ProblemPackageService(
     private val runner: Runner
 ) {
 
-    private val packageStatusCache = ConcurrentHashMap<Long, PreviewStatus>()
+    private val PACK_CHECKER = false
+
+    private val packageStatusCache = ConcurrentHashMap<Long, JobStatus>()
     private val packageGenerationCache = ConcurrentHashMap<Long, ByteArray>()
     private val problemChecksumCache = ConcurrentHashMap<Long, String>()
 
@@ -44,7 +46,7 @@ class ProblemPackageService(
         // Check if problem has a checker
         if (problem.problemInfo.checker == null) {
             return ProblemPackageResponse(
-                status = PreviewStatus.ERROR,
+                status = JobStatus.ERROR,
                 message = "Problem does not have a checker configured"
             )
         }
@@ -56,9 +58,9 @@ class ProblemPackageService(
 
         // Check if generation is in progress
         val currentStatus = packageStatusCache[problemId]
-        if (currentStatus == PreviewStatus.IN_PROGRESS) {
+        if (currentStatus == JobStatus.IN_PROGRESS) {
             return ProblemPackageResponse(
-                status = PreviewStatus.IN_PROGRESS,
+                status = JobStatus.IN_PROGRESS,
                 message = "Problem package generation is in progress. Please wait..."
             )
         }
@@ -68,7 +70,7 @@ class ProblemPackageService(
             val cachedPackage = packageGenerationCache[problemId]
             if (cachedPackage != null) {
                 return ProblemPackageResponse(
-                    status = PreviewStatus.COMPLETED,
+                    status = JobStatus.COMPLETED,
                     message = "Package is ready for download",
                     downloadUrl = "/api/problems/$problemId/package/download"
                 )
@@ -79,7 +81,7 @@ class ProblemPackageService(
         startAsyncPackageGeneration(problemId, userId, currentChecksum)
 
         return ProblemPackageResponse(
-            status = PreviewStatus.PENDING,
+            status = JobStatus.PENDING,
             message = if (hasChanges) {
                 "Changes detected. Starting package generation..."
             } else {
@@ -111,7 +113,7 @@ class ProblemPackageService(
     }
 
     private fun startAsyncPackageGeneration(problemId: Long, userId: Long, currentChecksum: String) {
-        packageStatusCache[problemId] = PreviewStatus.IN_PROGRESS
+        packageStatusCache[problemId] = JobStatus.IN_PROGRESS
 
         Thread {
             try {
@@ -120,10 +122,10 @@ class ProblemPackageService(
                 // Update caches
                 packageGenerationCache[problemId] = packageData
                 problemChecksumCache[problemId] = currentChecksum
-                packageStatusCache[problemId] = PreviewStatus.COMPLETED
+                packageStatusCache[problemId] = JobStatus.COMPLETED
 
             } catch (e: Exception) {
-                packageStatusCache[problemId] = PreviewStatus.ERROR
+                packageStatusCache[problemId] = JobStatus.ERROR
                 println("Error in async package generation for problem $problemId: ${e.message}")
                 e.printStackTrace()
             }
@@ -132,18 +134,18 @@ class ProblemPackageService(
 
     @Transactional
     fun generatePackageSync(problemId: Long, userId: Long): ByteArray {
-        val previewResponse = problemTestsService.getTestsPreview(problemId, userId)
-
-        if (previewResponse.status != PreviewStatus.COMPLETED) {
-            throw IllegalStateException("Failed to generate tests preview: ${previewResponse.message}")
-        }
-
         val problem = problemRepository.findById(problemId)
             .orElseThrow { IllegalArgumentException("Problem not found") }
 
         val checker = problem.problemInfo.checker
         if (checker == null) {
             throw IllegalStateException("Problem has no checker, can't generate package")
+        }
+
+        val previewResponse = problemTestsService.getTestsPreview(problemId, userId)
+        if (previewResponse.status != JobStatus.COMPLETED) {
+            // This is not error actually, preview is generated and we need to wait
+            throw IllegalStateException("Failed to generate tests preview: ${previewResponse.message}. Try to call tests preview first.")
         }
 
         // Compile checker if exists
@@ -185,10 +187,12 @@ class ProblemPackageService(
             }
 
             // Add compiled checker to ZIP
-            checkerBinary?.let { binary ->
-                zipOutputStream.putNextEntry(ZipEntry("check.exe"))
-                zipOutputStream.write(binary)
-                zipOutputStream.closeEntry()
+            if (PACK_CHECKER) {
+                checkerBinary?.let { binary ->
+                    zipOutputStream.putNextEntry(ZipEntry("check.exe"))
+                    zipOutputStream.write(binary)
+                    zipOutputStream.closeEntry()
+                }
             }
         }
 

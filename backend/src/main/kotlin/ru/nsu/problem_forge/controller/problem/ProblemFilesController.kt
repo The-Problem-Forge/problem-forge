@@ -1,35 +1,14 @@
 package ru.nsu.problem_forge.controller.problem
 
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
-import ru.nsu.problem_forge.dto.problem.CheckerDto
-import ru.nsu.problem_forge.dto.problem.CheckerResponse
-import ru.nsu.problem_forge.dto.problem.CheckerSourceDto
-import ru.nsu.problem_forge.dto.problem.CheckerTestDto
-import ru.nsu.problem_forge.dto.problem.CheckerTestResponse
-import ru.nsu.problem_forge.dto.problem.CheckerFullResponse
-import ru.nsu.problem_forge.dto.problem.GeneratorDto
-import ru.nsu.problem_forge.dto.problem.GeneratorResponse
-import ru.nsu.problem_forge.dto.problem.ProblemPackageResponse
-
-import ru.nsu.problem_forge.dto.problem.TestDto
-import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
-import ru.nsu.problem_forge.dto.problem.TestResponse
-import ru.nsu.problem_forge.type.problem.TestType
-import ru.nsu.problem_forge.dto.problem.ValidatorFullResponse
-import ru.nsu.problem_forge.dto.problem.ValidatorSourceDto
-import ru.nsu.problem_forge.dto.problem.ValidatorTestDto
-import ru.nsu.problem_forge.dto.problem.ValidatorTestResponse
-import ru.nsu.problem_forge.repository.FileRepository
-import ru.nsu.problem_forge.service.problem.ProblemCheckerService
-import ru.nsu.problem_forge.service.problem.ProblemSolutionsService
+import ru.nsu.problem_forge.dto.problem.*
 import ru.nsu.problem_forge.service.UserService
+import ru.nsu.problem_forge.service.problem.ProblemCheckerService
 import ru.nsu.problem_forge.service.problem.ProblemGeneratorService
-import ru.nsu.problem_forge.service.problem.ProblemPackageService
+import ru.nsu.problem_forge.service.problem.ProblemSolutionsService
 import ru.nsu.problem_forge.service.problem.ProblemTestsService
 import ru.nsu.problem_forge.service.problem.ProblemValidatorService
 import ru.nsu.problem_forge.type.problem.FileFormat
@@ -42,9 +21,7 @@ class ProblemFilesController(
     private val problemValidatorService: ProblemValidatorService,
     private val problemGeneratorService: ProblemGeneratorService,
     private val problemTestsService: ProblemTestsService,
-    private val problemPackageService: ProblemPackageService,
-    private val userService: UserService,
-    private val fileRepository: ru.nsu.problem_forge.repository.FileRepository
+    private val userService: UserService
 ) {
 
 
@@ -364,33 +341,4 @@ class ProblemFilesController(
         return ResponseEntity.ok(tests)
     }
 
-    @GetMapping("/tests/preview")
-    fun getTestsPreview(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<TestPreviewResponse> {
-        val user = userService.findUserByHandle(userDetails.username)
-        val preview = problemTestsService.getTestsPreview(problemId, user.id!!)
-        return ResponseEntity.ok(preview)
-    }
-
-    @GetMapping("/package")
-    fun getProblemPackage(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<ProblemPackageResponse> {
-        val user = userService.findUserByHandle(userDetails.username)
-        val packageResponse = problemPackageService.getProblemPackage(problemId, user.id!!)
-        return ResponseEntity.ok(packageResponse)
-    }
-
-    @GetMapping("/package/download")
-    fun downloadProblemPackage(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails,
-        response: HttpServletResponse
-    ) {
-        val user = userService.findUserByHandle(userDetails.username)
-        problemPackageService.downloadProblemPackage(problemId, user.id!!, response)
-    }
 }

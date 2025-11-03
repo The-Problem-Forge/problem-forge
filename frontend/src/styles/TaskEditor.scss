@@ -493,3 +493,9 @@
 .cancel-btn {
   @include button($secondary-color, $secondary-hover);
 }
+
+.error {
+  color: $danger-color;
+  font-size: $font-size-sm;
+  margin-top: $spacing-xs;
+}

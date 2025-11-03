@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { solutionsAPI } from "../../services/api";
 import Table from "../Table";
+import SolutionModal from "../SolutionModal";
 
 /**
  * SolutionsTab component for solutions management
@@ -12,12 +13,13 @@ const SolutionsTab = () => {
   const [solutions, setSolutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [uploadingFile, setUploadingFile] = useState(false);
   const [compiling, setCompiling] = useState({});
   const [compileResults, setCompileResults] = useState({});
   const [editingSource, setEditingSource] = useState(null);
   const [sourceContent, setSourceContent] = useState("");
   const [savingSource, setSavingSource] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSolution, setEditingSolution] = useState(null);
 
   useEffect(() => {
     loadSolutions();
@@ -41,27 +43,59 @@ const SolutionsTab = () => {
   };
 
   /**
-   * Handles file upload for new solution
-   * @param {Event} e - File input change event
-   * @returns {Promise<void>}
+   * Handles opening the add solution modal
    */
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleAddSolution = () => {
+    setEditingSolution(null);
+    setIsModalOpen(true);
+  };
 
-    setUploadingFile(true);
+  /**
+   * Handles opening the edit solution modal
+   * @param {Object} solution - Solution to edit
+   */
+  const handleEditSolution = (solution) => {
+    setEditingSolution(solution);
+    setIsModalOpen(true);
+  };
+
+  /**
+   * Handles saving a solution from the modal
+   * @param {Object} formData - Form data from modal
+   */
+  const handleSaveSolution = async (formData) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      await solutionsAPI.uploadSource(taskId, formData);
+      if (editingSolution) {
+        // Update existing solution
+        await solutionsAPI.update(taskId, editingSolution.id, {
+          name: formData.name,
+          language: formData.language,
+          type: formData.solutionType,
+        });
+      } else {
+        // Create new solution
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", formData.file);
+        uploadFormData.append("name", formData.name);
+        uploadFormData.append("language", formData.language);
+        uploadFormData.append("solutionType", formData.solutionType);
+        await solutionsAPI.uploadSource(taskId, uploadFormData);
+      }
       await loadSolutions();
+      setIsModalOpen(false);
       setError("");
     } catch (err) {
-      console.error("Failed to upload solution:", err);
-      setError("Failed to upload solution");
-    } finally {
-      setUploadingFile(false);
+      console.error("Failed to save solution:", err);
+      setError("Failed to save solution");
     }
+  };
+
+  /**
+   * Handles closing the modal
+   */
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingSolution(null);
   };
 
   /**
@@ -178,16 +212,8 @@ const SolutionsTab = () => {
 
   return (
     <div className="solutions-tab">
-      <h2>Solutions</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
       <div className="solutions-controls">
-        <input
-          type="file"
-          accept=".cpp,.py,.java,.c,.js"
-          onChange={handleFileUpload}
-          disabled={uploadingFile}
-        />
-        {uploadingFile && <span>Uploading...</span>}
+        <button onClick={handleAddSolution}>Add Solution</button>
       </div>
       <div className="solutions-editor">
         <div className="solutions-fields">
@@ -280,6 +306,9 @@ const SolutionsTab = () => {
                   <button onClick={() => handleDownload(solution.id)}>
                     Download
                   </button>
+                  <button onClick={() => handleEditSolution(solution)}>
+                    Edit
+                  </button>
                 </>
               )}
               emptyMessage="No solutions yet"
@@ -304,6 +333,12 @@ const SolutionsTab = () => {
           )}
         </div>
       </div>
+      <SolutionModal
+        isOpen={isModalOpen}
+        solution={editingSolution}
+        onSave={handleSaveSolution}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

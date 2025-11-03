@@ -4,15 +4,21 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ProblemSolution @JsonCreator constructor(
-    @JsonProperty("solutionId")
-    val solutionId: Long,
+     @JsonProperty("solutionId")
+     val solutionId: Long,
 
-    @JsonProperty("author")
-    val author: Long,
+     @JsonProperty("name")
+     val name: String,
 
-    @JsonProperty("file")
-    val file: Long,
+     @JsonProperty("language")
+     val language: String,
 
-    @JsonProperty("solutionType")
-    val solutionType: SolutionType
-)
+     @JsonProperty("author")
+     val author: Long,
+
+     @JsonProperty("file")
+     val file: Long,
+
+     @JsonProperty("solutionType")
+     val solutionType: SolutionType
+ )

@@ -201,6 +201,8 @@ class ProblemTestsServiceIntegrationTest {
                 solutions = listOf(
                     ProblemSolution(
                         solutionId = 1L,
+                        name = "Test Solution",
+                        language = "cpp",
                         author = userId,
                         file = solutionFileId,
                         solutionType = SolutionType.MAIN_AC

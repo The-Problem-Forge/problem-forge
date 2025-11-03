@@ -15,8 +15,7 @@ import ru.nsu.problem_forge.dto.problem.CheckerFullResponse
 import ru.nsu.problem_forge.dto.problem.GeneratorDto
 import ru.nsu.problem_forge.dto.problem.GeneratorResponse
 import ru.nsu.problem_forge.dto.problem.ProblemPackageResponse
-import ru.nsu.problem_forge.dto.problem.SolutionDto
-import ru.nsu.problem_forge.dto.problem.SolutionResponse
+
 import ru.nsu.problem_forge.dto.problem.TestDto
 import ru.nsu.problem_forge.dto.problem.TestPreviewResponse
 import ru.nsu.problem_forge.dto.problem.TestResponse
@@ -48,50 +47,7 @@ class ProblemFilesController(
     private val fileRepository: ru.nsu.problem_forge.repository.FileRepository
 ) {
 
-    // Solutions endpoints
-    @GetMapping("/solutions")
-    fun getSolutions(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<List<SolutionResponse>> {
-        val user = userService.findUserByHandle(userDetails.username)
-        val solutions = problemSolutionsService.getSolutions(problemId, user.id!!)
-        return ResponseEntity.ok(solutions)
-    }
 
-    @PostMapping("/solutions")
-    fun addSolution(
-        @PathVariable problemId: Long,
-        @RequestBody solutionDto: SolutionDto,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<SolutionResponse> {
-        val user = userService.findUserByHandle(userDetails.username)
-        val solution = problemSolutionsService.addSolution(problemId, user.id!!, solutionDto)
-        return ResponseEntity.ok(solution)
-    }
-
-    @PutMapping("/solutions/{solutionId}")
-    fun updateSolution(
-        @PathVariable problemId: Long,
-        @PathVariable solutionId: Long,
-        @RequestBody solutionDto: SolutionDto,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<SolutionResponse> {
-        val user = userService.findUserByHandle(userDetails.username)
-        val solution = problemSolutionsService.updateSolution(problemId, solutionId, user.id!!, solutionDto)
-        return ResponseEntity.ok(solution)
-    }
-
-    @DeleteMapping("/solutions/{solutionId}")
-    fun deleteSolution(
-        @PathVariable problemId: Long,
-        @PathVariable solutionId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<Void> {
-        val user = userService.findUserByHandle(userDetails.username)
-        problemSolutionsService.deleteSolution(problemId, solutionId, user.id!!)
-        return ResponseEntity.noContent().build()
-    }
 
     // Checker endpoints
     @GetMapping("/checker")

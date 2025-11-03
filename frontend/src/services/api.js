@@ -1106,13 +1106,16 @@ export const generatorsAPI = {
       // Return mock generators if any, otherwise empty array
       return Promise.resolve({ data: mockData.generators[taskId] || [] });
     }
-    return api.get(`/problems/${taskId}/generators`).then(response => {
+    return api.get(`/problems/${taskId}/generators`).then((response) => {
       // Transform backend response to frontend format
-      const transformedGenerators = response.data.map(gen => ({
+      const transformedGenerators = response.data.map((gen) => ({
         id: gen.generatorId.toString(), // Convert Long to string
         alias: gen.alias,
-        language: gen.format.toLowerCase().replace("_17", "").replace("_14", ""),
-        ...gen
+        language: gen.format
+          .toLowerCase()
+          .replace("_17", "")
+          .replace("_14", ""),
+        ...gen,
       }));
       return { data: transformedGenerators };
     });
@@ -1194,6 +1197,23 @@ export const generatorsAPI = {
 /**
  * Solutions API methods
  */
+const getFileFormatFromLanguage = (language) => {
+  switch (language) {
+    case "cpp":
+      return "CPP_17";
+    case "c":
+      return "C";
+    case "java":
+      return "JAVA_17";
+    case "python":
+      return "PYTHON";
+    case "js":
+      return "JSON"; // Using JSON as placeholder for JS
+    default:
+      return "TEXT";
+  }
+};
+
 export const solutionsAPI = {
   /**
    * Lists solutions for a task
@@ -1211,7 +1231,7 @@ export const solutionsAPI = {
   /**
    * Uploads source for solution
    * @param {string} taskId - Task ID
-   * @param {FormData} formData - Source file
+   * @param {FormData} formData - Source file with name, language, solutionType
    * @returns {Promise} Axios response
    * @throws {Error} If upload fails
    */
@@ -1219,8 +1239,8 @@ export const solutionsAPI = {
     if (UI_TEST) {
       const name = formData.get("name") || `Solution ${Date.now()}`;
       const language = formData.get("language") || "cpp";
-      const compilerVariant = formData.get("compilerVariant") || "";
-      const type = formData.get("type") || "main";
+      const solutionType =
+        formData.get("solutionType") || "Main correct solution";
 
       const newSolution = {
         id: String(
@@ -1229,8 +1249,7 @@ export const solutionsAPI = {
         ),
         name,
         language,
-        compilerVariant,
-        type,
+        type: solutionType,
       };
       if (!mockData.solutions[taskId]) {
         mockData.solutions[taskId] = [];
@@ -1245,7 +1264,11 @@ export const solutionsAPI = {
       };
       return Promise.resolve({ data: newSolution });
     }
-    return api.post(`/problems/${taskId}/solutions`, formData);
+    return api.post(`/problems/${taskId}/solutions`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 
   /**
@@ -1299,7 +1322,15 @@ export const solutionsAPI = {
       }
       return Promise.resolve({ data: solutions[index] });
     }
-    return api.put(`/problems/${taskId}/solutions/${solutionId}`, data);
+    // Transform frontend data to backend format (don't send file for updates)
+    const backendData = {
+      name: data.name,
+      language: data.language,
+      file: "", // Empty file means don't update file content
+      format: getFileFormatFromLanguage(data.language),
+      solutionType: data.type || data.solutionType,
+    };
+    return api.put(`/problems/${taskId}/solutions/${solutionId}`, backendData);
   },
 
   /**

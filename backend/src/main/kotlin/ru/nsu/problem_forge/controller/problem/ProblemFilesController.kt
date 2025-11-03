@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import ru.nsu.problem_forge.dto.problem.*
 import ru.nsu.problem_forge.service.UserService
 import ru.nsu.problem_forge.service.problem.ProblemCheckerService

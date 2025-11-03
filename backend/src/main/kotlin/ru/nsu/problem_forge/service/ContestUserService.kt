@@ -64,7 +64,7 @@ class ContestUserService(
     }
 
     private fun grantContestProblemsAccessToUser(contestId: Long, userId: Long) {
-        val contestProblems = contestProblemRepository.findAllByContestId(contestId)
+        val contestProblems = contestProblemRepository.findByContestId(contestId)
 
         contestProblems.forEach { contestProblem ->
             val problemId = contestProblem.problem!!.id

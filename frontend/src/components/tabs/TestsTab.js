@@ -185,7 +185,6 @@ const TestsTab = () => {
       <div className="tests-editor">
         <div className="tests-fields">
           <div className="field-group">
-            <label>Problem Tests:</label>
             <Table
               headers={[
                 {

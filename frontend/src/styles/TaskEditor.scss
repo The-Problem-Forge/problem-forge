@@ -44,6 +44,12 @@
 
 .tab-content {
   padding: $spacing-md 0;
+  min-height: 600px;
+}
+
+/* Prevent layout shift during tab transitions */
+.tab-content > div {
+  min-height: 500px;
 }
 
 .general-tab .form-group {

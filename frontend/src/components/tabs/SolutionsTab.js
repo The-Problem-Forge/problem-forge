@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { solutionsAPI } from "../../services/api";
 import Table from "../Table";
 import SolutionModal from "../SolutionModal";
+import SourceEditorModal from "../SourceEditorModal";
+import "../SourceEditorModal.css";
 
 /**
  * SolutionsTab component for solutions management
@@ -20,6 +22,7 @@ const SolutionsTab = () => {
   const [savingSource, setSavingSource] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSolution, setEditingSolution] = useState(null);
+  const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
 
   useEffect(() => {
     loadSolutions();
@@ -122,6 +125,7 @@ const SolutionsTab = () => {
       const response = await solutionsAPI.getSource(taskId, solutionId);
       setSourceContent(response.data?.source || "");
       setEditingSource(solutionId);
+      setIsSourceModalOpen(true);
       setError("");
     } catch (err) {
       console.error("Failed to load solution source:", err);
@@ -131,9 +135,10 @@ const SolutionsTab = () => {
 
   /**
    * Handles saving solution source
+   * @param {string} content - Source code content to save
    * @returns {Promise<void>}
    */
-  const handleSaveSource = async () => {
+  const handleSaveSource = async (content) => {
     if (!editingSource) return;
 
     setSavingSource(true);
@@ -148,10 +153,10 @@ const SolutionsTab = () => {
         name: solution.name,
         language: solution.language,
         solutionType: solution.solutionType,
-        source: sourceContent,
+        source: content,
       });
-      setEditingSource(null);
-      setSourceContent("");
+      setSourceContent(content);
+      setIsSourceModalOpen(false);
       setError("");
       await loadSolutions();
     } catch (err) {
@@ -160,6 +165,15 @@ const SolutionsTab = () => {
     } finally {
       setSavingSource(false);
     }
+  };
+
+  /**
+   * Handles closing the source editor modal
+   */
+  const handleCloseSourceModal = () => {
+    setIsSourceModalOpen(false);
+    setEditingSource(null);
+    setSourceContent("");
   };
 
   /**
@@ -212,13 +226,13 @@ const SolutionsTab = () => {
 
   return (
     <div className="solutions-tab">
+      <h2>Solutions</h2>
       <div className="solutions-controls">
         <button onClick={handleAddSolution}>Add Solution</button>
       </div>
       <div className="solutions-editor">
         <div className="solutions-fields">
           <div className="field-group">
-            <label>Solutions:</label>
             <Table
               headers={[
                 {
@@ -311,28 +325,6 @@ const SolutionsTab = () => {
               emptyMessage="No solutions yet"
             />
           </div>
-          {editingSource && (
-            <div className="field-group">
-              <label>Edit Solution Source:</label>
-              <textarea
-                value={sourceContent}
-                onChange={(e) => setSourceContent(e.target.value)}
-                rows={15}
-                placeholder="Enter solution source code..."
-              />
-              <div className="editor-buttons">
-                <button onClick={handleSaveSource} disabled={savingSource}>
-                  {savingSource ? "Saving..." : "Save"}
-                </button>
-                <button
-                  className="cancel-btn"
-                  onClick={() => setEditingSource(null)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       <SolutionModal
@@ -340,6 +332,14 @@ const SolutionsTab = () => {
         solution={editingSolution}
         onSave={handleSaveSolution}
         onClose={handleCloseModal}
+      />
+      <SourceEditorModal
+        isOpen={isSourceModalOpen}
+        solutionId={editingSource}
+        initialContent={sourceContent}
+        onSave={handleSaveSource}
+        onClose={handleCloseSourceModal}
+        saving={savingSource}
       />
     </div>
   );

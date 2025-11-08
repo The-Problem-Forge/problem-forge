@@ -367,9 +367,44 @@
   align-items: center;
   margin-bottom: $spacing-md;
 
+  h2 {
+    margin: 0;
+  }
+}
+
+.invocations-tab .invocations-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  align-items: start;
+}
+
+.invocations-tab .list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+
   h3 {
     margin: 0;
   }
+}
+
+.invocations-tab .matrix-section {
+  background: white;
+  border-radius: $border-radius;
+  padding: $spacing-md;
+  border: 1px solid #e0e0e0;
+  min-height: 400px;
+}
+
+.invocations-tab .matrix-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #666;
+  font-style: italic;
 }
 
 .invocations-tab .refresh-btn {

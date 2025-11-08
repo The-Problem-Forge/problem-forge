@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { invocationsAPI, solutionsAPI, testsAPI } from "../../services/api";
 import Table from "../Table";
+import InvocationModal from "../InvocationModal";
 
 /**
  * InvocationsTab component for managing invocations and viewing results matrix
@@ -21,6 +22,7 @@ const InvocationsTab = () => {
   const [matrixData, setMatrixData] = useState(null);
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -60,6 +62,7 @@ const InvocationsTab = () => {
       setSelectedSolutions([]);
       setSelectedTests([]);
       setError("");
+      setShowModal(false);
     } catch (err) {
       console.error("Failed to create invocation:", err);
       setError("Failed to create invocation");
@@ -131,7 +134,9 @@ const InvocationsTab = () => {
 
     data.solutions.forEach((solution, i) => {
       const solutionResults = data.results[i + 1] || [];
-      const passedCount = solutionResults.filter((r) => r?.verdict === "A").length;
+      const passedCount = solutionResults.filter(
+        (r) => r?.verdict === "A",
+      ).length;
       const maxTime = Math.max(
         ...solutionResults.map((r) => r?.timeMs || 0).filter((t) => t > 0),
         0,
@@ -201,215 +206,182 @@ const InvocationsTab = () => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="invocations-tab">
-      <h2>Invocations</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <div className="invocation-creator">
-        <div className="selector-section">
-          <div className="solutions-selector">
-            <h4>Select Solutions</h4>
-            {solutions.length > 0 && (
-              <button onClick={selectAllSolutions} className="select-all-btn">
-                {solutions.every((solution) =>
-                  selectedSolutions.includes(solution.id),
-                )
-                  ? "Deselect All"
-                  : "Select All"}
-              </button>
-            )}
-            {solutions.length === 0 ? (
-              <p>No solutions available</p>
-            ) : (
-              <div className="selector-list">
-                {solutions.map((solution) => (
-                  <div
-                    key={solution.id}
-                    className={`selector-item ${
-                      selectedSolutions.includes(solution.id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleSolution(solution.id)}
-                  >
-                    <div>{solution.name}</div>
-                    <div className="subtext">
-                      {solution.language}, {solution.solutionType}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="tests-selector">
-            <h4>Select Tests</h4>
-            {tests.length > 0 && (
-              <button onClick={selectAllTests} className="select-all-btn">
-                {tests.every((test) => selectedTests.includes(test.id))
-                  ? "Deselect All"
-                  : "Select All"}
-              </button>
-            )}
-            {tests.length === 0 ? (
-              <p>No tests available</p>
-            ) : (
-              <div className="selector-list">
-                {tests.map((test) => (
-                  <div
-                    key={test.id}
-                    className={`selector-item ${
-                      selectedTests.includes(test.id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleTest(test.id)}
-                  >
-                    Test {test.id}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="invocation-buttons">
+    <>
+      <div className="invocations-tab">
+        <div className="invocations-header">
+          <h2>Invocations</h2>
           <button
-            onClick={handleCreateInvocation}
-            disabled={creating}
+            onClick={() => setShowModal(true)}
             className="create-invocation-btn"
           >
-            {creating ? "Creating..." : "Create Invocation"}
+            Create Invocation
           </button>
         </div>
-      </div>
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <div className="invocations-list">
-        <div className="invocations-header">
-          <h3>Invocations</h3>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="refresh-btn"
-            title="Refresh invocations"
-          >
-            {refreshing ? (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="refresh-icon spinning"
+        <div className="invocations-content">
+          <div className="invocations-list">
+            <div className="list-header">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="refresh-btn"
+                title="Refresh invocations"
               >
-                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-              </svg>
-            ) : (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="refresh-icon"
-              >
-                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-              </svg>
-            )}
-          </button>
-        </div>
-        <Table
-          headers={[
-            { key: "id", label: "ID" },
-            { key: "solutions", label: "Solutions" },
-            { key: "tests", label: "Tests" },
-            { key: "status", label: "Status" },
-            { key: "createdAt", label: "Created At" },
-            { key: "actions", label: "Actions" },
-          ]}
-          rows={invocations}
-          renderCell={(inv, key) => {
-            if (key === "id") return inv.id;
-            if (key === "solutions") return inv.solutionIds?.length || 0;
-            if (key === "tests") return inv.testIds?.length || 0;
-            if (key === "status") return inv.status || "Pending";
-            if (key === "createdAt")
-              return inv.createdAt
-                ? new Date(inv.createdAt).toLocaleString()
-                : "N/A";
-            if (key === "actions") {
-              return (
-                <button onClick={() => handleViewMatrix(inv.id)}>
-                  View Matrix
-                </button>
-              );
-            }
-            return null;
-          }}
-          emptyMessage="No invocations yet"
-        />
-      </div>
-
-      {selectedInvocation && matrixData && (
-        <div className="matrix-section">
-          <h3>Results Matrix</h3>
-          {matrixLoading ? (
-            <p>Loading matrix...</p>
-          ) : (
-            <div className="matrix-container">
-              <Table
-                className="results-matrix"
-                headers={matrixData.headers}
-                rows={matrixData.rows}
-                renderCell={(row, key) => {
-                  if (key === "testName") {
-                    return row.testName;
-                  }
-
-                  // Handle solution columns
-                  if (key.startsWith("solution_")) {
-                    const cellData = row[key];
-
-                    if (row.isSummary) {
-                      // Summary row
-                      if (cellData && cellData.passedCount !== undefined) {
-                        return (
-                          <div>
-                            Passed: {cellData.passedCount}{" "}
-                            <span
-                              style={{ fontSize: "smaller", color: "grey" }}
-                            >
-                              Max: {cellData.maxTime}ms / {cellData.maxMemory}KB
-                            </span>
-                          </div>
-                        );
-                      }
-                      return <span>-</span>;
-                    } else {
-                      // Test result row
-                      if (cellData) {
-                        return (
-                          <div>
-                            {cellData.description}{" "}
-                            <span
-                              style={{ fontSize: "smaller", color: "grey" }}
-                            >
-                              {cellData.timeMs}ms / {cellData.memoryKb}KB
-                            </span>
-                          </div>
-                        );
-                      }
-                      return <span>-</span>;
-                    }
-                  }
-
-                  return null;
-                }}
-                emptyMessage="No matrix data"
-              />
+                {refreshing ? (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="refresh-icon spinning"
+                  >
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                  </svg>
+                ) : (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="refresh-icon"
+                  >
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                  </svg>
+                )}
+              </button>
             </div>
-          )}
+            <Table
+              headers={[
+                { key: "id", label: "ID" },
+                { key: "status", label: "Status" },
+                { key: "createdAt", label: "Created At" },
+                { key: "actions", label: "Actions" },
+              ]}
+              rows={invocations}
+              renderCell={(inv, key) => {
+                if (key === "id") return inv.id;
+                if (key === "status") return inv.status || "Pending";
+                if (key === "createdAt")
+                  return inv.createdAt
+                    ? new Date(inv.createdAt).toLocaleString()
+                    : "N/A";
+                if (key === "actions") {
+                  return inv.status === "COMPLETED" ? (
+                    <button onClick={() => handleViewMatrix(inv.id)}>
+                      View Matrix
+                    </button>
+                  ) : null;
+                }
+                return null;
+              }}
+              emptyMessage="No invocations yet"
+            />
+          </div>
+
+          <div className="matrix-section">
+            {selectedInvocation && matrixData ? (
+              <>
+                <h3>Results Matrix</h3>
+                {matrixLoading ? (
+                  <p>Loading matrix...</p>
+                ) : (
+                  <div className="matrix-container">
+                    <Table
+                      className="results-matrix"
+                      headers={matrixData.headers}
+                      rows={matrixData.rows}
+                      renderCell={(row, key) => {
+                        if (key === "testName") {
+                          return row.testName;
+                        }
+
+                        // Handle solution columns
+                        if (key.startsWith("solution_")) {
+                          const cellData = row[key];
+
+                          if (row.isSummary) {
+                            // Summary row
+                            if (
+                              cellData &&
+                              cellData.passedCount !== undefined
+                            ) {
+                              return (
+                                <div>
+                                  Passed: {cellData.passedCount}{" "}
+                                  <span
+                                    style={{
+                                      fontSize: "smaller",
+                                      color: "grey",
+                                    }}
+                                  >
+                                    Max: {cellData.maxTime}ms /{" "}
+                                    {cellData.maxMemory}KB
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return <span>-</span>;
+                          } else {
+                            // Test result row
+                            if (cellData) {
+                              return (
+                                <div>
+                                  {cellData.description}{" "}
+                                  <span
+                                    style={{
+                                      fontSize: "smaller",
+                                      color: "grey",
+                                    }}
+                                  >
+                                    {cellData.timeMs}ms / {cellData.memoryKb}KB
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return <span>-</span>;
+                          }
+                        }
+
+                        return null;
+                      }}
+                      emptyMessage="No matrix data"
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="matrix-placeholder">
+                <p>Select a completed invocation to view results matrix</p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+
+      <InvocationModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setError("");
+        }}
+        solutions={solutions}
+        tests={tests}
+        selectedSolutions={selectedSolutions}
+        selectedTests={selectedTests}
+        onToggleSolution={toggleSolution}
+        onToggleTest={toggleTest}
+        onSelectAllSolutions={selectAllSolutions}
+        onSelectAllTests={selectAllTests}
+        onCreate={handleCreateInvocation}
+        creating={creating}
+        error={error}
+      />
+    </>
   );
 };
 

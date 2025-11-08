@@ -210,77 +210,82 @@ const InvocationsTab = () => {
       <div className="invocations-tab">
         <div className="invocations-header">
           <h2>Invocations</h2>
-          <button
-            onClick={() => setShowModal(true)}
-            className="create-invocation-btn"
-          >
-            Create Invocation
-          </button>
+          <div className="header-buttons">
+            <button
+              onClick={() => setShowModal(true)}
+              className="create-invocation-btn"
+            >
+              Create Invocation
+            </button>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="refresh-btn"
+              title="Refresh invocations"
+            >
+              {refreshing ? (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="refresh-icon spinning"
+                >
+                  <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                </svg>
+              ) : (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="refresh-icon"
+                >
+                  <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
         {error && <p style={{ color: "red" }}>{error}</p>}
 
         <div className="invocations-content">
           <div className="invocations-list">
-            <div className="list-header">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="refresh-btn"
-                title="Refresh invocations"
-              >
-                {refreshing ? (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="refresh-icon spinning"
+            <div className="invocation-cards">
+              {invocations.length === 0 ? (
+                <p className="empty-message">No invocations yet</p>
+              ) : (
+                invocations.map((invocation) => (
+                  <div
+                    key={invocation.id}
+                    className={`invocation-card ${
+                      selectedInvocation === invocation.id ? "selected" : ""
+                    } ${invocation.status !== "COMPLETED" ? "disabled" : ""}`}
+                    onClick={() => {
+                      if (invocation.status === "COMPLETED") {
+                        handleViewMatrix(invocation.id);
+                      }
+                    }}
                   >
-                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                  </svg>
-                ) : (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="refresh-icon"
-                  >
-                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                  </svg>
-                )}
-              </button>
+                    <div className="invocation-status">
+                      {invocation.status || "Pending"}
+                    </div>
+                    <div className="invocation-details">
+                      <div className="invocation-id">ID: {invocation.id}</div>
+                      <div className="invocation-time">
+                        {invocation.createdAt
+                          ? new Date(invocation.createdAt).toLocaleString()
+                          : "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <Table
-              headers={[
-                { key: "id", label: "ID" },
-                { key: "status", label: "Status" },
-                { key: "createdAt", label: "Created At" },
-                { key: "actions", label: "Actions" },
-              ]}
-              rows={invocations}
-              renderCell={(inv, key) => {
-                if (key === "id") return inv.id;
-                if (key === "status") return inv.status || "Pending";
-                if (key === "createdAt")
-                  return inv.createdAt
-                    ? new Date(inv.createdAt).toLocaleString()
-                    : "N/A";
-                if (key === "actions") {
-                  return inv.status === "COMPLETED" ? (
-                    <button onClick={() => handleViewMatrix(inv.id)}>
-                      View Matrix
-                    </button>
-                  ) : null;
-                }
-                return null;
-              }}
-              emptyMessage="No invocations yet"
-            />
           </div>
 
           <div className="matrix-section">

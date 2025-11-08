@@ -61,7 +61,7 @@ const SolutionsTab = () => {
         await solutionsAPI.update(taskId, editingSolution.id, {
           name: formData.name,
           language: formData.language,
-          type: formData.solutionType,
+          solutionType: formData.solutionType,
         });
       } else {
         // Create new solution
@@ -138,7 +138,16 @@ const SolutionsTab = () => {
 
     setSavingSource(true);
     try {
+      // Find the solution to get its current metadata
+      const solution = solutions.find((s) => s.id === editingSource);
+      if (!solution) {
+        throw new Error("Solution not found");
+      }
+
       await solutionsAPI.update(taskId, editingSource, {
+        name: solution.name,
+        language: solution.language,
+        solutionType: solution.solutionType,
         source: sourceContent,
       });
       setEditingSource(null);
@@ -185,7 +194,7 @@ const SolutionsTab = () => {
       await solutionsAPI.update(taskId, updatedSolution.id, {
         name: updatedSolution.name,
         language: updatedSolution.language,
-        type: updatedSolution.type,
+        solutionType: updatedSolution.solutionType,
       });
       setSolutions((prevSolutions) =>
         prevSolutions.map((solution) =>
@@ -232,7 +241,7 @@ const SolutionsTab = () => {
                   ],
                 },
                 {
-                  key: "type",
+                  key: "solutionType",
                   label: "Type",
                   editable: true,
                   type: "select",

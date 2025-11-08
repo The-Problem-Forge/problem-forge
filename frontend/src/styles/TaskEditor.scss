@@ -345,14 +345,64 @@
   color: white;
 }
 
-.invocations-tab .create-invocation-btn {
-  @include button($primary-color, $primary-hover);
+.invocations-tab .invocation-buttons {
+  display: flex;
+  gap: $spacing-sm;
   margin-top: $spacing-md;
+}
+
+.invocations-tab .create-invocation-btn,
+.invocations-tab .run-subset-btn {
+  @include button($primary-color, $primary-hover);
 }
 
 .invocations-tab .select-all-btn {
   @include button($secondary-color, $secondary-hover);
   margin-bottom: $spacing-sm;
+}
+
+.invocations-tab .invocations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.invocations-tab .refresh-btn {
+  @include button($secondary-color, $secondary-hover);
+  padding: $spacing-sm;
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .refresh-icon {
+    display: block;
+
+    &.spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .general-tab .save-btn {

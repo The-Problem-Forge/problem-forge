@@ -20,6 +20,7 @@ const InvocationsTab = () => {
   const [selectedInvocation, setSelectedInvocation] = useState(null);
   const [matrixData, setMatrixData] = useState(null);
   const [matrixLoading, setMatrixLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -71,13 +72,101 @@ const InvocationsTab = () => {
     setMatrixLoading(true);
     try {
       const response = await invocationsAPI.matrix(taskId, invocationId);
-      setMatrixData(response.data);
+      const transformedData = transformMatrixData(response.data);
+      setMatrixData(transformedData);
       setSelectedInvocation(invocationId);
     } catch (err) {
       console.error("Failed to load matrix:", err);
       setError("Failed to load matrix");
     } finally {
       setMatrixLoading(false);
+    }
+  };
+
+  /**
+   * Transforms backend matrix data into a Table-friendly structure
+   * @param {Object} matrixData - Raw matrix data from backend
+   * @returns {Object} Transformed data with headers and rows
+   */
+  const transformMatrixData = (data) => {
+    if (!data || !data.solutions || !data.tests || !data.results) {
+      return { headers: [], rows: [] };
+    }
+
+    // Create headers: Test column + one column per solution
+    const headers = [
+      { key: "testName", label: "Test" },
+      ...data.solutions.map((solution) => ({
+        key: `solution_${solution.id}`,
+        label: solution.name,
+      })),
+    ];
+
+    // Create rows: one per test + summary row
+    const rows = data.tests.map((test) => {
+      const row = {
+        testName: `Test ${test.testNumber}`,
+        isSummary: false,
+        testNumber: test.testNumber,
+      };
+
+      // Add result for each solution
+      data.solutions.forEach((solution, i) => {
+        const solutionResults = data.results[i + 1] || [];
+        const result = solutionResults.find(
+          (r) => r.testNumber === test.testNumber,
+        );
+
+        row[`solution_${solution.id}`] = result || null;
+      });
+
+      return row;
+    });
+
+    // Add summary row
+    const summaryRow = {
+      testName: "Summary",
+      isSummary: true,
+    };
+
+    data.solutions.forEach((solution, i) => {
+      const solutionResults = data.results[i + 1] || [];
+      const passedCount = solutionResults.filter((r) => r?.verdict === "A").length;
+      const maxTime = Math.max(
+        ...solutionResults.map((r) => r?.timeMs || 0).filter((t) => t > 0),
+        0,
+      );
+      const maxMemory = Math.max(
+        ...solutionResults.map((r) => r?.memoryKb || 0).filter((m) => m > 0),
+        0,
+      );
+
+      summaryRow[`solution_${solution.id}`] = {
+        passedCount,
+        maxTime,
+        maxMemory,
+      };
+    });
+
+    rows.push(summaryRow);
+
+    return { headers, rows };
+  };
+
+  /**
+   * Refreshes the invocations list
+   */
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const response = await invocationsAPI.list(taskId);
+      setInvocations(response.data || []);
+      setError("");
+    } catch (err) {
+      console.error("Failed to refresh invocations:", err);
+      setError("Failed to refresh invocations");
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -143,7 +232,7 @@ const InvocationsTab = () => {
                   >
                     <div>{solution.name}</div>
                     <div className="subtext">
-                      {solution.language}, {solution.type}
+                      {solution.language}, {solution.solutionType}
                     </div>
                   </div>
                 ))}
@@ -180,17 +269,53 @@ const InvocationsTab = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleCreateInvocation}
-          disabled={creating}
-          className="create-invocation-btn"
-        >
-          {creating ? "Creating..." : "Create Invocation"}
-        </button>
+        <div className="invocation-buttons">
+          <button
+            onClick={handleCreateInvocation}
+            disabled={creating}
+            className="create-invocation-btn"
+          >
+            {creating ? "Creating..." : "Create Invocation"}
+          </button>
+        </div>
       </div>
 
       <div className="invocations-list">
-        <h3>Invocations</h3>
+        <div className="invocations-header">
+          <h3>Invocations</h3>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="refresh-btn"
+            title="Refresh invocations"
+          >
+            {refreshing ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="refresh-icon spinning"
+              >
+                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="refresh-icon"
+              >
+                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
+            )}
+          </button>
+        </div>
         <Table
           headers={[
             { key: "id", label: "ID" },
@@ -232,62 +357,51 @@ const InvocationsTab = () => {
             <div className="matrix-container">
               <Table
                 className="results-matrix"
-                headers={[
-                  { key: "test", label: "Test" },
-                  ...(matrixData.solutions?.map((solution) => ({
-                    key: `solution-${solution.id}`,
-                    label: solution.name,
-                  })) || []),
-                ]}
-                rows={[...(matrixData.tests || []), { isSummary: true }]}
-                renderCell={(row, key, index) => {
-                  if (row.isSummary) {
-                    if (key === "test") return "Summary";
-                    if (key.startsWith("solution-")) {
-                      const solutionId = key.replace("solution-", "");
-                      const results = matrixData.results?.[solutionId] || {};
-                      const passedCount = Object.values(results).filter(
-                        (r) => r?.verdict === "OK" || r?.verdict === "AC",
-                      ).length;
-                      const maxTime = Math.max(
-                        ...Object.values(results)
-                          .map((r) => r?.timeMs || 0)
-                          .filter((t) => t > 0),
-                      );
-                      const maxMemory = Math.max(
-                        ...Object.values(results)
-                          .map((r) => r?.memoryKb || 0)
-                          .filter((m) => m > 0),
-                      );
-                      return (
-                        <div>
-                          Passed: {passedCount}{" "}
-                          <span style={{ fontSize: "smaller", color: "grey" }}>
-                            Max: {maxTime}ms / {maxMemory}KB
-                          </span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  } else {
-                    if (key === "test") return `Test ${row.id}`;
-                    if (key.startsWith("solution-")) {
-                      const solutionId = key.replace("solution-", "");
-                      const results = matrixData.results?.[solutionId] || {};
-                      const result = results[row.id];
-                      return result ? (
-                        <div>
-                          {result.verdict}{" "}
-                          <span style={{ fontSize: "smaller", color: "grey" }}>
-                            {result.timeMs}ms / {result.memoryKb}KB
-                          </span>
-                        </div>
-                      ) : (
-                        <span>-</span>
-                      );
-                    }
-                    return null;
+                headers={matrixData.headers}
+                rows={matrixData.rows}
+                renderCell={(row, key) => {
+                  if (key === "testName") {
+                    return row.testName;
                   }
+
+                  // Handle solution columns
+                  if (key.startsWith("solution_")) {
+                    const cellData = row[key];
+
+                    if (row.isSummary) {
+                      // Summary row
+                      if (cellData && cellData.passedCount !== undefined) {
+                        return (
+                          <div>
+                            Passed: {cellData.passedCount}{" "}
+                            <span
+                              style={{ fontSize: "smaller", color: "grey" }}
+                            >
+                              Max: {cellData.maxTime}ms / {cellData.maxMemory}KB
+                            </span>
+                          </div>
+                        );
+                      }
+                      return <span>-</span>;
+                    } else {
+                      // Test result row
+                      if (cellData) {
+                        return (
+                          <div>
+                            {cellData.description}{" "}
+                            <span
+                              style={{ fontSize: "smaller", color: "grey" }}
+                            >
+                              {cellData.timeMs}ms / {cellData.memoryKb}KB
+                            </span>
+                          </div>
+                        );
+                      }
+                      return <span>-</span>;
+                    }
+                  }
+
+                  return null;
                 }}
                 emptyMessage="No matrix data"
               />

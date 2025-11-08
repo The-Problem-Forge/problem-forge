@@ -77,7 +77,11 @@ const Table = ({
                 const isEditable = header.editable;
 
                 if (header.key === "actions" && renderActions) {
-                  return <td key={header.key} className="actions-cell">{renderActions(row, index)}</td>;
+                  return (
+                    <td key={header.key} className="actions-cell">
+                      {renderActions(row, index)}
+                    </td>
+                  );
                 }
 
                 if (isEditable && header.type === "select") {

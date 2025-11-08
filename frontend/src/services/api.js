@@ -180,13 +180,13 @@ const mockData = {
         name: "Solution A",
         language: "cpp",
         compilerVariant: "g++",
-        type: "main",
+        solutionType: "main",
       },
       {
         id: "2",
         name: "Solution B",
         language: "python",
-        type: "accepted",
+        solutionType: "accepted",
       },
     ],
     2: [
@@ -194,7 +194,7 @@ const mockData = {
         id: "3",
         name: "Solution C",
         language: "java",
-        type: "main",
+        solutionType: "main",
       },
     ],
     3: [],
@@ -1250,7 +1250,7 @@ export const solutionsAPI = {
         ),
         name,
         language,
-        type: solutionType,
+        solutionType: solutionType,
       };
       if (!mockData.solutions[taskId]) {
         mockData.solutions[taskId] = [];
@@ -1323,13 +1323,13 @@ export const solutionsAPI = {
       }
       return Promise.resolve({ data: solutions[index] });
     }
-    // Transform frontend data to backend format (don't send file for updates)
+    // Transform frontend data to backend format
     const backendData = {
       name: data.name,
       language: data.language,
-      file: "", // Empty file means don't update file content
+      file: data.source ? btoa(data.source) : "", // Only send file if source is provided
       format: getFileFormatFromLanguage(data.language),
-      solutionType: data.type || data.solutionType,
+      solutionType: data.solutionType,
     };
     return api.put(`/problems/${taskId}/solutions/${solutionId}`, backendData);
   },
@@ -1429,6 +1429,8 @@ export const invocationsAPI = {
 
       if (!mockData.invocationMatrices) mockData.invocationMatrices = {};
       mockData.invocationMatrices[`${taskId}:${newId}`] = {
+        invocationId: newId,
+        status: "Completed",
         solutions,
         tests,
         results,
@@ -1498,7 +1500,15 @@ export const invocationsAPI = {
           };
         });
       });
-      return Promise.resolve({ data: { solutions, tests, results } });
+      return Promise.resolve({
+        data: {
+          invocationId: invocationId,
+          status: "Completed",
+          solutions,
+          tests,
+          results,
+        },
+      });
     }
     return api.get(`/problems/${taskId}/invocations/${invocationId}/matrix`);
   },

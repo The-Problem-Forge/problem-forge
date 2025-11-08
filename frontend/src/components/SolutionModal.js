@@ -24,7 +24,7 @@ const SolutionModal = ({ isOpen, solution, onSave, onClose }) => {
       setFormData({
         name: solution.name || "",
         language: solution.language || "cpp",
-        solutionType: solution.type || "Main correct solution",
+        solutionType: solution.solutionType || "Main correct solution",
         file: null,
         source: "",
       });

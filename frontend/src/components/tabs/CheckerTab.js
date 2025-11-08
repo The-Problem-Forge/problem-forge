@@ -170,10 +170,10 @@ const CheckerTab = () => {
         <div className="checker-fields">
           <div className="field-group">
             <label>Language:</label>
-             <select
-               value={data.language}
-               onChange={(e) => handleLanguageChange(e.target.value)}
-             >
+            <select
+              value={data.language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
               <option value="cpp">C++</option>
               <option value="python">Python</option>
               <option value="java">Java</option>

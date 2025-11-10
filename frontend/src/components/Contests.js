@@ -11,7 +11,12 @@ const Contests = () => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [newContest, setNewContest] = useState({ name: "", description: "" });
+  const [newContest, setNewContest] = useState({
+    name: "",
+    description: "",
+    location: "",
+    contestDate: "",
+  });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -36,7 +41,12 @@ const Contests = () => {
     try {
       const response = await contestsAPI.create(newContest);
       setContests([...contests, response.data]);
-      setNewContest({ name: "", description: "" });
+      setNewContest({
+        name: "",
+        description: "",
+        location: "",
+        contestDate: "",
+      });
       setShowModal(false);
     } catch (err) {
       console.error("Failed to create contest:", err);
@@ -92,6 +102,34 @@ const Contests = () => {
                     setNewContest({
                       ...newContest,
                       description: e.target.value,
+                    })
+                  }
+                  className="modal-input"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Location (optional)"
+                  value={newContest.location}
+                  onChange={(e) =>
+                    setNewContest({
+                      ...newContest,
+                      location: e.target.value,
+                    })
+                  }
+                  className="modal-input"
+                />
+              </div>
+              <div>
+                <input
+                  type="datetime-local"
+                  placeholder="Contest Date (optional)"
+                  value={newContest.contestDate}
+                  onChange={(e) =>
+                    setNewContest({
+                      ...newContest,
+                      contestDate: e.target.value,
                     })
                   }
                   className="modal-input"

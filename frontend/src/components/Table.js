@@ -104,6 +104,21 @@ const Table = ({
                   );
                 }
 
+                if (isEditable && header.type === "checkbox") {
+                  return (
+                    <td key={header.key}>
+                      <input
+                        type="checkbox"
+                        checked={row[header.key] || false}
+                        onChange={(e) =>
+                          handleSave(row.id, header.key, e.target.checked)
+                        }
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    </td>
+                  );
+                }
+
                 return (
                   <td
                     key={header.key}
@@ -145,7 +160,12 @@ const Table = ({
                         handleEdit(row.id, header.key),
                       )
                     ) : (
-                      <span>{row[header.key] || "N/A"}</span>
+                      <span>
+                        {row[header.key] !== undefined &&
+                        row[header.key] !== null
+                          ? row[header.key]
+                          : "N/A"}
+                      </span>
                     )}
                   </td>
                 );

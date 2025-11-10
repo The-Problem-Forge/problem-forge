@@ -89,14 +89,18 @@ class ProblemService(
     }
 
     fun getProblem(problemId: Long, userId: Long): ProblemDto {
-        val problem = problemRepository.findById(problemId)
-            .orElseThrow { IllegalArgumentException("Problem not found with id: $problemId") }
+        val problem = getProblemEntity(problemId)
 
         // Проверяем доступ пользователя к проблеме
-        val problemUser = problemUserRepository.findByProblemIdAndUserId(problemId, userId)
+        problemUserRepository.findByProblemIdAndUserId(problemId, userId)
             ?: throw SecurityException("User does not have access to this problem")
 
         return problem.toDto()
+    }
+
+    fun getProblemEntity(problemId: Long): Problem {
+        return problemRepository.findById(problemId)
+            .orElseThrow { IllegalArgumentException("Problem not found with id: $problemId") }
     }
 
     private fun Problem.toDto(): ProblemDto {

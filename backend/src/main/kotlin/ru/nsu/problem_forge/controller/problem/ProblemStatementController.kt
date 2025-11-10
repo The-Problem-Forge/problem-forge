@@ -39,41 +39,5 @@ class ProblemStatementController(
         return ResponseEntity.ok(updatedStatement)
     }
 
-    @GetMapping("/export/tex")
-    fun exportStatementToTex(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<String> {
-        val user = userService.findUserByHandle(userDetails.username)
-        return problemStatementService.exportStatementToTex(problemId, user.id!!)
-    }
 
-    @GetMapping("/tutorial/export/tex")
-    fun exportTutorialToTex(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails
-    ): ResponseEntity<String> {
-        val user = userService.findUserByHandle(userDetails.username)
-        return problemStatementService.exportTutorialToTex(problemId, user.id!!)
-    }
-
-    @GetMapping("/export/pdf")
-    fun downloadStatementPdf(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails,
-        response: HttpServletResponse
-    ) {
-        val user = userService.findUserByHandle(userDetails.username)
-        problemStatementService.downloadStatementPdf(problemId, user.id!!, response)
-    }
-
-    @GetMapping("/tutorial/export/pdf")
-    fun downloadTutorialPdf(
-        @PathVariable problemId: Long,
-        @AuthenticationPrincipal userDetails: UserDetails,
-        response: HttpServletResponse
-    ) {
-        val user = userService.findUserByHandle(userDetails.username)
-        problemStatementService.downloadTutorialPdf(problemId, user.id!!, response)
-    }
 }

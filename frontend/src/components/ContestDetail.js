@@ -14,7 +14,14 @@ const ContestDetail = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", description: "" });
+  const [editContest, setEditContest] = useState({
+    name: "",
+    description: "",
+    location: "",
+    contestDate: "",
+  });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -50,6 +57,33 @@ const ContestDetail = () => {
       console.error("Failed to create task:", err);
       setError("Failed to create task");
     }
+  };
+
+  const handleEditContest = async (e) => {
+    e.preventDefault();
+    if (!editContest.name.trim()) return;
+
+    try {
+      const response = await contestsAPI.update(contestId, editContest);
+      setContest(response.data);
+      setShowEditModal(false);
+      setError("");
+    } catch (err) {
+      console.error("Failed to update contest:", err);
+      setError("Failed to update contest");
+    }
+  };
+
+  const openEditModal = () => {
+    setEditContest({
+      name: contest.name,
+      description: contest.description || "",
+      location: contest.location || "",
+      contestDate: contest.contestDate
+        ? new Date(contest.contestDate).toISOString().slice(0, 16)
+        : "",
+    });
+    setShowEditModal(true);
   };
 
   const handleReorder = async (taskId, direction) => {
@@ -95,8 +129,24 @@ const ContestDetail = () => {
         <Link to="/contests" className="back-button">
           ← Back to Contests
         </Link>
-        <h1>{contest.name}</h1>
-        {contest.description && <p>{contest.description}</p>}
+        <div className="contest-info">
+          <h1>{contest.name}</h1>
+          {contest.description && <p>{contest.description}</p>}
+          {contest.location && (
+            <p>
+              <strong>Location:</strong> {contest.location}
+            </p>
+          )}
+          {contest.contestDate && (
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(contest.contestDate).toLocaleString()}
+            </p>
+          )}
+        </div>
+        <button className="edit-contest-btn" onClick={openEditModal}>
+          Edit Contest
+        </button>
       </div>
 
       <div className="tasks-section">
@@ -160,6 +210,75 @@ const ContestDetail = () => {
                   Cancel
                 </button>
                 <button type="submit">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Edit Contest</h3>
+            <form onSubmit={handleEditContest}>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Contest Name"
+                  value={editContest.name}
+                  onChange={(e) =>
+                    setEditContest({ ...editContest, name: e.target.value })
+                  }
+                  className="modal-input"
+                  required
+                />
+              </div>
+              <div>
+                <textarea
+                  placeholder="Description (optional)"
+                  value={editContest.description}
+                  onChange={(e) =>
+                    setEditContest({
+                      ...editContest,
+                      description: e.target.value,
+                    })
+                  }
+                  className="modal-input"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Location (optional)"
+                  value={editContest.location}
+                  onChange={(e) =>
+                    setEditContest({
+                      ...editContest,
+                      location: e.target.value,
+                    })
+                  }
+                  className="modal-input"
+                />
+              </div>
+              <div>
+                <input
+                  type="datetime-local"
+                  placeholder="Contest Date (optional)"
+                  value={editContest.contestDate}
+                  onChange={(e) =>
+                    setEditContest({
+                      ...editContest,
+                      contestDate: e.target.value,
+                    })
+                  }
+                  className="modal-input"
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="button" onClick={() => setShowEditModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Update</button>
               </div>
             </form>
           </div>

@@ -17,6 +17,12 @@ class Contest {
     @Column(nullable = true, length = 255)
     var description: String = ""
 
+    @Column(nullable = true, length = 255)
+    var location: String? = null
+
+    @Column(name = "contest_date", nullable = true)
+    var contestDate: LocalDateTime? = null
+
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
 

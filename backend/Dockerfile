@@ -18,11 +18,15 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 WORKDIR /app
 
-# Install build tools including g++
+# Install build tools including g++ and LaTeX
 RUN apt-get update && apt-get install -y \
     g++ \
     gcc \
     make \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security

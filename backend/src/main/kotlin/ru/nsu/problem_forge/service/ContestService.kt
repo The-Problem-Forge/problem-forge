@@ -17,277 +17,295 @@ import java.time.LocalDateTime
 
 @Service
 class ContestService(
-    private val contestRepository: ContestRepository,
-    private val contestProblemRepository: ContestProblemRepository,
-    private val problemRepository: ProblemRepository
+  private val contestRepository: ContestRepository,
+  private val contestProblemRepository: ContestProblemRepository,
+  private val problemRepository: ProblemRepository
 ) {
-    private val logger = LoggerFactory.getLogger(ContestService::class.java)
+  private val logger = LoggerFactory.getLogger(ContestService::class.java)
 
-    fun getContestsForUser(userId: Long): List<ContestDto> {
-        return contestRepository.findContestsByUserId(userId).map { contest ->
-            val role = contestRepository.findUserRoleInContest(contest.id, userId) ?: "VIEWER"
-            ContestDto(
-                id = contest.id,
-                name = contest.title,
-                description = contest.description,
-                role = role,
-                createdAt = contest.createdAt,
-                updatedAt = contest.modifiedAt
-            )
-        }
+  fun getContestsForUser(userId: Long): List<ContestDto> {
+    return contestRepository.findContestsByUserId(userId).map { contest ->
+      val role = contestRepository.findUserRoleInContest(contest.id, userId) ?: "VIEWER"
+      ContestDto(
+        id = contest.id,
+        name = contest.title,
+        description = contest.description,
+        location = contest.location,
+        contestDate = contest.contestDate,
+        role = role,
+        createdAt = contest.createdAt,
+        updatedAt = contest.modifiedAt
+      )
+    }
+  }
+
+  @Transactional
+  fun createContest(request: CreateContestRequest, owner: User): ContestDto {
+    if (request.name.isBlank()) {
+      throw IllegalArgumentException("Contest name is required")
     }
 
-    @Transactional
-    fun createContest(request: CreateContestRequest, owner: User): ContestDto {
-        if (request.name.isBlank()) {
-            throw IllegalArgumentException("Contest name is required")
-        }
+    val contest = Contest().apply {
+      title = request.name
+      request.description?.let { desc ->
+        description = desc
+      }
+      request.location?.let { loc ->
+        location = loc
+      }
+      request.contestDate?.let { date ->
+        contestDate = date
+      }
+      createdAt = LocalDateTime.now()
+      modifiedAt = LocalDateTime.now()
+    }
 
-        val contest = Contest().apply {
-            title = request.name
-            request.description?.let { desc ->
-                description = desc
-            }
-            createdAt = LocalDateTime.now()
-            modifiedAt = LocalDateTime.now()
-        }
+    val savedContest = contestRepository.save(contest)
 
-        val savedContest = contestRepository.save(contest)
+    // Add owner as contest member
+    val contestUser = ContestUser(
+      contest = contest,
+      user = owner,
+      role = Role.OWNER
+    )
+    savedContest.contestUsers = listOf(contestUser)
 
-        // Add owner as contest member
-        val contestUser = ContestUser(
-            contest = contest,
-            user = owner,
-            role = Role.OWNER
+    return ContestDto(
+      id = savedContest.id,
+      name = savedContest.title,
+      description = savedContest.description,
+      location = savedContest.location,
+      contestDate = savedContest.contestDate,
+      role = Role.OWNER.toString(),
+      createdAt = savedContest.createdAt,
+      updatedAt = savedContest.modifiedAt
+    )
+  }
+
+  fun getContest(contestId: Long, userId: Long): ContestDto {
+    val contest = contestRepository.findById(contestId)
+      .orElseThrow { IllegalArgumentException("Contest not found") }
+
+    val role = contestRepository.findUserRoleInContest(contestId, userId)
+      ?: throw SecurityException("No access to contest")
+
+    return ContestDto(
+      id = contest.id,
+      name = contest.title,
+      description = contest.description,
+      location = contest.location,
+      contestDate = contest.contestDate,
+      role = role,
+      createdAt = contest.createdAt,
+      updatedAt = contest.modifiedAt
+    )
+  }
+
+  @Transactional
+  fun updateContest(contestId: Long, request: UpdateContestRequest, userId: Long): ContestDto {
+    val contest = contestRepository.findById(contestId)
+      .orElseThrow { IllegalArgumentException("Contest not found") }
+
+    val role = contestRepository.findUserRoleInContest(contestId, userId)
+      ?: throw SecurityException("No access to contest")
+
+    if (role != "OWNER" && role != "EDITOR") {
+      throw SecurityException("Insufficient permissions")
+    }
+
+    request.name?.takeIf { it.isNotBlank() }?.let { contest.title = it }
+    request.description?.takeIf { it.isNotBlank() }?.let { contest.description = it }
+    request.location?.let { contest.location = it }
+    request.contestDate?.let { contest.contestDate = it }
+    contest.modifiedAt = LocalDateTime.now()
+
+    val updatedContest = contestRepository.save(contest)
+
+    return ContestDto(
+      id = updatedContest.id,
+      name = updatedContest.title,
+      description = updatedContest.description,
+      location = updatedContest.location,
+      contestDate = updatedContest.contestDate,
+      role = role,
+      createdAt = updatedContest.createdAt,
+      updatedAt = updatedContest.modifiedAt
+    )
+  }
+
+  @Transactional
+  fun deleteContest(contestId: Long, userId: Long) {
+    val contest = contestRepository.findById(contestId)
+      .orElseThrow { IllegalArgumentException("Contest not found") }
+
+    val role = contestRepository.findUserRoleInContest(contestId, userId)
+      ?: throw SecurityException("No access to contest")
+
+    if (role != "OWNER") {
+      throw SecurityException("Only owner can delete contest")
+    }
+
+    contestRepository.delete(contest)
+  }
+
+  fun getTasksForContest(contestId: Long, userId: Long): List<TaskDto> {
+    // Check access
+    val role = contestRepository.findUserRoleInContest(contestId, userId)
+      ?: throw SecurityException("No access to contest")
+
+    val contestProblems = contestRepository.findContestProblemsByContestId(contestId)
+
+    return contestProblems.map { cp ->
+      val problem = cp.problem!!
+      TaskDto(
+        id = problem.id,
+        title = problem.title,
+        description = "",
+        orderIndex = cp.orderIndex,
+        createdAt = problem.createdAt,
+        updatedAt = problem.modifiedAt
+      )
+    }
+  }
+
+  @Transactional
+  fun reorderTasks(contestId: Long, userId: Long, newOrder: List<Long>) {
+    logger.info("Reordering tasks in contest $contestId by user $userId")
+
+    // Check access to contest
+    val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
+    if (contestRole == null) {
+      logger.warn("User $userId has no access to contest $contestId")
+      throw SecurityException("No access to contest")
+    }
+
+    if (contestRole != "OWNER" && contestRole != "EDITOR") {
+      logger.warn("User $userId has insufficient permissions ($contestRole) to reorder tasks in contest $contestId")
+      throw SecurityException("Insufficient permissions to reorder tasks")
+    }
+
+    val contestProblems = contestProblemRepository.findByContestId(contestId)
+    val problemIds = contestProblems.map { it.problem?.id }
+
+    // Validate that all IDs in newOrder exist in the contest
+    if (newOrder.any { it !in problemIds }) {
+      logger.warn("Invalid problem IDs in reorder request for contest $contestId")
+      throw IllegalArgumentException("Invalid problem IDs")
+    }
+
+    // Update orderIndex for each contest problem
+    newOrder.forEachIndexed { index, problemId ->
+      val contestProblem = contestProblems.find { it.problem?.id == problemId }
+      if (contestProblem != null) {
+        contestProblem.orderIndex = index
+        contestProblemRepository.save(contestProblem)
+      }
+    }
+
+    logger.info("Successfully reordered tasks in contest $contestId")
+  }
+
+  fun getContestsForProblem(problemId: Long, userId: Long): List<ContestDto> {
+    // Check access to problem
+    val problemUser = problemRepository.findById(problemId)
+      .orElseThrow { IllegalArgumentException("Problem not found") }
+
+    // Find all contests that contain this problem
+    val contestProblems = contestProblemRepository.findByProblemId(problemId)
+
+    return contestProblems.mapNotNull { cp ->
+      val contest = cp.contest ?: return@mapNotNull null
+      val role = contestRepository.findUserRoleInContest(contest.id, userId)
+      if (role != null) {
+        ContestDto(
+          id = contest.id,
+          name = contest.title,
+          description = contest.description,
+          location = contest.location,
+          contestDate = contest.contestDate,
+          role = role,
+          createdAt = contest.createdAt,
+          updatedAt = contest.modifiedAt
         )
-        savedContest.contestUsers = listOf(contestUser)
+      } else null
+    }
+  }
 
-        return ContestDto(
-            id = savedContest.id,
-            name = savedContest.title,
-            description = savedContest.description,
-            role = Role.OWNER.toString(),
-            createdAt = savedContest.createdAt,
-            updatedAt = savedContest.modifiedAt
-        )
+  @Transactional
+  fun removeProblemFromContest(contestId: Long, problemId: Long, userId: Long) {
+    logger.info("Removing problem $problemId from contest $contestId by user $userId")
+
+    // Check access to contest
+    val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
+    if (contestRole == null) {
+      logger.warn("User $userId has no access to contest $contestId")
+      throw SecurityException("No access to contest")
     }
 
-    fun getContest(contestId: Long, userId: Long): ContestDto {
-        val contest = contestRepository.findById(contestId)
-            .orElseThrow { IllegalArgumentException("Contest not found") }
-
-        val role = contestRepository.findUserRoleInContest(contestId, userId)
-            ?: throw SecurityException("No access to contest")
-
-        return ContestDto(
-            id = contest.id,
-            name = contest.title,
-            description = contest.description,
-            role = role,
-            createdAt = contest.createdAt,
-            updatedAt = contest.modifiedAt
-        )
+    if (contestRole != "OWNER" && contestRole != "EDITOR") {
+      logger.warn("User $userId has insufficient permissions ($contestRole) to remove problems from contest $contestId")
+      throw SecurityException("Insufficient permissions to remove problems")
     }
 
-    @Transactional
-    fun updateContest(contestId: Long, request: UpdateContestRequest, userId: Long): ContestDto {
-        val contest = contestRepository.findById(contestId)
-            .orElseThrow { IllegalArgumentException("Contest not found") }
+    val contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+      ?: throw IllegalArgumentException("Problem not in contest")
 
-        val role = contestRepository.findUserRoleInContest(contestId, userId)
-            ?: throw SecurityException("No access to contest")
+    contestProblemRepository.delete(contestProblem)
+    logger.info("Successfully removed problem $problemId from contest $contestId")
+  }
 
-        if (role != "OWNER" && role != "EDITOR") {
-            throw SecurityException("Insufficient permissions")
-        }
+  @Transactional
+  fun addProblemToContest(contestId: Long, problemId: Long, userId: Long) {
+    logger.info("Adding problem $problemId to contest $contestId by user $userId")
 
-        request.name?.takeIf { it.isNotBlank() }?.let { contest.title = it }
-        request.description?.takeIf { it.isNotBlank() }?.let { contest.description = it }
-        contest.modifiedAt = LocalDateTime.now()
-
-        val updatedContest = contestRepository.save(contest)
-
-        return ContestDto(
-            id = updatedContest.id,
-            name = updatedContest.title,
-            description = updatedContest.description,
-            role = role,
-            createdAt = updatedContest.createdAt,
-            updatedAt = updatedContest.modifiedAt
-        )
+    // Check access to contest
+    val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
+    if (contestRole == null) {
+      logger.warn("User $userId has no access to contest $contestId")
+      throw SecurityException("No access to contest")
     }
 
-    @Transactional
-    fun deleteContest(contestId: Long, userId: Long) {
-        val contest = contestRepository.findById(contestId)
-            .orElseThrow { IllegalArgumentException("Contest not found") }
-
-        val role = contestRepository.findUserRoleInContest(contestId, userId)
-            ?: throw SecurityException("No access to contest")
-
-        if (role != "OWNER") {
-            throw SecurityException("Only owner can delete contest")
-        }
-
-        contestRepository.delete(contest)
+    if (contestRole != "OWNER" && contestRole != "EDITOR") {
+      logger.warn("User $userId has insufficient permissions ($contestRole) to add problems to contest $contestId")
+      throw SecurityException("Insufficient permissions to add problems")
     }
 
-    fun getTasksForContest(contestId: Long, userId: Long): List<TaskDto> {
-        // Check access
-        val role = contestRepository.findUserRoleInContest(contestId, userId)
-            ?: throw SecurityException("No access to contest")
+    val contest = contestRepository.findById(contestId)
+      .orElseThrow {
+        logger.error("Contest $contestId not found")
+        IllegalArgumentException("Contest not found")
+      }
 
-        val contestProblems = contestRepository.findContestProblemsByContestId(contestId)
+    val problem = problemRepository.findById(problemId)
+      .orElseThrow {
+        logger.error("Problem $problemId not found")
+        IllegalArgumentException("Problem not found")
+      }
 
-        return contestProblems.map { cp ->
-            val problem = cp.problem!!
-            TaskDto(
-                id = problem.id,
-                title = problem.title,
-                description = problem.problemInfo.statement.legend.takeIf { it.isNotBlank() },
-                orderIndex = cp.orderIndex,
-                createdAt = problem.createdAt,
-                updatedAt = problem.modifiedAt
-            )
-        }
+    // Check if already added
+    val existing = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+    if (existing != null) {
+      logger.warn("Problem $problemId is already in contest $contestId")
+      throw IllegalArgumentException("Problem already in contest")
     }
 
-    @Transactional
-    fun reorderTasks(contestId: Long, userId: Long, newOrder: List<Long>) {
-        logger.info("Reordering tasks in contest $contestId by user $userId")
+    // Find max orderIndex
+    val existingProblems = contestProblemRepository.findByContestId(contestId)
+    val maxOrderIndex = existingProblems.maxOfOrNull { it.orderIndex } ?: -1
+    logger.info("Max orderIndex for contest $contestId: $maxOrderIndex")
 
-        // Check access to contest
-        val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
-        if (contestRole == null) {
-            logger.warn("User $userId has no access to contest $contestId")
-            throw SecurityException("No access to contest")
-        }
-
-        if (contestRole != "OWNER" && contestRole != "EDITOR") {
-            logger.warn("User $userId has insufficient permissions ($contestRole) to reorder tasks in contest $contestId")
-            throw SecurityException("Insufficient permissions to reorder tasks")
-        }
-
-        val contestProblems = contestProblemRepository.findByContestId(contestId)
-        val problemIds = contestProblems.map { it.problem?.id }
-
-        // Validate that all IDs in newOrder exist in the contest
-        if (newOrder.any { it !in problemIds }) {
-            logger.warn("Invalid problem IDs in reorder request for contest $contestId")
-            throw IllegalArgumentException("Invalid problem IDs")
-        }
-
-        // Update orderIndex for each contest problem
-        newOrder.forEachIndexed { index, problemId ->
-            val contestProblem = contestProblems.find { it.problem?.id == problemId }
-            if (contestProblem != null) {
-                contestProblem.orderIndex = index
-                contestProblemRepository.save(contestProblem)
-            }
-        }
-
-        logger.info("Successfully reordered tasks in contest $contestId")
+    val contestProblem = ContestProblem().apply {
+      this.contest = contest
+      this.problem = problem
+      orderIndex = maxOrderIndex + 1
     }
 
-    fun getContestsForProblem(problemId: Long, userId: Long): List<ContestDto> {
-        // Check access to problem
-        val problemUser = problemRepository.findById(problemId)
-            .orElseThrow { IllegalArgumentException("Problem not found") }
-
-        // Find all contests that contain this problem
-        val contestProblems = contestProblemRepository.findByProblemId(problemId)
-
-        return contestProblems.mapNotNull { cp ->
-            val contest = cp.contest ?: return@mapNotNull null
-            val role = contestRepository.findUserRoleInContest(contest.id, userId)
-            if (role != null) {
-                ContestDto(
-                    id = contest.id,
-                    name = contest.title,
-                    description = contest.description,
-                    role = role,
-                    createdAt = contest.createdAt,
-                    updatedAt = contest.modifiedAt
-                )
-            } else null
-        }
+    try {
+      contestProblemRepository.save(contestProblem)
+      logger.info("Successfully added problem $problemId to contest $contestId")
+    } catch (e: Exception) {
+      logger.error("Failed to save ContestProblem for problem $problemId and contest $contestId", e)
+      throw RuntimeException("Failed to add problem to contest: ${e.message}", e)
     }
-
-    @Transactional
-    fun removeProblemFromContest(contestId: Long, problemId: Long, userId: Long) {
-        logger.info("Removing problem $problemId from contest $contestId by user $userId")
-
-        // Check access to contest
-        val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
-        if (contestRole == null) {
-            logger.warn("User $userId has no access to contest $contestId")
-            throw SecurityException("No access to contest")
-        }
-
-        if (contestRole != "OWNER" && contestRole != "EDITOR") {
-            logger.warn("User $userId has insufficient permissions ($contestRole) to remove problems from contest $contestId")
-            throw SecurityException("Insufficient permissions to remove problems")
-        }
-
-        val contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
-            ?: throw IllegalArgumentException("Problem not in contest")
-
-        contestProblemRepository.delete(contestProblem)
-        logger.info("Successfully removed problem $problemId from contest $contestId")
-    }
-
-    @Transactional
-    fun addProblemToContest(contestId: Long, problemId: Long, userId: Long) {
-        logger.info("Adding problem $problemId to contest $contestId by user $userId")
-
-        // Check access to contest
-        val contestRole = contestRepository.findUserRoleInContest(contestId, userId)
-        if (contestRole == null) {
-            logger.warn("User $userId has no access to contest $contestId")
-            throw SecurityException("No access to contest")
-        }
-
-        if (contestRole != "OWNER" && contestRole != "EDITOR") {
-            logger.warn("User $userId has insufficient permissions ($contestRole) to add problems to contest $contestId")
-            throw SecurityException("Insufficient permissions to add problems")
-        }
-
-        val contest = contestRepository.findById(contestId)
-            .orElseThrow {
-                logger.error("Contest $contestId not found")
-                IllegalArgumentException("Contest not found")
-            }
-
-        val problem = problemRepository.findById(problemId)
-            .orElseThrow {
-                logger.error("Problem $problemId not found")
-                IllegalArgumentException("Problem not found")
-            }
-
-        // Check if already added
-        val existing = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
-        if (existing != null) {
-            logger.warn("Problem $problemId is already in contest $contestId")
-            throw IllegalArgumentException("Problem already in contest")
-        }
-
-        // Find max orderIndex
-        val existingProblems = contestProblemRepository.findByContestId(contestId)
-        val maxOrderIndex = existingProblems.maxOfOrNull { it.orderIndex } ?: -1
-        logger.info("Max orderIndex for contest $contestId: $maxOrderIndex")
-
-        val contestProblem = ContestProblem().apply {
-            this.contest = contest
-            this.problem = problem
-            orderIndex = maxOrderIndex + 1
-        }
-
-        try {
-            contestProblemRepository.save(contestProblem)
-            logger.info("Successfully added problem $problemId to contest $contestId")
-        } catch (e: Exception) {
-            logger.error("Failed to save ContestProblem for problem $problemId and contest $contestId", e)
-            throw RuntimeException("Failed to add problem to contest: ${e.message}", e)
-        }
-    }
+  }
 }

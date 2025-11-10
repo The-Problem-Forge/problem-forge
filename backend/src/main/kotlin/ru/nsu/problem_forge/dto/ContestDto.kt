@@ -7,6 +7,8 @@ data class ContestDto(
     val id: Long,
     val name: String,
     val description: String?,
+    val location: String?,
+    val contestDate: LocalDateTime?,
     val role: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
@@ -14,12 +16,16 @@ data class ContestDto(
 
 data class CreateContestRequest(
     val name: String,
-    val description: String?
+    val description: String?,
+    val location: String?,
+    val contestDate: LocalDateTime?
 )
 
 data class UpdateContestRequest(
     val name: String?,
-    val description: String?
+    val description: String?,
+    val location: String?,
+    val contestDate: LocalDateTime?
 )
 
 data class AddUserToContestRequest(

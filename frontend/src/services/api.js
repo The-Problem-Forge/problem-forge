@@ -19,6 +19,8 @@ const mockData = {
       id: "1",
       name: "Sample Contest 1",
       description: "A sample contest for testing",
+      location: "Online",
+      contestDate: "2023-06-15T10:00:00Z",
       role: "Owner",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -27,6 +29,8 @@ const mockData = {
       id: "2",
       name: "Sample Contest 2",
       description: "Another sample contest",
+      location: "University Campus",
+      contestDate: "2023-07-20T09:00:00Z",
       role: "Editor",
       createdAt: "2023-01-02T00:00:00Z",
       updatedAt: "2023-01-02T00:00:00Z",
@@ -167,10 +171,18 @@ const mockData = {
   },
   tests: {
     1: [
-      { id: "1", input: "1 2", description: "Test 1", points: 1 },
-      { id: "2", input: "2 3", description: "Test 2", points: 2 },
+      {
+        id: "1",
+        input: "1 2",
+        description: "Test 1",
+        points: 1,
+        sample: false,
+      },
+      { id: "2", input: "2 3", description: "Test 2", points: 2, sample: true },
     ],
-    2: [{ id: "3", input: "1", description: "Test 3", points: 1 }],
+    2: [
+      { id: "3", input: "1", description: "Test 3", points: 1, sample: false },
+    ],
     3: [],
   },
   solutions: {
@@ -979,6 +991,7 @@ export const testsAPI = {
         input: test.inputText,
         description: test.description,
         points: test.points || 1,
+        sample: test.sample || false,
         testType: test.testType || "RAW",
         ...test,
       };
@@ -993,7 +1006,7 @@ export const testsAPI = {
       testType: test.testType || "RAW",
       content: test.inputText,
       description: test.description,
-      sample: false,
+      sample: test.sample || false,
       points: test.points || 1,
     };
     return api.post(`/problems/${taskId}/tests`, backendTest);
@@ -1054,6 +1067,7 @@ export const testsAPI = {
         inputText:
           test.inputText !== undefined ? test.inputText : existing.inputText,
         points: test.points !== undefined ? test.points : existing.points,
+        sample: test.sample !== undefined ? test.sample : existing.sample,
       };
       taskTests[index] = updated;
       return Promise.resolve({ data: updated });
@@ -1063,7 +1077,7 @@ export const testsAPI = {
       testType: "RAW",
       content: test.inputText,
       description: test.description,
-      sample: false,
+      sample: test.sample || false,
       points: test.points || 1,
     };
     return api.put(`/problems/${taskId}/tests/${testId}`, backendTest);

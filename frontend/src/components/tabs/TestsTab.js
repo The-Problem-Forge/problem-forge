@@ -20,6 +20,7 @@ const TestsTab = () => {
     inputText: "",
     description: "",
     points: 1,
+    sample: false,
   });
   const [selectedGenerator, setSelectedGenerator] = useState(null);
   const [generatorArgs, setGeneratorArgs] = useState("");
@@ -69,6 +70,7 @@ const TestsTab = () => {
           inputText: fileContent,
           description: newTest.description || "",
           points: newTest.points || 1,
+          sample: newTest.sample || false,
         };
         response = await testsAPI.createText(taskId, testData);
       } else if (addMode === "generator" && selectedGenerator) {
@@ -79,6 +81,7 @@ const TestsTab = () => {
           inputText: command,
           description: newTest.description,
           points: newTest.points || 1,
+          sample: newTest.sample || false,
           testType: "GENERATED",
         };
         response = await testsAPI.createText(taskId, testData);
@@ -86,7 +89,12 @@ const TestsTab = () => {
       if (response) {
         // Reload data to get updated preview with outputs
         await loadData();
-        setNewTest({ inputText: "", description: "", points: 1 });
+        setNewTest({
+          inputText: "",
+          description: "",
+          points: 1,
+          sample: false,
+        });
         setGeneratorFile(null);
         setSelectedGenerator(null);
         setGeneratorArgs("");
@@ -208,6 +216,12 @@ const TestsTab = () => {
                   placeholder: "Points",
                   editable: true,
                 },
+                {
+                  key: "sample",
+                  label: "Sample",
+                  type: "checkbox",
+                  editable: true,
+                },
                 { key: "actions", label: "Actions" },
               ]}
               rows={tests}
@@ -237,6 +251,7 @@ const TestsTab = () => {
                     inputText: test?.input || "",
                     description: test?.description || "",
                     points: test?.points || 1,
+                    sample: test?.sample || false,
                   };
 
                   if (columnKey === "input") {
@@ -245,6 +260,8 @@ const TestsTab = () => {
                     updateData.description = newValue;
                   } else if (columnKey === "points") {
                     updateData.points = parseInt(newValue) || 1;
+                  } else if (columnKey === "sample") {
+                    updateData.sample = newValue;
                   }
 
                   await testsAPI.update(taskId, rowId, updateData);
@@ -350,6 +367,19 @@ const TestsTab = () => {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={newTest.sample}
+                      onChange={(e) =>
+                        setNewTest({ ...newTest, sample: e.target.checked })
+                      }
+                    />
+                    Sample test
+                  </label>
+                </div>
+
                 <div className="modal-buttons">
                   <button type="submit">Add Test</button>
                   <button type="button" onClick={() => setShowAddModal(false)}>
@@ -394,6 +424,18 @@ const TestsTab = () => {
                     }
                     min="1"
                   />
+                </div>
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={newTest.sample}
+                      onChange={(e) =>
+                        setNewTest({ ...newTest, sample: e.target.checked })
+                      }
+                    />
+                    Sample test
+                  </label>
                 </div>
                 <div className="modal-buttons">
                   <button type="submit">Add Test</button>

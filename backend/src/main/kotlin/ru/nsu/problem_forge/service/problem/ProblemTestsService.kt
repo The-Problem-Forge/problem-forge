@@ -283,7 +283,6 @@ class ProblemTestsService(
         }
 
       } catch (e: Exception) {
-        throw Exception("Failed to regenerate a test: ${e}")
         previewTests.add(
           TestPreview(
             testNumber = testNumber,

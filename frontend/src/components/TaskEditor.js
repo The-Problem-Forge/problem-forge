@@ -30,7 +30,7 @@ const TaskEditor = () => {
   return (
     <div className="task-editor">
       <div className="task-editor-header">
-        <h1>Task Editor</h1>
+        <h1>Problem Editor</h1>
       </div>
       <nav className="tab-nav">
         {tabs.map((tab) => (

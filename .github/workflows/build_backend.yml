@@ -2,7 +2,8 @@ name: Build Kotlin Project
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - "**"
   pull_request:
     branches:
       - "**"

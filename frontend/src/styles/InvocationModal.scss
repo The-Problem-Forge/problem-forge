@@ -1,0 +1,158 @@
+@import "variables";
+@import "mixins";
+
+.modal-overlay {
+  @include modal;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: $background-color;
+  border-radius: $border-radius-lg;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  @include flex-between;
+  padding: $spacing-lg $spacing-lg * 1.5;
+  border-bottom: 1px solid $border-color;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  @include flex-center;
+  border-radius: $border-radius;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: $light-gray;
+  }
+}
+
+.modal-body {
+  padding: $spacing-lg * 1.5;
+}
+
+.modal-error {
+  color: $danger-color;
+  background-color: lighten($danger-color, 45%);
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+  border: 1px solid lighten($danger-color, 30%);
+}
+
+.modal-selectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg * 1.5;
+}
+
+.solutions-selector,
+.tests-selector {
+  h4 {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-base;
+    font-weight: 600;
+  }
+}
+
+.selector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: $spacing-xs;
+}
+
+.selector-item {
+  padding: $spacing-xs $spacing-md;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: $medium-gray;
+  }
+
+  &.selected {
+    background-color: $success-color;
+    color: white;
+    border-color: darken($success-color, 5%);
+  }
+
+  .subtext {
+    font-size: 0.75rem;
+    color: $dark-gray;
+    margin-top: 2px;
+  }
+
+  &.selected .subtext {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.select-all-btn {
+  @include button($primary-color, $primary-hover);
+  font-size: $font-size-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg * 1.5;
+  border-top: 1px solid $border-color;
+  background-color: lighten($light-gray, 2%);
+}
+
+.create-invocation-btn {
+  @include button($success-color, $success-hover);
+
+  &:disabled {
+    background-color: $medium-gray;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: $medium-gray;
+    }
+  }
+}
+
+.cancel-btn {
+  background-color: $light-gray;
+  color: $text-color;
+  border: 1px solid $medium-gray;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: $medium-gray;
+  }
+}

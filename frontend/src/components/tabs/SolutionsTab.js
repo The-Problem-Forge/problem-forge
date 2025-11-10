@@ -4,7 +4,7 @@ import { solutionsAPI } from "../../services/api";
 import Table from "../Table";
 import SolutionModal from "../SolutionModal";
 import SourceEditorModal from "../SourceEditorModal";
-import "../SourceEditorModal.css";
+import "../../styles/SourceEditorModal.scss";
 
 /**
  * SolutionsTab component for solutions management

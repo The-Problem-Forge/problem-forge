@@ -1,5 +1,5 @@
 import React from "react";
-import "./InvocationModal.css";
+import "../styles/InvocationModal.scss";
 
 /**
  * Modal component for creating new invocations

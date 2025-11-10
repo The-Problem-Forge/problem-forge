@@ -1,3 +1,6 @@
+@import "variables";
+@import "mixins";
+
 /* Source Editor Modal Styles */
 .source-editor-modal {
   width: 90vw;
@@ -8,11 +11,9 @@
 }
 
 .source-editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
   border-bottom: 1px solid $border-color;
 }
 
@@ -36,7 +37,7 @@
 .source-editor-textarea {
   flex: 1;
   min-height: 400px;
-  padding: 1rem;
+  padding: $spacing-md;
   border: 1px solid $border-color;
   border-radius: $border-radius;
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
@@ -57,8 +58,8 @@
 .source-editor-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 0.5rem;
+  margin-top: $spacing-md;
+  padding-top: $spacing-sm;
   border-top: 1px solid $border-color;
 }
 
@@ -90,7 +91,7 @@
 
   .source-editor-footer {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: $spacing-sm;
     align-items: stretch;
   }
 }

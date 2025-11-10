@@ -11,8 +11,23 @@ COPY src /app/src
 RUN gradle build --no-daemon -x test
 
 # Runtime stage
-FROM openjdk:21-jdk-slim
+FROM debian:12-slim
+ENV JAVA_HOME=/opt/java/openjdk
+COPY --from=eclipse-temurin:21 $JAVA_HOME $JAVA_HOME
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
 WORKDIR /app
+
+# Install build tools including g++ and LaTeX
+RUN apt-get update && apt-get install -y \
+    g++ \
+    gcc \
+    make \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN groupadd -r spring && useradd -r -g spring spring

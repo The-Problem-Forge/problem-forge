@@ -1,0 +1,14 @@
+# Frontend
+- [ ] Fix adding new tests on tabs Checker, Validator, Tests to include all fields
+- [ ] Figure out how to add tests with generators 
+- [ ] Make sane add solution button
+- [ ] Make View/Edit button to open a pop-up on almost all screen with the text
+- [ ] Figure out how to more efficiently lay out tests for selection on Invocations tab
+- [ ] Add a good editor for source code (with basic syntax highlighting)
+- [ ] Export LaTeX from client
+- [ ] Preview pdf in the statement page?
+- [ ] Drag'n'drop task reordering on contest page
+- [ ] Make sure reordering does not mess up ids in the url
+- [x] Adding a task makes it display twice
+- [x] Go into task by clicking the task, not the edit button
+- [ ] Make tasks tab to see a list of available tasks

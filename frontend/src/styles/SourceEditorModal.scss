@@ -1,0 +1,97 @@
+@import "variables";
+@import "mixins";
+
+/* Source Editor Modal Styles */
+.source-editor-modal {
+  width: 90vw;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.source-editor-header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid $border-color;
+}
+
+.source-editor-header h3 {
+  margin: 0;
+  color: $text-color;
+}
+
+.source-editor-info small {
+  color: $secondary-color;
+  font-family: monospace;
+}
+
+.source-editor-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.source-editor-textarea {
+  flex: 1;
+  min-height: 400px;
+  padding: $spacing-md;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: none;
+  background-color: $light-gray;
+  color: $text-color;
+}
+
+.source-editor-textarea:focus {
+  outline: none;
+  border-color: $primary-color;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  background-color: $background-color;
+}
+
+.source-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: $spacing-md;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $border-color;
+}
+
+/* Ensure disabled buttons are properly styled */
+.source-editor-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: $secondary-color;
+  border-color: $secondary-color;
+}
+
+.source-editor-modal button:disabled:hover {
+  background-color: $secondary-color;
+  border-color: $secondary-color;
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .source-editor-modal {
+    width: 95vw;
+    max-height: 95vh;
+  }
+
+  .source-editor-textarea {
+    min-height: 300px;
+    font-size: 12px;
+  }
+
+  .source-editor-footer {
+    flex-direction: column;
+    gap: $spacing-sm;
+    align-items: stretch;
+  }
+}

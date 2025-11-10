@@ -1,0 +1,21 @@
+# Build outputs
+.gradle/
+build/
+out/
+target/
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+

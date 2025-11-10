@@ -1,0 +1,702 @@
+@import "variables";
+@import "mixins";
+
+.task-editor {
+  padding: $spacing-lg;
+}
+
+.task-editor-header {
+  @include flex-between;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.back-button {
+  @include button($secondary-color, $secondary-hover);
+  text-decoration: none;
+}
+
+.task-editor h1 {
+  margin: 0;
+}
+
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $spacing-lg;
+}
+
+.tab-link {
+  padding: $spacing-sm $spacing-md;
+  text-decoration: none;
+  color: $dark-gray;
+  border-bottom: 2px solid transparent;
+
+  &.active {
+    color: $primary-color;
+    border-bottom-color: $primary-color;
+  }
+
+  &:hover {
+    color: $primary-color;
+  }
+}
+
+.tab-content {
+  padding: $spacing-md 0;
+  min-height: 600px;
+}
+
+/* Prevent layout shift during tab transitions */
+.tab-content > div {
+  min-height: 500px;
+}
+
+.general-tab .form-group {
+  @include form-group;
+}
+
+.general-tab label {
+  @include label;
+}
+
+.general-tab input {
+  @include input;
+}
+
+.statement-tab .statement-controls {
+  margin-bottom: $spacing-md;
+}
+
+.statement-tab .statement-controls button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.statement-tab .statement-editor {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.statement-tab .statement-fields {
+  flex: 1;
+}
+
+.statement-tab .field-group {
+  @include form-group;
+}
+
+.statement-tab label {
+  @include label;
+}
+
+.statement-tab textarea {
+  @include textarea;
+}
+
+.statement-tab .statement-preview {
+  flex: 1;
+  border-left: 1px solid $border-color;
+  padding-left: $spacing-lg;
+}
+
+.statement-tab .statement-preview h3,
+.statement-tab .statement-preview h4 {
+  margin-top: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.checker-tab .checker-controls,
+.validator-tab .validator-controls,
+.tests-tab .tests-controls,
+.solutions-tab .solutions-controls {
+  margin-bottom: $spacing-md;
+}
+
+.checker-tab .checker-controls button,
+.validator-tab .validator-controls button,
+.tests-tab .tests-controls button,
+.solutions-tab .solutions-controls button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.checker-tab .field-group button,
+.validator-tab .field-group button {
+  @include button($primary-color, $primary-hover);
+}
+
+.checker-tab .source-controls,
+.validator-tab .source-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.checker-tab .test-controls,
+.validator-tab .test-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.modal {
+  @include modal;
+}
+
+.modal-content {
+  @include modal-content;
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $spacing-lg;
+}
+
+.modal-tabs button {
+  padding: $spacing-sm $spacing-md;
+  background: none;
+  border: none;
+  color: $dark-gray;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: inherit;
+
+  &.active {
+    color: $primary-color;
+    border-bottom-color: $primary-color;
+  }
+
+  &:hover {
+    color: $primary-color;
+  }
+}
+
+.modal .form-group {
+  @include form-group;
+  label {
+    @include label;
+  }
+  textarea {
+    @include textarea;
+  }
+  select {
+    width: 100%;
+    padding: $spacing-sm;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+  }
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: $spacing-md;
+}
+
+.checker-tab .checker-editor,
+.validator-tab .validator-editor,
+.tests-tab .tests-editor,
+.solutions-tab .solutions-editor {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.checker-tab .checker-fields,
+.validator-tab .validator-fields,
+.tests-tab .tests-fields,
+.solutions-tab .solutions-fields {
+  flex: 1;
+}
+
+.checker-tab .field-group,
+.validator-tab .field-group,
+.tests-tab .field-group,
+.solutions-tab .field-group {
+  @include form-group;
+}
+
+.checker-tab label,
+.validator-tab label,
+.tests-tab label,
+.solutions-tab label {
+  @include label;
+}
+
+.checker-tab textarea,
+.validator-tab textarea,
+.tests-tab textarea,
+.solutions-tab textarea {
+  @include textarea;
+}
+
+.checker-tab input,
+.validator-tab input,
+.tests-tab input,
+.solutions-tab input {
+  @include input;
+}
+
+.checker-tab select,
+.validator-tab select,
+.tests-tab select,
+.solutions-tab select {
+  @include input;
+}
+
+.modal-buttons {
+  margin-top: $spacing-md;
+}
+
+.modal-buttons button {
+  margin-right: $spacing-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.add-test {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.add-test input {
+  flex: 1;
+}
+
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table th {
+  @include table-header;
+}
+
+.table td {
+  @include table-cell;
+}
+
+.table tr {
+  height: 80px;
+}
+
+.table textarea,
+.table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.table button {
+  margin-right: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.table .actions-cell {
+  padding: $spacing-sm;
+}
+
+.table .actions-cell button {
+  margin: $spacing-xxs $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  @include button($primary-color, $primary-hover);
+}
+
+.table .actions-cell button:first-child {
+  margin-left: 0;
+}
+
+.table .actions-cell button:last-child {
+  margin-right: 0;
+}
+
+.invocations-tab .selector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.invocations-tab .selector-item {
+  padding: $spacing-sm $spacing-md;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+
+  &:hover {
+    background-color: darken($light-gray, 10%);
+    cursor: pointer;
+  }
+
+  &.selected {
+    background-color: $success-color;
+    color: white;
+  }
+}
+
+.invocations-tab .selector-item .subtext {
+  font-size: smaller;
+  color: grey;
+}
+
+.invocations-tab .selector-item.selected .subtext {
+  color: white;
+}
+
+.invocations-tab .invocation-buttons {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.invocations-tab .create-invocation-btn,
+.invocations-tab .run-subset-btn {
+  @include button($primary-color, $primary-hover);
+}
+
+.invocations-tab .select-all-btn {
+  @include button($secondary-color, $secondary-hover);
+  margin-bottom: $spacing-sm;
+}
+
+.invocations-tab .invocations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.invocations-tab .header-buttons {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.invocations-tab .invocations-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: $spacing-lg;
+  align-items: start;
+}
+
+.invocations-tab .list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.invocations-tab .matrix-section {
+  background: white;
+  border-radius: $border-radius;
+  padding: $spacing-md;
+  border: 1px solid #e0e0e0;
+  min-height: 400px;
+}
+
+.invocations-tab .invocation-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.invocations-tab .invocation-card {
+  padding: 8px 10px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  user-select: none;
+  border: 1px solid transparent;
+
+  &:hover:not(.disabled) {
+    background-color: #e0e0e0;
+  }
+
+  &:hover.selected {
+    background-color: #45a049;
+  }
+
+  &.selected {
+    background-color: #4caf50;
+    color: white;
+    border-color: #45a049;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #fafafa;
+  }
+
+  .invocation-status {
+    font-weight: 600;
+    margin-bottom: 2px;
+    font-size: 0.875rem;
+  }
+
+  .invocation-details {
+    .invocation-id {
+      font-size: 0.75rem;
+      margin-bottom: 1px;
+    }
+
+    .invocation-time {
+      font-size: 0.7rem;
+      color: #666;
+    }
+  }
+
+  &.selected .invocation-details .invocation-time {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.invocations-tab .empty-message {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.invocations-tab .matrix-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #666;
+  font-style: italic;
+}
+
+.invocations-tab .refresh-btn {
+  @include button($secondary-color, $secondary-hover);
+  padding: $spacing-sm;
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .refresh-icon {
+    display: block;
+
+    &.spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.general-tab .save-btn {
+  @include button($primary-color, $primary-hover);
+
+  &.has-changes {
+    background-color: $success-color;
+    border-color: $success-color;
+
+    &:hover:not(:disabled) {
+      background-color: darken($success-color, 10%);
+      border-color: darken($success-color, 10%);
+    }
+  }
+
+  &.no-changes {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: $secondary-color;
+      border-color: $secondary-color;
+    }
+  }
+}
+
+.contests-section {
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  h4 {
+    margin-bottom: $spacing-sm;
+  }
+}
+
+.contests-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.contest-item {
+  position: relative;
+  padding: $spacing-sm $spacing-md;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: darken($light-gray, 10%);
+  }
+
+  &.add-contest {
+    border: 2px dashed $border-color;
+    background-color: transparent;
+
+    .add-icon {
+      font-size: 24px;
+      color: $primary-color;
+      font-weight: bold;
+    }
+  }
+}
+
+.contest-name {
+  font-weight: 500;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: none;
+  border: none;
+  color: $danger-color;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: rgba($danger-color, 0.1);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: $spacing-lg;
+  border-radius: $border-radius;
+  max-width: 400px;
+  width: 90%;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.contest-search-input {
+  @include input;
+  width: 100%;
+  margin-bottom: $spacing-sm;
+}
+
+.contest-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+
+  .suggestion-item {
+    padding: $spacing-sm $spacing-md;
+    cursor: pointer;
+    border-bottom: 1px solid $light-gray;
+
+    &:hover {
+      background-color: $light-gray;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .no-suggestions {
+    padding: $spacing-sm $spacing-md;
+    color: $dark-gray;
+    font-style: italic;
+  }
+}
+
+.cancel-btn {
+  @include button($secondary-color, $secondary-hover);
+}
+
+.editor-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: $spacing-md;
+}
+
+.editor-buttons button {
+  @include button($primary-color, $primary-hover);
+}
+
+.editor-buttons .cancel-btn {
+  @include button($secondary-color, $secondary-hover);
+}
+
+.error {
+  color: $danger-color;
+  font-size: $font-size-sm;
+  margin-top: $spacing-xs;
+}

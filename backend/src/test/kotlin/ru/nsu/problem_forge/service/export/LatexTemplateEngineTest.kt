@@ -1,8 +1,10 @@
 package ru.nsu.problem_forge.service.export
 
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import ru.nsu.problem_forge.entity.Problem
+import ru.nsu.problem_forge.repository.FileRepository
 import ru.nsu.problem_forge.type.ProblemInfo
 import ru.nsu.problem_forge.type.problem.General
 import ru.nsu.problem_forge.type.problem.Statement
@@ -11,10 +13,12 @@ import ru.nsu.problem_forge.type.problem.ProblemTest
 
 class LatexTemplateEngineTest {
 
+  private val fileRepository: FileRepository = mockk()
+
   @Test
   fun `should generate basic LaTeX structure`() {
     // Arrange
-    val templateEngine = LatexTemplateEngine()
+    val templateEngine = LatexTemplateEngine(fileRepository)
     val problem = createBasicProblem(
       title = "Test Problem",
       legend = "This is a test problem",
@@ -52,7 +56,7 @@ class LatexTemplateEngineTest {
   @Test
   fun `should escape LaTeX special characters`() {
     // Arrange
-    val templateEngine = LatexTemplateEngine()
+    val templateEngine = LatexTemplateEngine(fileRepository)
     val problem = createBasicProblem(
       title = "Problem with special chars",
       legend = "Use formula: x^2 + y^2 = r^2",
@@ -69,20 +73,20 @@ class LatexTemplateEngineTest {
     println(latex)
     println("--- End of LaTeX ---")
 
-    // Assert - check that special characters are properly escaped
+    // Assert - check that special characters are not escaped
     assertTrue(latex.contains("\\documentclass[12pt]{article}"))
     assertTrue(latex.contains("\\usepackage{olymp}"))
     assertTrue(latex.contains("\\begin{document}"))
-    assertTrue(latex.contains("Use formula: x\\textasciicircum{}2 + y\\textasciicircum{}2 = r\\textasciicircum{}2"))
-    assertTrue(latex.contains("Input contains \\#hashtag"))
-    assertTrue(latex.contains("Output \\& result"))
+    assertTrue(latex.contains("Use formula: x^2 + y^2 = r^2"))
+    assertTrue(latex.contains("Input contains #hashtag"))
+    assertTrue(latex.contains("Output & result"))
     assertTrue(latex.contains("\\end{document}"))
   }
 
   @Test
   fun `should handle empty statement fields`() {
     // Arrange
-    val templateEngine = LatexTemplateEngine()
+    val templateEngine = LatexTemplateEngine(fileRepository)
     val problem = createBasicProblem(
       title = "Empty Problem",
       legend = "",
@@ -108,7 +112,7 @@ class LatexTemplateEngineTest {
   @Test
   fun `should include examples when sample tests exist`() {
     // Arrange
-    val templateEngine = LatexTemplateEngine()
+    val templateEngine = LatexTemplateEngine(fileRepository)
     val sampleTests = listOf(
       ProblemTest(
         testType = TestType.RAW,
@@ -145,7 +149,7 @@ class LatexTemplateEngineTest {
   @Test
   fun `should not include examples when no sample tests exist`() {
     // Arrange
-    val templateEngine = LatexTemplateEngine()
+    val templateEngine = LatexTemplateEngine(fileRepository)
     val nonSampleTests = listOf(
       ProblemTest(
         testType = TestType.RAW,

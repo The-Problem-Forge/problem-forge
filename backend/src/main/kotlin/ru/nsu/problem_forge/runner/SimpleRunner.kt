@@ -84,7 +84,6 @@ class SimpleRunner : Runner {
     if (testlibNeeded) {
       val testlibFile = copyTestlibToTemp(tempDir)
       compileCommand.add("-I${tempDir.absolutePath}")
-      compileCommand.add(testlibFile.absolutePath)
     }
 
     compileCommand.add(sourceFile.absolutePath)

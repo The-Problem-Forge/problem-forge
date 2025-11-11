@@ -1,5 +1,6 @@
 package ru.nsu.problem_forge.runner
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import ru.nsu.problem_forge.runner.Runner.*
 import java.io.File
@@ -7,6 +8,8 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class SimpleRunner : Runner {
+
+  private val logger = LoggerFactory.getLogger(SimpleRunner::class.java)
 
   override fun run(programSource: String, runs: List<RunInput>, testlibNeeded: Boolean): List<RunOutput> {
     var tempDir: File? = null
@@ -22,6 +25,7 @@ class SimpleRunner : Runner {
       val compileSuccess = compileProgram(sourceFile, binaryFile, testlibNeeded, tempDir)
 
       if (!compileSuccess) {
+        logger.error("Program compilation failed")
         return runs.map {
           RunOutput(RunStatus.COMPILE_ERROR, "Compilation failed")
         }
@@ -52,6 +56,7 @@ class SimpleRunner : Runner {
 
           if (!runSuccess) {
             runProcess.destroyForcibly()
+            logger.error("Program execution timed out for run with args: ${runInput.args}")
             return@map RunOutput(RunStatus.RUNTIME_ERROR, "Time limit exceeded")
           }
 
@@ -59,17 +64,20 @@ class SimpleRunner : Runner {
           val errorOutput = runProcess.errorStream.bufferedReader().readText()
 
           if (runProcess.exitValue() != 0) {
+            logger.error("Program runtime error for run with args: ${runInput.args}. stderr: $errorOutput; stdout: $runOutput")
             return@map RunOutput(RunStatus.RUNTIME_ERROR, "Runtime error. stderr: $errorOutput; stdout: $runOutput")
           }
 
           RunOutput(RunStatus.SUCCESS, runOutput)
 
         } catch (e: Exception) {
+          logger.error("Program execution error for run with args: ${runInput.args}", e)
           RunOutput(RunStatus.RUNTIME_ERROR, "Execution error: ${e.message}")
         }
       }
 
     } catch (e: Exception) {
+      logger.error("Setup error during program execution", e)
       return runs.map {
         RunOutput(RunStatus.RUNTIME_ERROR, "Setup error: ${e.message}")
       }
@@ -100,14 +108,14 @@ class SimpleRunner : Runner {
       val compileOutput = compileProcess.inputStream.bufferedReader().readText()
 
       if (!compileSuccess || compileProcess.exitValue() != 0) {
-        println("Compilation failed. Output: $compileOutput")
+        logger.error("Compilation failed. Output: $compileOutput")
         return false
       }
-      println("Compilation output: $compileOutput")
+      logger.debug("Compilation output: $compileOutput")
 
       return outputFile.exists()
     } catch (e: Exception) {
-      println("Compilation error: ${e.message}")
+      logger.error("Compilation error: ${e.message}", e)
       return false
     }
   }
@@ -127,7 +135,7 @@ class SimpleRunner : Runner {
       }
       return null
     } catch (e: Exception) {
-      println("Compilation to binary error: ${e.message}")
+      logger.error("Compilation to binary error", e)
       return null
     } finally {
       tempDir?.deleteRecursively()
@@ -164,7 +172,10 @@ class SimpleRunner : Runner {
         "cpp" -> {
           val bin = File(tempDir, "checker.out")
           val compileSuccess = compileProgram(sourceFile, bin, true, tempDir) // testlib needed for checkers
-          if (!compileSuccess) return "CRASHED"
+          if (!compileSuccess) {
+            logger.error("Checker compilation failed for language: $language")
+            return "CRASHED"
+          }
           bin.setExecutable(true)
           bin
         }
@@ -177,7 +188,10 @@ class SimpleRunner : Runner {
             .redirectErrorStream(true)
             .start()
           val compileSuccess = compileProcess.waitFor(10, TimeUnit.SECONDS)
-          if (!compileSuccess || compileProcess.exitValue() != 0) return "CRASHED"
+          if (!compileSuccess || compileProcess.exitValue() != 0) {
+            logger.error("Java checker compilation failed")
+            return "CRASHED"
+          }
           File(tempDir, "Checker.class")
         }
 
@@ -223,6 +237,7 @@ class SimpleRunner : Runner {
 
       if (!runSuccess) {
         runProcess.destroyForcibly()
+        logger.error("Checker execution timed out for language: $language")
         return "CRASHED"
       }
 
@@ -238,6 +253,7 @@ class SimpleRunner : Runner {
       }
 
     } catch (e: Exception) {
+      logger.error("Checker test execution error for language: $language", e)
       return "CRASHED"
     } finally {
       tempDir?.deleteRecursively()
@@ -246,6 +262,7 @@ class SimpleRunner : Runner {
 
   override fun runValidatorTest(validatorSource: String, language: String, input: String): String {
     // Stub implementation: always return VALID
+    logger.warn("runValidatorTest is not implemented, returning VALID by default")
     return "VALID"
   }
 

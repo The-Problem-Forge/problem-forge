@@ -12,8 +12,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class CorsConfig : WebMvcConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/api/**")
-            .allowedOrigins("http://localhost:3000", "http://frontend:3000")
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:3000", "http://frontend:3000", "http://91.218.244.146:3000")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)
@@ -22,13 +22,13 @@ class CorsConfig : WebMvcConfigurer {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:3000", "http://frontend:3000")
+        configuration.allowedOrigins = listOf("http://localhost:3000", "http://frontend:3000", "http://91.218.244.146:3000")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.allowCredentials = true
         
         val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/api/**", configuration)
+        source.registerCorsConfiguration("/**", configuration)
         return source
     }
 }

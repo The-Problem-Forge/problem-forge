@@ -16,8 +16,7 @@ class File {
     @Column(nullable = false, length = 255)
     var format: FileFormat = FileFormat.TEXT
 
-    @Column(nullable = false)
-    @Lob
+    @Column(nullable = false, columnDefinition = "bytea")
     var content: ByteArray = byteArrayOf()
 
     @Column(name = "created_at", nullable = false)

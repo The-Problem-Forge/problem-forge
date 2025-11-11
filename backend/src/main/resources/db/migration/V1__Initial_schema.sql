@@ -1,7 +1,7 @@
 -- Initial schema migration
 
 CREATE TABLE users (
-    user_id BIGINT NOT NULL,
+    user_id BIGSERIAL NOT NULL,
     handle VARCHAR(50) NOT NULL UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE contests (
-    contest_id BIGINT NOT NULL,
+    contest_id BIGSERIAL NOT NULL,
     title VARCHAR(255) NOT NULL,
     description VARCHAR(255),
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE contests (
 );
 
 CREATE TABLE problems (
-    problem_id BIGINT NOT NULL,
+    problem_id BIGSERIAL NOT NULL,
     title VARCHAR(40) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     modified_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE problems (
 );
 
 CREATE TABLE files (
-    file_id BIGINT NOT NULL,
+    file_id BIGSERIAL NOT NULL,
     format VARCHAR(255) NOT NULL,
     content BYTEA NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE files (
 );
 
 CREATE TABLE contest_problems (
-    id BIGINT NOT NULL,
+    id BIGSERIAL NOT NULL,
     contest_id BIGINT NOT NULL,
     problem_id BIGINT NOT NULL,
     order_index INT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE contest_problems (
 );
 
 CREATE TABLE contest_users (
-    id BIGINT NOT NULL,
+    id BIGSERIAL NOT NULL,
     contest_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     role VARCHAR(255) NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE contest_users (
 );
 
 CREATE TABLE problem_users (
-    id BIGINT NOT NULL,
+    id BIGSERIAL NOT NULL,
     problem_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     modified_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { invocationsAPI, solutionsAPI, testsAPI } from "../../services/api";
+import {
+  invocationsAPI,
+  solutionsAPI,
+  testsAPI,
+  problemsAPI,
+} from "../../services/api";
 import Table from "../Table";
 import InvocationModal from "../InvocationModal";
 
@@ -21,7 +26,9 @@ const InvocationsTab = () => {
   const [selectedInvocation, setSelectedInvocation] = useState(null);
   const [matrixData, setMatrixData] = useState(null);
   const [matrixLoading, setMatrixLoading] = useState(false);
+  const [invocationError, setInvocationError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -73,6 +80,27 @@ const InvocationsTab = () => {
 
   const handleViewMatrix = async (invocationId) => {
     setMatrixLoading(true);
+    setInvocationError(null);
+    setMatrixData(null);
+
+    const invocation = invocations.find((inv) => inv.id === invocationId);
+    if (!invocation) {
+      setInvocationError("Invocation not found");
+      setMatrixLoading(false);
+      return;
+    }
+
+    // If invocation is not completed, show error message
+    if (invocation.status !== "COMPLETED") {
+      const errorMsg =
+        invocation.errorMessage ||
+        `Invocation ${invocation.status.toLowerCase().replace("_", " ")}`;
+      setInvocationError(errorMsg);
+      setSelectedInvocation(invocationId);
+      setMatrixLoading(false);
+      return;
+    }
+
     try {
       const response = await invocationsAPI.matrix(taskId, invocationId);
       const transformedData = transformMatrixData(response.data);
@@ -80,7 +108,8 @@ const InvocationsTab = () => {
       setSelectedInvocation(invocationId);
     } catch (err) {
       console.error("Failed to load matrix:", err);
-      setError("Failed to load matrix");
+      setInvocationError("Failed to load matrix data");
+      setSelectedInvocation(invocationId);
     } finally {
       setMatrixLoading(false);
     }
@@ -175,6 +204,75 @@ const InvocationsTab = () => {
     }
   };
 
+  /**
+   * Downloads the problem package
+   */
+  const handleDownloadPackage = async () => {
+    setDownloading(true);
+    setError("");
+
+    try {
+      // First check package status and generate if needed
+      let statusResponse = await problemsAPI.getPackageStatus(taskId);
+      let status = statusResponse.data.status;
+
+      if (status === "ERROR") {
+        throw new Error(
+          statusResponse.data.message || "Package generation failed",
+        );
+      }
+
+      if (status === "PENDING" || status === "IN_PROGRESS") {
+        // Wait for package generation to complete
+        let attempts = 0;
+        const maxAttempts = 30; // 30 seconds max wait
+
+        while (
+          (status === "PENDING" || status === "IN_PROGRESS") &&
+          attempts < maxAttempts
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+          statusResponse = await problemsAPI.getPackageStatus(taskId);
+          status = statusResponse.data.status;
+          attempts++;
+        }
+
+        if (status === "ERROR") {
+          throw new Error(
+            statusResponse.data.message || "Package generation failed",
+          );
+        }
+
+        if (status !== "COMPLETED") {
+          throw new Error(
+            "Package generation timed out. Please try again later.",
+          );
+        }
+      }
+
+      // Package is ready, download it
+      const response = await problemsAPI.downloadPackage(taskId);
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `problem_${taskId}_package.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setError("");
+    } catch (err) {
+      console.error("Failed to download package:", err);
+      setError(
+        "Failed to download package: " +
+          (err.response?.data?.message || err.message || "Unknown error"),
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const toggleSolution = (solutionId) => {
     setSelectedSolutions((prev) =>
       prev.includes(solutionId)
@@ -212,10 +310,46 @@ const InvocationsTab = () => {
           <h2>Invocations</h2>
           <div className="header-buttons">
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => {
+                setSelectedSolutions(solutions.map((s) => s.id));
+                setSelectedTests(tests.map((t) => t.id));
+                setShowModal(true);
+              }}
               className="create-invocation-btn"
             >
               Create Invocation
+            </button>
+            <button
+              onClick={handleDownloadPackage}
+              disabled={downloading}
+              className="download-btn"
+              title="Download problem package"
+            >
+              {downloading ? (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="download-icon spinning"
+                >
+                  <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                </svg>
+              ) : (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="download-icon"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                </svg>
+              )}
             </button>
             <button
               onClick={handleRefresh}
@@ -264,12 +398,8 @@ const InvocationsTab = () => {
                     key={invocation.id}
                     className={`invocation-card ${
                       selectedInvocation === invocation.id ? "selected" : ""
-                    } ${invocation.status !== "COMPLETED" ? "disabled" : ""}`}
-                    onClick={() => {
-                      if (invocation.status === "COMPLETED") {
-                        handleViewMatrix(invocation.id);
-                      }
-                    }}
+                    } status-${invocation.status.toLowerCase()}`}
+                    onClick={() => handleViewMatrix(invocation.id)}
                   >
                     <div className="invocation-status">
                       {invocation.status || "Pending"}
@@ -289,12 +419,18 @@ const InvocationsTab = () => {
           </div>
 
           <div className="matrix-section">
-            {selectedInvocation && matrixData ? (
+            {selectedInvocation ? (
               <>
                 <h3>Results Matrix</h3>
                 {matrixLoading ? (
                   <p>Loading matrix...</p>
-                ) : (
+                ) : invocationError ? (
+                  <div className="error-container">
+                    <p style={{ color: "red", fontWeight: "bold" }}>
+                      Error: {invocationError}
+                    </p>
+                  </div>
+                ) : matrixData ? (
                   <div className="matrix-container">
                     <Table
                       className="results-matrix"
@@ -357,11 +493,15 @@ const InvocationsTab = () => {
                       emptyMessage="No matrix data"
                     />
                   </div>
+                ) : (
+                  <div className="matrix-placeholder">
+                    <p>No matrix data available</p>
+                  </div>
                 )}
               </>
             ) : (
               <div className="matrix-placeholder">
-                <p>Select a completed invocation to view results matrix</p>
+                <p>Select an invocation to view results matrix</p>
               </div>
             )}
           </div>

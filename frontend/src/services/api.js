@@ -219,6 +219,15 @@ const mockData = {
         testIds: ["1", "2"],
         status: "Completed",
         createdAt: "2023-01-01T00:00:00Z",
+        errorMessage: null,
+      },
+      {
+        id: "2",
+        solutionIds: ["1"],
+        testIds: ["1", "2"],
+        status: "ERROR",
+        createdAt: "2023-01-02T00:00:00Z",
+        errorMessage: "Compilation failed: undefined reference to 'main'",
       },
     ],
     2: [],
@@ -384,20 +393,18 @@ export const contestsAPI = {
 
   /**
    * Deletes a contest
-   * @param {string} id - Contest ID
+   * @param {string} contestId - Contest ID
    * @returns {Promise} Axios response
    * @throws {Error} If deletion fails
    */
-  delete: (id) => {
+  delete: (contestId) => {
     if (UI_TEST) {
-      const index = mockData.contests.findIndex((c) => c.id === id);
-      if (index === -1) {
-        return Promise.reject(new Error("Contest not found"));
-      }
+      const index = mockData.contests.findIndex((c) => c.id === contestId);
+      if (index === -1) return Promise.reject(new Error("Contest not found"));
       mockData.contests.splice(index, 1);
       return Promise.resolve({ data: null });
     }
-    return api.delete(`/contests/${id}`);
+    return api.delete(`/contests/${contestId}`);
   },
 
   /**
@@ -576,6 +583,44 @@ export const problemsAPI = {
       return Promise.resolve({ data: null });
     }
     return api.delete(`/problems/${taskId}`);
+  },
+
+  /**
+   * Gets problem package status
+   * @param {string} taskId - Task ID
+   * @returns {Promise} Axios response with package status
+   * @throws {Error} If request fails
+   */
+  getPackageStatus: (taskId) => {
+    if (UI_TEST) {
+      return Promise.resolve({
+        data: {
+          status: "COMPLETED",
+          message: "Package is ready for download",
+          downloadUrl: `/problems/${taskId}/package/download`,
+        },
+      });
+    }
+    return api.get(`/problems/${taskId}/package`);
+  },
+
+  /**
+   * Downloads problem package
+   * @param {string} taskId - Task ID
+   * @returns {Promise} Axios response with file blob
+   * @throws {Error} If download fails
+   */
+  downloadPackage: (taskId) => {
+    if (UI_TEST) {
+      // Mock download - return a simple text file
+      const blob = new Blob(["Mock problem package content"], {
+        type: "application/zip",
+      });
+      return Promise.resolve({ data: blob });
+    }
+    return api.get(`/problems/${taskId}/package/download`, {
+      responseType: "blob",
+    });
   },
 };
 
@@ -1370,6 +1415,26 @@ export const solutionsAPI = {
     return api.get(`/problems/${taskId}/solutions/${solutionId}/download`, {
       responseType: "blob",
     });
+  },
+
+  /**
+   * Deletes a solution
+   * @param {string} taskId - Task ID
+   * @param {string} solutionId - Solution ID
+   * @returns {Promise} Axios response
+   * @throws {Error} If deletion fails
+   */
+  delete: (taskId, solutionId) => {
+    if (UI_TEST) {
+      const solutions = mockData.solutions[taskId] || [];
+      const index = solutions.findIndex((s) => s.id === solutionId);
+      if (index === -1) {
+        return Promise.reject(new Error("Solution not found"));
+      }
+      solutions.splice(index, 1);
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/problems/${taskId}/solutions/${solutionId}`);
   },
 
   /**

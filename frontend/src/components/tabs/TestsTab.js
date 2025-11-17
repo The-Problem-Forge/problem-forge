@@ -226,23 +226,18 @@ const TestsTab = () => {
               ]}
               rows={tests}
               renderCell={(row, key, index, isEditing, onEdit) => {
+                let text = row[key] || "";
                 if (key === "input") {
-                  const inputText = row[key] || "";
-                  const truncated =
-                    inputText.length > 100
-                      ? inputText.substring(0, 100) + "..."
-                      : inputText;
-                  return (
-                    <span
-                      title={inputText}
-                      style={{ cursor: "pointer" }}
-                      onClick={onEdit}
-                    >
-                      {truncated}
-                    </span>
-                  );
+                  text =
+                    text.length > 100
+                      ? text.substring(0, 100) + "..."
+                      : text;
                 }
-                return null; // Let default rendering handle other columns
+                return (
+                  <span>
+                    {text}
+                  </span>
+                );
               }}
               onSave={async (rowId, columnKey, newValue) => {
                 try {

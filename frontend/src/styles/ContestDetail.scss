@@ -29,8 +29,17 @@
   margin-bottom: $spacing-md;
 }
 
+.contest-actions {
+  display: flex;
+  gap: $spacing-md;
+}
+
 .edit-contest-btn {
   @include button($primary-color, $primary-hover);
+}
+
+.delete-contest-btn {
+  @include button($danger-color, $danger-hover);
 }
 
 .tasks-list {
@@ -101,4 +110,8 @@
   @include flex-between;
   gap: $spacing-md;
   justify-content: flex-end;
+}
+
+.delete-btn {
+  @include button($danger-color, $danger-hover);
 }

@@ -130,7 +130,7 @@
 }
 
 .create-invocation-btn {
-  @include button($success-color, $success-hover);
+  @include button($primary-color, $primary-hover);
 
   &:disabled {
     background-color: $medium-gray;
@@ -155,4 +155,28 @@
   &:hover {
     background-color: $medium-gray;
   }
+}
+
+.confirmation-modal {
+  max-width: 400px;
+
+  .modal-body {
+    text-align: center;
+    padding: $spacing-lg;
+
+    p {
+      margin: 0;
+      font-size: $font-size-base;
+      color: $text-color;
+    }
+  }
+
+  .modal-footer {
+    justify-content: center;
+    gap: $spacing-md;
+  }
+}
+
+.confirm-btn {
+  @include button($danger-color, $danger-hover);
 }

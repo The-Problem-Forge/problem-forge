@@ -15,6 +15,7 @@ const ContestDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", description: "" });
   const [editContest, setEditContest] = useState({
     name: "",
@@ -71,6 +72,17 @@ const ContestDetail = () => {
     } catch (err) {
       console.error("Failed to update contest:", err);
       setError("Failed to update contest");
+    }
+  };
+
+  const handleDeleteContest = async () => {
+    try {
+      await contestsAPI.delete(contestId);
+      navigate("/contests");
+    } catch (err) {
+      console.error("Failed to delete contest:", err);
+      setError("Failed to delete contest");
+      setShowDeleteModal(false);
     }
   };
 
@@ -144,9 +156,14 @@ const ContestDetail = () => {
             </p>
           )}
         </div>
-        <button className="edit-contest-btn" onClick={openEditModal}>
-          Edit Contest
-        </button>
+         <div className="contest-actions">
+           <button className="edit-contest-btn" onClick={openEditModal}>
+             Edit Contest
+           </button>
+           <button className="delete-contest-btn" onClick={() => setShowDeleteModal(true)}>
+             Delete Contest
+           </button>
+         </div>
       </div>
 
       <div className="tasks-section">
@@ -281,6 +298,23 @@ const ContestDetail = () => {
                 <button type="submit">Update</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Delete Contest</h3>
+            <p>Are you sure you want to delete this contest? This action cannot be undone.</p>
+            <div className="modal-buttons">
+              <button type="button" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </button>
+              <button type="button" className="delete-btn" onClick={handleDeleteContest}>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

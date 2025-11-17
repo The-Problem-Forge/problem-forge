@@ -392,19 +392,19 @@ export const contestsAPI = {
   },
 
   /**
-   * Deletes a problem
-   * @param {string} taskId - Task ID
+   * Deletes a contest
+   * @param {string} contestId - Contest ID
    * @returns {Promise} Axios response
    * @throws {Error} If deletion fails
    */
-  delete: (taskId) => {
+  delete: (contestId) => {
     if (UI_TEST) {
-      const index = mockData.allTasks.findIndex((t) => t.id === taskId);
-      if (index === -1) return Promise.reject(new Error("Task not found"));
-      mockData.allTasks.splice(index, 1);
+      const index = mockData.contests.findIndex((c) => c.id === contestId);
+      if (index === -1) return Promise.reject(new Error("Contest not found"));
+      mockData.contests.splice(index, 1);
       return Promise.resolve({ data: null });
     }
-    return api.delete(`/problems/${taskId}`);
+    return api.delete(`/contests/${contestId}`);
   },
 
   /**

@@ -17,6 +17,25 @@ $navbar-bg: #333;
 $navbar-text: white;
 $navbar-link: #ccc;
 
+// Invocation status colors
+$invocation-completed-bg: #defde3;
+$invocation-completed-border: #4caf50;
+$invocation-completed-left-border: #4caf50;
+$invocation-completed-text: #2f855a;
+$invocation-completed-hover: #aefdb2;
+
+$invocation-error-bg: #fff5f5;
+$invocation-error-border: #feb2b2;
+$invocation-error-left-border: #e53e3e;
+$invocation-error-text: #c53030;
+$invocation-error-hover: #fed7d7;
+
+$invocation-pending-bg: #fffaf0;
+$invocation-pending-border: #fbbf24;
+$invocation-pending-left-border: #ed8936;
+$invocation-pending-text: #dd6b20;
+$invocation-pending-hover: #ffe6a6;
+
 // Spacing
 $spacing-xxs: 0.15rem;
 $spacing-xs: 0.25rem;

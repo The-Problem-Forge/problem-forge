@@ -4,6 +4,7 @@ import { solutionsAPI } from "../../services/api";
 import Table from "../Table";
 import SolutionModal from "../SolutionModal";
 import SourceEditorModal from "../SourceEditorModal";
+import ConfirmationModal from "../ConfirmationModal";
 import "../../styles/SourceEditorModal.scss";
 
 /**
@@ -23,6 +24,8 @@ const SolutionsTab = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSolution, setEditingSolution] = useState(null);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [solutionToDelete, setSolutionToDelete] = useState(null);
 
   useEffect(() => {
     loadSolutions();
@@ -222,6 +225,44 @@ const SolutionsTab = () => {
     }
   };
 
+  /**
+   * Handles opening the delete confirmation modal
+   * @param {string} solutionId - Solution ID to delete
+   */
+  const handleDeleteSolution = (solutionId) => {
+    setSolutionToDelete(solutionId);
+    setIsConfirmModalOpen(true);
+  };
+
+  /**
+   * Handles confirming the solution deletion
+   * @returns {Promise<void>}
+   */
+  const handleConfirmDelete = async () => {
+    if (!solutionToDelete) return;
+
+    try {
+      await solutionsAPI.delete(taskId, solutionToDelete);
+      setSolutions((prevSolutions) =>
+        prevSolutions.filter((solution) => solution.id !== solutionToDelete),
+      );
+      setError("");
+      setIsConfirmModalOpen(false);
+      setSolutionToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete solution:", err);
+      setError("Failed to delete solution");
+    }
+  };
+
+  /**
+   * Handles canceling the solution deletion
+   */
+  const handleCancelDelete = () => {
+    setIsConfirmModalOpen(false);
+    setSolutionToDelete(null);
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -320,6 +361,12 @@ const SolutionsTab = () => {
                   <button onClick={() => handleDownload(solution.id)}>
                     Download
                   </button>
+                  <button
+                    onClick={() => handleDeleteSolution(solution.id)}
+                    style={{ backgroundColor: "#dc3545", color: "white" }}
+                  >
+                    Delete
+                  </button>
                 </>
               )}
               emptyMessage="No solutions yet"
@@ -340,6 +387,14 @@ const SolutionsTab = () => {
         onSave={handleSaveSource}
         onClose={handleCloseSourceModal}
         saving={savingSource}
+      />
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        message="Are you sure you want to delete this solution? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </div>
   );

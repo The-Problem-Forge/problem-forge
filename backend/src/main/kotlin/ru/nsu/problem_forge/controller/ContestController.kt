@@ -99,4 +99,14 @@ class ContestController(
         contestService.removeProblemFromContest(contestId, problemId, user.id!!)
         return ResponseEntity.ok().build()
     }
+
+    @DeleteMapping("/{contestId}")
+    fun deleteContest(
+        @PathVariable contestId: Long,
+        @AuthenticationPrincipal userDetails: UserDetails
+    ): ResponseEntity<Void> {
+        val user = userService.findUserByHandle(userDetails.username)
+        contestService.deleteContest(contestId, user.id!!)
+        return ResponseEntity.ok().build()
+    }
 }

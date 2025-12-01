@@ -109,7 +109,10 @@ const InvocationModal = ({
                       }`}
                       onClick={() => onToggleTest(test.id)}
                     >
-                      Test {test.id}
+                      <div>Test {test.id}</div>
+                      {test.description && (
+                        <div className="subtext">{test.description}</div>
+                      )}
                     </div>
                   ))}
                 </div>

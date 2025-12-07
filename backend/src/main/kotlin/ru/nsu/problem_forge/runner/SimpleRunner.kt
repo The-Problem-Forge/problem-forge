@@ -40,17 +40,19 @@ class SimpleRunner : Runner {
           val command = mutableListOf(binaryFile.absolutePath)
           command.addAll(runInput.args)
 
+          val inputFile = File(tempDir, "input.txt").apply { writeText(runInput.inputContent) }
+          val outputFile = File(tempDir, "output.txt")
+          val errorFile = File(tempDir, "error.txt")
+
           val runProcess = ProcessBuilder(command)
-            .directory(tempDir)
-            .redirectErrorStream(true)
-            .start()
+              .directory(tempDir)
+              .redirectInput(inputFile)
+              .redirectOutput(outputFile)
+              .redirectError(errorFile)
+              .start()
 
-
-          // Write input to process
-          runProcess.outputStream.bufferedWriter().use { writer ->
-            writer.write(runInput.inputContent)
-            writer.flush()
-          }
+          val runOutput = outputFile.readText()
+          val errorOutput = errorFile.readText()
 
           val runSuccess = runProcess.waitFor(runInput.timeLimit, TimeUnit.MILLISECONDS)
 
@@ -59,9 +61,6 @@ class SimpleRunner : Runner {
             logger.error("Program execution timed out for run with args: ${runInput.args}")
             return@map RunOutput(RunStatus.RUNTIME_ERROR, "Time limit exceeded")
           }
-
-          val runOutput = runProcess.inputStream.bufferedReader().readText()
-          val errorOutput = runProcess.errorStream.bufferedReader().readText()
 
           if (runProcess.exitValue() != 0) {
             logger.error("Program runtime error for run with args: ${runInput.args}. stderr: $errorOutput; stdout: $runOutput")

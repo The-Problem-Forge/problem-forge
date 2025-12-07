@@ -10,7 +10,10 @@ class LatexGenerationService {
         val statement = problem.problemInfo.statement
         return """
             \documentclass[12pt]{article}
+            \usepackage{cmap}
+            \usepackage[T2A]{fontenc}
             \usepackage[utf8]{inputenc}
+            \usepackage[english, russian]{babel}
             \usepackage{amsmath}
             \usepackage{amssymb}
             \usepackage{graphicx}
@@ -48,7 +51,10 @@ class LatexGenerationService {
         val statement = problem.problemInfo.statement
         return """
             \documentclass[12pt]{article}
+            \usepackage{cmap}
+            \usepackage[T2A]{fontenc}
             \usepackage[utf8]{inputenc}
+            \usepackage[english, russian]{babel}
             \usepackage{amsmath}
             \usepackage{amssymb}
             \usepackage{graphicx}

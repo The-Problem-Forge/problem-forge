@@ -51,16 +51,16 @@ class SimpleRunner : Runner {
               .redirectError(errorFile)
               .start()
 
-          val runOutput = outputFile.readText()
-          val errorOutput = errorFile.readText()
-
           val runSuccess = runProcess.waitFor(runInput.timeLimit, TimeUnit.MILLISECONDS)
-
+          
           if (!runSuccess) {
             runProcess.destroyForcibly()
             logger.error("Program execution timed out for run with args: ${runInput.args}")
             return@map RunOutput(RunStatus.RUNTIME_ERROR, "Time limit exceeded")
           }
+          
+          val runOutput = outputFile.readText()
+          val errorOutput = errorFile.readText()
 
           if (runProcess.exitValue() != 0) {
             logger.error("Program runtime error for run with args: ${runInput.args}. stderr: $errorOutput; stdout: $runOutput")

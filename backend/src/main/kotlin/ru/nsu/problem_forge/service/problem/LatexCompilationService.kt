@@ -61,7 +61,7 @@ class LatexCompilationService {
     private fun runPdflatex(workingDir: Path, texFile: Path) {
         try {
             val command = listOf(
-                "pdflatex",
+                "xelatex",
                 "-interaction=nonstopmode",
                 "-halt-on-error",
                 "-no-shell-escape",

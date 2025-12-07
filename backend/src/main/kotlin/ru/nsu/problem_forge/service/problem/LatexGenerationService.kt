@@ -10,16 +10,19 @@ class LatexGenerationService {
         val statement = problem.problemInfo.statement
         return """
             \documentclass[12pt]{article}
-            \usepackage{cmap}
-            \usepackage[T2A]{fontenc}
-            \usepackage[utf8]{inputenc}
-            \usepackage[english, russian]{babel}
+
+            \usepackage{fontspec}
+            \usepackage{polyglossia}
+            \setmainlanguage{russian}
+            \setotherlanguage{english}
+            \setmainfont{DejaVu Serif}
+
             \usepackage{amsmath}
             \usepackage{amssymb}
             \usepackage{graphicx}
             \usepackage{geometry}
             \geometry{a4paper, margin=1in}
-            
+        
             \title{${escapeLatex(statement.name)}}
             \author{}
             \date{}
@@ -51,16 +54,18 @@ class LatexGenerationService {
         val statement = problem.problemInfo.statement
         return """
             \documentclass[12pt]{article}
-            \usepackage{cmap}
-            \usepackage[T2A]{fontenc}
-            \usepackage[utf8]{inputenc}
-            \usepackage[english, russian]{babel}
+            \documentclass[12pt]{article}
+            \usepackage{fontspec}
+            \usepackage{polyglossia}
+            \setmainlanguage{russian}
+            \setotherlanguage{english}
+            \setmainfont{DejaVu Serif}
             \usepackage{amsmath}
             \usepackage{amssymb}
             \usepackage{graphicx}
             \usepackage{geometry}
             \geometry{a4paper, margin=1in}
-            
+
             \title{Tutorial: ${escapeLatex(statement.name)}}
             \author{}
             \date{}

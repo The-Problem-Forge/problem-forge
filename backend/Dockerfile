@@ -27,6 +27,8 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-fonts-extra \
+    texlive-xetex \
+    fonts-dejavu \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security

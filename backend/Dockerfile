@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install -y \
     make \
     texlive-latex-base \
     texlive-latex-extra \
+    texlive-lang-cyrillic \
     texlive-fonts-recommended \
-    texlive-fonts-extra \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security

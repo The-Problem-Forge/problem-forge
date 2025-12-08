@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
  */
 @Service
 class LatexTemplateEngine(
-    private val fileRepository: FileRepository
+  private val fileRepository: FileRepository
 ) {
 
   /**
@@ -26,23 +26,25 @@ class LatexTemplateEngine(
     val general = problem.problemInfo.general
 
     return buildString {
-       // LaTeX document header with olymp.sty package
-       appendLine("\\documentclass[12pt]{article}")
-       appendLine("\\usepackage[utf8]{inputenc}")
-       appendLine("\\usepackage{olymp}")
-       appendLine()
+      // LaTeX document header with olymp.sty package
+      appendLine("\\documentclass[12pt]{article}")
+      appendLine("\\usepackage[utf8]{inputenc}")
+      appendLine("\\usepackage[T2A]{fontenc}")
+      appendLine("\\usepackage[russian,english]{babel}")
+      appendLine("\\usepackage{olymp}")
+      appendLine()
 
-       // Set contest information if available
-       contest?.let { c ->
-         val contestName = c.name
-         val contestLocation = c.location ?: "Unknown Location"
-         val contestDate = c.contestDate?.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) ?: "TBD"
-         appendLine("\\contest{$contestName}{$contestLocation}{$contestDate}")
-         appendLine()
-       }
+      // Set contest information if available
+      contest?.let { c ->
+        val contestName = c.name
+        val contestLocation = c.location ?: "Unknown Location"
+        val contestDate = c.contestDate?.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")) ?: "TBD"
+        appendLine("\\contest{$contestName}{$contestLocation}{$contestDate}")
+        appendLine()
+      }
 
-       appendLine("\\begin{document}")
-       appendLine()
+      appendLine("\\begin{document}")
+      appendLine()
 
       // Problem environment with olymp.sty formatting
       appendLine("\\begin{problem}{${problem.title}}{${general.inputFile}}{${general.outputFile}}{${general.timeLimit / 1000.0} seconds}{${general.memoryLimit} megabytes}")
@@ -72,23 +74,23 @@ class LatexTemplateEngine(
       }
       appendLine()
 
-       // Examples section (if any tests with sample flag exist)
-       val sampleTests = problem.problemInfo.tests.filter { it.sample }
-       if (sampleTests.isNotEmpty()) {
-         appendLine("\\Examples")
-         appendLine()
-         appendLine("\\begin{example}")
-         sampleTests.forEach { test ->
-           val input = test.content
-           // For sample tests, fetch output from outputFileId if available
-           val output = test.outputFileId?.let { fileId ->
-             fileRepository.findById(fileId).map { String(it.content) }.orElse("")
-           } ?: ""
-           appendLine("\\exmp{$input}{$output}%")
-         }
-         appendLine("\\end{example}")
-         appendLine()
-       }
+      // Examples section (if any tests with sample flag exist)
+      val sampleTests = problem.problemInfo.tests.filter { it.sample }
+      if (sampleTests.isNotEmpty()) {
+        appendLine("\\Examples")
+        appendLine()
+        appendLine("\\begin{example}")
+        sampleTests.forEach { test ->
+          val input = test.content
+          // For sample tests, fetch output from outputFileId if available
+          val output = test.outputFileId?.let { fileId ->
+            fileRepository.findById(fileId).map { String(it.content) }.orElse("")
+          } ?: ""
+          appendLine("\\exmp{$input}{$output}%")
+        }
+        appendLine("\\end{example}")
+        appendLine()
+      }
 
       // Notes section
       if (statement.notes.isNotBlank()) {
